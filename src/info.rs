@@ -27,7 +27,7 @@ impl PlayerInfo {
         tick: u32,
         pos: usize,
         renderer: &mut PlayerRenderer,
-        players: &HashMap<i32, Player>,
+        players: &Vec<Option<Player>>,
         grid: &HashMap<u32, HashSet<i32>>,
         player: &mut Player,
         dx: i32,
@@ -81,7 +81,7 @@ impl PlayerInfo {
     }
 
     #[inline(always)]
-    fn write_players(&mut self, tick: u32, players: &HashMap<i32, Player>, renderer: &mut PlayerRenderer, player: &mut Player, mut bytes: usize) -> usize {
+    fn write_players(&mut self, tick: u32, players: &Vec<Option<Player>>, renderer: &mut PlayerRenderer, player: &mut Player, mut bytes: usize) -> usize {
         let len: usize = player.build.players.len();
         self.buf.pbit(8, len as i32);
         let mut index: usize = 0;
@@ -90,29 +90,26 @@ impl PlayerInfo {
                 break;
             }
             if let Some(&pid) = player.build.players.get(index) {
-                match players.get(&pid) {
-                    None => {
+                if let Some(Some(other)) = players.get(pid as usize) {
+                    if other.pid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, player.build.view_distance) || !other.check_life_cycle(tick) || other.visibility == 2 {
                         self.remove(player, pid);
                         index -= 1;
-                    },
-                    Some(other) => {
-                        if other.pid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, player.build.view_distance) || !other.check_life_cycle(tick) || other.visibility == 2 {
-                            self.remove(player, pid);
-                            index -= 1;
+                    } else {
+                        let len: usize = renderer.highdefinitions(pid);
+                        if other.run_dir != -1 {
+                            self.run(renderer, player, other, len > 0 && self.fits(bytes, 1 + 2 + 3 + 3 + 1, len));
+                        } else if other.walk_dir != -1 {
+                            self.walk(renderer, player, other, len > 0 && self.fits(bytes, 1 + 2 + 3 + 1, len));
+                        } else if len > 0 && self.fits(bytes, 1 + 2, len) {
+                            self.extend(renderer, player, other);
                         } else {
-                            let len: usize = renderer.highdefinitions(pid);
-                            if other.run_dir != -1 {
-                                self.run(renderer, player, other, len > 0 && self.fits(bytes, 1 + 2 + 3 + 3 + 1, len));
-                            } else if other.walk_dir != -1 {
-                                self.walk(renderer, player, other, len > 0 && self.fits(bytes, 1 + 2 + 3 + 1, len));
-                            } else if len > 0 && self.fits(bytes, 1 + 2, len) {
-                                self.extend(renderer, player, other);
-                            } else {
-                                self.idle();
-                            }
-                            bytes += len;
+                            self.idle();
                         }
+                        bytes += len;
                     }
+                } else {
+                    self.remove(player, pid);
+                    index -= 1;
                 }
             }
             index += 1;
@@ -121,12 +118,12 @@ impl PlayerInfo {
     }
 
     #[inline(always)]
-    fn write_new_players(&mut self, players: &HashMap<i32, Player>, renderer: &mut PlayerRenderer, grid: &HashMap<u32, HashSet<i32>>, player: &mut Player, mut bytes: usize) {
+    fn write_new_players(&mut self, players: &Vec<Option<Player>>, renderer: &mut PlayerRenderer, grid: &HashMap<u32, HashSet<i32>>, player: &mut Player, mut bytes: usize) {
         for pid in player.build.get_nearby_players(players, grid, player.pid, player.coord.x(), player.coord.y(), player.coord.z()) {
             if player.build.players.len() >= BuildArea::PREFERRED_PLAYERS as usize {
                 return;
             }
-            if let Some(other) = players.get(&pid) {
+            if let Some(Some(other)) = players.get(pid as usize) {
                 if other.visibility != 2 {
                     let len: usize = renderer.lowdefinitions(pid) + renderer.highdefinitions(pid);
                     // bits to add player + extended info size + bits to break loop (11)

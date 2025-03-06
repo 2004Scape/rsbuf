@@ -19,7 +19,7 @@ mod message;
 mod info;
 mod build;
 
-static mut PLAYERS: Lazy<HashMap<i32, Player>> = Lazy::new(|| HashMap::with_capacity(2048));
+static mut PLAYERS: Lazy<Vec<Option<Player>>> = Lazy::new(|| vec![None; 2048]);
 static mut PLAYER_GRID: Lazy<HashMap<u32, HashSet<i32>>> = Lazy::new(|| HashMap::with_capacity(2048));
 static mut PLAYER_RENDERER: Lazy<PlayerRenderer> = Lazy::new(PlayerRenderer::new);
 static mut PLAYER_INFO: Lazy<PlayerInfo> = Lazy::new(PlayerInfo::new);
@@ -72,7 +72,7 @@ pub unsafe fn compute_player(
         return;
     }
 
-    if let Some(player) = PLAYERS.get_mut(&pid) {
+    if let Some(Some(player)) = PLAYERS.get_mut(pid as usize) {
         let coord: CoordGrid = CoordGrid::from(x, y, z);
         let origin: CoordGrid = CoordGrid::from(originX, y, originZ);
         let exact_move: Option<ExactMove> = match exactStartX {
@@ -141,8 +141,8 @@ pub unsafe fn player_info(tick: u32, pos: usize, pid: i32, dx: i32, dz: i32, reb
         return vec![];
     }
 
-    if let Some(mut player) = PLAYERS.get_mut(&pid) {
-        return PLAYER_INFO.encode(tick, pos, &mut PLAYER_RENDERER, &PLAYERS, &PLAYER_GRID, &mut player, dx, dz, rebuild);
+    if let Some(Some(ref mut player)) = PLAYERS.get_mut(pid as usize) {
+        return PLAYER_INFO.encode(tick, pos, &mut PLAYER_RENDERER, &PLAYERS, &PLAYER_GRID, player, dx, dz, rebuild);
     }
 
     return vec![];
@@ -153,7 +153,7 @@ pub unsafe fn add_player(pid: i32) {
     if pid == -1 {
         return;
     }
-    &PLAYERS.insert(pid, Player::new(pid));
+    *PLAYERS.as_mut_ptr().add(pid as usize) = Some(Player::new(pid));
 }
 
 #[wasm_bindgen(method, js_name = removePlayer)]
@@ -162,7 +162,7 @@ pub unsafe fn remove_player(pid: i32) {
         return;
     }
     &PLAYER_RENDERER.removePermanent(pid);
-    &PLAYERS.remove(&pid);
+    *PLAYERS.as_mut_ptr().add(pid as usize) = None;
 }
 
 #[wasm_bindgen(method, js_name = cleanup)]
