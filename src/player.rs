@@ -1,0 +1,139 @@
+use crate::build::BuildArea;
+use crate::coord::CoordGrid;
+
+#[derive(Eq, Hash, PartialEq, Clone)]
+pub struct Player {
+    pub coord: CoordGrid,
+    pub origin: CoordGrid,
+    pub pid: i32,
+    pub tele: bool,
+    pub jump: bool,
+    pub run_dir: i8,
+    pub walk_dir: i8,
+    pub visibility: u8,
+    pub lifecycle: u8,
+    pub lifecycle_tick: u32,
+    pub build: BuildArea,
+    pub masks: u32,
+    pub appearance: Vec<u8>,
+    pub last_appearance: i32,
+    pub face_entity: i32,
+    pub face_x: i32,
+    pub face_z: i32,
+    pub orientation_x: i32,
+    pub orientation_z: i32,
+    pub damage_taken: i32,
+    pub current_hitpoints: i32,
+    pub base_hitpoints: i32,
+    pub anim_id: i32,
+    pub anim_delay: i32,
+    pub say: Option<String>,
+    pub chat: Option<Chat>,
+    pub graphic_id: i32,
+    pub graphic_height: i32,
+    pub graphic_delay: i32,
+    pub exact_move: Option<ExactMove>,
+}
+
+#[derive(Eq, Hash, PartialEq, Clone)]
+pub struct Chat {
+    pub bytes: Vec<u8>,
+    pub color: u8,
+    pub effect: u8,
+    pub ignored: u8,
+}
+
+#[derive(Eq, Hash, PartialEq, Clone)]
+pub struct ExactMove {
+    pub start_x: i32,
+    pub start_z: i32,
+    pub end_x: i32,
+    pub end_z: i32,
+    pub begin: i32,
+    pub finish: i32,
+    pub dir: u8,
+}
+
+impl Player {
+    pub fn new(pid: i32) -> Player {
+        return Player {
+            coord: CoordGrid::from(0, 0, 0),
+            origin: CoordGrid::from(0, 0, 0),
+            pid,
+            tele: false,
+            jump: false,
+            run_dir: -1,
+            walk_dir: -1,
+            visibility: 0,
+            lifecycle: 0,
+            lifecycle_tick: 0,
+            build: BuildArea::new(),
+            masks: 0,
+            appearance: vec![],
+            last_appearance: -1,
+            face_entity: -1,
+            face_x: -1,
+            face_z: -1,
+            orientation_x: -1,
+            orientation_z: -1,
+            damage_taken: -1,
+            current_hitpoints: -1,
+            base_hitpoints: -1,
+            anim_id: -1,
+            anim_delay: -1,
+            say: None,
+            chat: None,
+            graphic_id: -1,
+            graphic_height: -1,
+            graphic_delay: -1,
+            exact_move: None,
+        }
+    }
+
+    #[inline(always)]
+    pub fn check_life_cycle(&self, tick: u32) -> bool {
+        return match self.lifecycle {
+            0 => true,
+            1 => self.lifecycle_tick < tick,
+            _ => self.lifecycle_tick > tick,
+        };
+    }
+}
+
+impl ExactMove {
+    pub fn new(
+        start_x: i32,
+        start_z: i32,
+        end_x: i32,
+        end_z: i32,
+        begin: i32,
+        finish: i32,
+        dir: u8
+    ) -> ExactMove {
+        return ExactMove {
+            start_x,
+            start_z,
+            end_x,
+            end_z,
+            begin,
+            finish,
+            dir,
+        }
+    }
+}
+
+impl Chat {
+    pub fn new(
+        bytes: Vec<u8>,
+        color: u8,
+        effect: u8,
+        ignored: u8
+    ) -> Chat {
+        return Chat {
+            bytes,
+            color,
+            effect,
+            ignored,
+        }
+    }
+}
