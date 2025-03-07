@@ -13,7 +13,7 @@
     "test": "cargo test"
   },
   "repository": {
-    "type": "git",
+    "type": "git"
   },
   "keywords": [
     "runescape",
