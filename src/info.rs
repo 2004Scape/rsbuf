@@ -28,7 +28,7 @@ impl PlayerInfo {
         tick: u32,
         pos: usize,
         renderer: &mut PlayerRenderer,
-        players: &Vec<Option<Player>>,
+        players: &[Option<Player>],
         map: &mut ZoneMap,
         grid: &HashMap<u32, HashSet<i32>>,
         player: &mut Player,
@@ -64,7 +64,11 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn write_local_player(&mut self, renderer: &mut PlayerRenderer, player: &Player) -> usize {
+    fn write_local_player(
+        &mut self,
+        renderer: &mut PlayerRenderer,
+        player: &Player
+    ) -> usize {
         let len: usize = renderer.highdefinitions(player.pid);
         if player.tele {
             let x: i32 = player.coord.x() as i32;
@@ -83,7 +87,14 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn write_players(&mut self, tick: u32, players: &Vec<Option<Player>>, renderer: &mut PlayerRenderer, player: &mut Player, mut bytes: usize) -> usize {
+    fn write_players(
+        &mut self,
+        tick: u32,
+        players: &[Option<Player>],
+        renderer: &mut PlayerRenderer,
+        player: &mut Player,
+        mut bytes: usize
+    ) -> usize {
         let len: usize = player.build.players.len();
         self.buf.pbit(8, len as i32);
         let mut index: usize = 0;
@@ -120,7 +131,15 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn write_new_players(&mut self, map: &mut ZoneMap, players: &Vec<Option<Player>>, renderer: &mut PlayerRenderer, grid: &HashMap<u32, HashSet<i32>>, player: &mut Player, mut bytes: usize) {
+    fn write_new_players(
+        &mut self,
+        map: &mut ZoneMap,
+        players: &[Option<Player>],
+        renderer: &mut PlayerRenderer,
+        grid: &HashMap<u32, HashSet<i32>>,
+        player: &mut Player,
+        mut bytes: usize
+    ) {
         for pid in player.build.get_nearby_players(players, grid, map, player.pid, player.coord.x(), player.coord.y(), player.coord.z()) {
             if player.build.players.len() >= BuildArea::PREFERRED_PLAYERS as usize {
                 return;
@@ -141,7 +160,16 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn add(&mut self, renderer: &mut PlayerRenderer, player: &mut Player, other: &Player, pid: i32, x: i32, z: i32, jump: bool) {
+    fn add(
+        &mut self,
+        renderer: &mut PlayerRenderer,
+        player: &mut Player,
+        other: &Player,
+        pid: i32,
+        x: i32,
+        z: i32,
+        jump: bool
+    ) {
         self.buf.pbit(11, pid);
         self.buf.pbit(5, x);
         self.buf.pbit(5, z);
@@ -152,14 +180,28 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn remove(&mut self, player: &mut Player, other: i32) {
+    fn remove(
+        &mut self,
+        player: &mut Player,
+        other: i32
+    ) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 3);
         player.build.players.retain(|&pid| pid != other);
     }
 
     #[inline]
-    fn teleport(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player, x: i32, y: i32, z: i32, jump: bool, extend: bool) {
+    fn teleport(
+        &mut self,
+        renderer: &mut PlayerRenderer,
+        player: &Player,
+        other: &Player,
+        x: i32,
+        y: i32,
+        z: i32,
+        jump: bool,
+        extend: bool
+    ) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 3);
         self.buf.pbit(2, y);
@@ -175,7 +217,13 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn run(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player, extend: bool) {
+    fn run(
+        &mut self,
+        renderer: &mut PlayerRenderer,
+        player: &Player,
+        other: &Player,
+        extend: bool
+    ) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 2);
         self.buf.pbit(3, other.walk_dir as i32);
@@ -189,7 +237,13 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn walk(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player, extend: bool) {
+    fn walk(
+        &mut self,
+        renderer: &mut PlayerRenderer,
+        player: &Player,
+        other: &Player,
+        extend: bool
+    ) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 1);
         self.buf.pbit(3, other.walk_dir as i32);
@@ -202,7 +256,12 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn extend(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player) {
+    fn extend(
+        &mut self,
+        renderer: &mut PlayerRenderer,
+        player: &Player,
+        other: &Player
+    ) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 0);
         self.highdefinition(renderer, player, other);
@@ -214,7 +273,12 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn highdefinition(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player) {
+    fn highdefinition(
+        &mut self,
+        renderer: &mut PlayerRenderer,
+        player: &Player,
+        other: &Player
+    ) {
         let myself: bool = player.pid == other.pid;
         let mut masks: u32 = other.masks;
         if myself {
@@ -224,7 +288,12 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn lowdefinition(&mut self, renderer: &mut PlayerRenderer, player: &mut Player, other: &Player) {
+    fn lowdefinition(
+        &mut self,
+        renderer: &mut PlayerRenderer,
+        player: &mut Player,
+        other: &Player
+    ) {
         let pid: i32 = other.pid;
         let mut masks: u32 = other.masks;
 
@@ -272,7 +341,15 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn write_blocks(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player, pid: i32, mut masks: u32, myself: bool) {
+    fn write_blocks(
+        &mut self,
+        renderer: &mut PlayerRenderer,
+        player: &Player,
+        other: &Player,
+        pid: i32,
+        mut masks: u32,
+        myself: bool
+    ) {
         if masks > 0xff {
             masks |= PlayerInfoProt::Big as u32;
         }

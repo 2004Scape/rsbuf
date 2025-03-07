@@ -69,7 +69,7 @@ impl BuildArea {
     }
 
     #[inline]
-    pub fn rebuild_players(&mut self, players: &Vec<Option<Player>>, grid: &HashMap<u32, HashSet<i32>>, pid: i32, x: u16, y: u8, z: u16) {
+    pub fn rebuild_players(&mut self, players: &[Option<Player>], grid: &HashMap<u32, HashSet<i32>>, pid: i32, x: u16, y: u8, z: u16) {
         // optimization to avoid sending 3 bits * observed players when everything has to be removed anyways
         self.players.clear();
         self.last_resize = 0;
@@ -102,7 +102,7 @@ impl BuildArea {
     #[inline]
     pub fn get_nearby_players(
         &self,
-        players: &Vec<Option<Player>>,
+        players: &[Option<Player>],
         grid: &HashMap<u32, HashSet<i32>>,
         map: &mut ZoneMap,
         pid: i32,
@@ -202,7 +202,14 @@ impl BuildArea {
     }
 
     #[inline]
-    fn filter_player(&self, players: &[Option<Player>], player: i32, pid: i32, x: u16, y: u8, z: u16) -> bool {
+    fn filter_player(
+        &self, players: &[Option<Player>],
+        player: i32,
+        pid: i32,
+        x: u16,
+        y: u8,
+        z: u16
+    ) -> bool {
         if let Some(other) = unsafe { &*players.as_ptr().add(player as usize) } {
             return !(self.players.contains(&player) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), self.view_distance) || other.pid == -1 || other.pid == pid || other.coord.y() != y);
         }

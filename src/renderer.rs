@@ -95,7 +95,7 @@ impl PlayerRenderer {
 
     #[inline]
     pub fn cache(&mut self, id: i32, message: &dyn InfoMessage, prot: PlayerInfoProt) -> usize {
-        let cache = self.caches.get_mut(&prot).expect("");
+        let cache: &mut [Option<Vec<u8>>; 2048] = self.caches.get_mut(&prot).expect("");
         unsafe {
             if (*cache.as_ptr().add(id as usize)).is_some() && !message.persists() {
                 return 0;
@@ -106,7 +106,7 @@ impl PlayerRenderer {
 
     #[inline]
     pub fn write(&self, buf: &mut Packet, id: i32, prot: PlayerInfoProt) {
-        let cache = self.caches.get(&prot).expect("");
+        let cache: &[Option<Vec<u8>>; 2048] = self.caches.get(&prot).expect("");
         unsafe {
             if let Some(bytes) = &*cache.as_ptr().add(id as usize) {
                 self.write_block(buf, bytes, id);
