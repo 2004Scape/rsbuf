@@ -6,7 +6,7 @@ pub trait InfoMessage {
     fn persists(&self) -> bool;
 }
 
-// ----
+// ---- players
 
 pub struct PlayerInfoAppearance {
     pub bytes: Vec<u8>,
@@ -365,3 +365,257 @@ impl InfoMessage for PlayerInfoExactMove {
         return false;
     }
 }
+
+// ---- npcs
+
+pub struct NpcInfoFaceEntity {
+    pub entity: i32,
+}
+
+impl NpcInfoFaceEntity {
+    #[inline]
+    pub fn new(entity: i32) -> NpcInfoFaceEntity {
+        return NpcInfoFaceEntity {
+            entity,
+        }
+    }
+}
+
+impl InfoMessage for NpcInfoFaceEntity {
+    #[inline]
+    fn encode(&self, buf: &mut Packet) {
+        buf.p2(self.entity);
+    }
+
+    #[inline]
+    fn test(&self) -> usize {
+        return 2;
+    }
+
+    #[inline]
+    fn persists(&self) -> bool {
+        return false;
+    }
+}
+
+// ----
+
+pub struct NpcInfoFaceCoord {
+    pub x: i32,
+    pub z: i32,
+}
+
+impl NpcInfoFaceCoord {
+    #[inline]
+    pub fn new(
+        x: i32,
+        z: i32
+    ) -> NpcInfoFaceCoord {
+        return NpcInfoFaceCoord {
+            x,
+            z,
+        }
+    }
+}
+
+impl InfoMessage for NpcInfoFaceCoord {
+    #[inline]
+    fn encode(&self, buf: &mut Packet) {
+        buf.p2(self.x);
+        buf.p2(self.z);
+    }
+
+    #[inline]
+    fn test(&self) -> usize {
+        return 4;
+    }
+
+    #[inline]
+    fn persists(&self) -> bool {
+        return false;
+    }
+}
+
+// ----
+
+pub struct NpcInfoAnim {
+    pub anim: i32,
+    pub delay: i32,
+}
+
+impl NpcInfoAnim {
+    #[inline]
+    pub fn new(
+        anim: i32,
+        delay: i32
+    ) -> NpcInfoAnim {
+        return NpcInfoAnim {
+            anim,
+            delay,
+        }
+    }
+}
+
+impl InfoMessage for NpcInfoAnim {
+    #[inline]
+    fn encode(&self, buf: &mut Packet) {
+        buf.p2(self.anim);
+        buf.p1(self.delay);
+    }
+
+    #[inline]
+    fn test(&self) -> usize {
+        return 3;
+    }
+
+    #[inline]
+    fn persists(&self) -> bool {
+        return false;
+    }
+}
+
+// ----
+
+pub struct NpcInfoSay {
+    pub say: String
+}
+
+impl NpcInfoSay {
+    pub fn new(say: String) -> NpcInfoSay {
+        return NpcInfoSay {
+            say,
+        }
+    }
+}
+
+impl InfoMessage for NpcInfoSay {
+    #[inline]
+    fn encode(&self, buf: &mut Packet) {
+        buf.pjstr(&self.say, 10);
+    }
+
+    #[inline]
+    fn test(&self) -> usize {
+        return 1 + self.say.len();
+    }
+
+    #[inline]
+    fn persists(&self) -> bool {
+        return false;
+    }
+}
+
+// ----
+
+pub struct NpcInfoDamage {
+    pub damage: i32,
+    pub damage_type: i32,
+    pub current_hitpoints: i32,
+    pub base_hitpoints: i32,
+}
+
+impl NpcInfoDamage {
+    pub fn new(
+        damage: i32,
+        damage_type: i32,
+        current_hitpoints: i32,
+        base_hitpoints: i32,
+    ) -> NpcInfoDamage {
+        return NpcInfoDamage {
+            damage,
+            damage_type,
+            current_hitpoints,
+            base_hitpoints,
+        }
+    }
+}
+
+impl InfoMessage for NpcInfoDamage {
+    #[inline]
+    fn encode(&self, buf: &mut Packet) {
+        buf.p1(self.damage);
+        buf.p1(self.damage_type);
+        buf.p1(self.current_hitpoints);
+        buf.p1(self.base_hitpoints);
+    }
+
+    #[inline]
+    fn test(&self) -> usize {
+        return 4;
+    }
+
+    #[inline]
+    fn persists(&self) -> bool {
+        return false;
+    }
+}
+
+// ----
+
+pub struct NpcInfoChangeType {
+    pub change_type: i32,
+}
+
+impl NpcInfoChangeType {
+    pub fn new(change_type: i32) -> NpcInfoChangeType {
+        return NpcInfoChangeType {
+            change_type,
+        }
+    }
+}
+
+impl InfoMessage for NpcInfoChangeType {
+    fn encode(&self, buf: &mut Packet) {
+        buf.p2(self.change_type);
+    }
+
+    fn test(&self) -> usize {
+        return 2;
+    }
+
+    fn persists(&self) -> bool {
+        return false;
+    }
+}
+
+// ----
+
+pub struct NpcInfoSpotanim {
+    pub graphic_id: i32,
+    pub graphic_height: i32,
+    pub graphic_delay: i32,
+}
+
+impl NpcInfoSpotanim {
+    pub fn new(
+        graphic_id: i32,
+        graphic_height: i32,
+        graphic_delay: i32
+    ) -> NpcInfoSpotanim {
+        return NpcInfoSpotanim {
+            graphic_id,
+            graphic_height,
+            graphic_delay,
+        }
+    }
+}
+
+impl InfoMessage for NpcInfoSpotanim {
+    #[inline]
+    fn encode(&self, buf: &mut Packet) {
+        buf.p2(self.graphic_id);
+        buf.p4((self.graphic_height << 16) | self.graphic_delay);
+    }
+
+    #[inline]
+    fn test(&self) -> usize {
+        return 6;
+    }
+
+    #[inline]
+    fn persists(&self) -> bool {
+        return false;
+    }
+}
+
+// ----

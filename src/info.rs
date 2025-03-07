@@ -1,12 +1,13 @@
 use std::collections::{HashMap, HashSet};
 use crate::build::BuildArea;
 use crate::coord::CoordGrid;
-use crate::message::{PlayerInfoFaceCoord, PlayerInfoFaceEntity};
+use crate::message::{NpcInfoFaceCoord, NpcInfoFaceEntity, PlayerInfoFaceCoord, PlayerInfoFaceEntity};
 use crate::packet::Packet;
 use crate::player::Player;
-use crate::prot::PlayerInfoProt;
-use crate::renderer::PlayerRenderer;
+use crate::prot::{NpcInfoProt, PlayerInfoProt};
+use crate::renderer::{NpcRenderer, PlayerRenderer};
 use crate::grid::ZoneMap;
+use crate::npc::Npc;
 
 pub struct PlayerInfo {
     pub buf: Packet,
@@ -14,7 +15,6 @@ pub struct PlayerInfo {
 }
 
 impl PlayerInfo {
-    #[inline]
     pub fn new() -> PlayerInfo {
         return PlayerInfo {
             buf: Packet::new(5000),
@@ -148,6 +148,9 @@ impl PlayerInfo {
         mut bytes: usize
     ) {
         for pid in player.build.get_nearby_players(players, grid, map, player.pid, player.coord.x(), player.coord.y(), player.coord.z()) {
+            if player.build.players.contains(&pid) {
+                continue;
+            }
             if player.build.players.len() >= BuildArea::PREFERRED_PLAYERS as usize {
                 return;
             }
@@ -406,6 +409,307 @@ impl PlayerInfo {
                     exactmove.dir,
                 )
             }
+        }
+    }
+
+    #[inline]
+    fn fits(&self, bytes: usize, bits_to_add: usize, bytes_to_add: usize) -> bool {
+        // 7 aligns to the next byte
+        return ((self.buf.bit_pos + bits_to_add + 7) >> 3) + bytes + bytes_to_add <= 4997;
+    }
+}
+
+pub struct NpcInfo {
+    pub buf: Packet,
+    pub updates: Packet,
+}
+
+impl NpcInfo {
+    pub fn new() -> NpcInfo {
+        return NpcInfo {
+            buf: Packet::new(5000),
+            updates: Packet::new(5000),
+        }
+    }
+
+    #[inline]
+    pub fn encode(
+        &mut self,
+        tick: u32,
+        pos: usize,
+        renderer: &mut NpcRenderer,
+        npcs: &[Option<Npc>],
+        map: &mut ZoneMap,
+        player: &mut Player,
+        dx: i32,
+        dz: i32,
+        rebuild: bool,
+    ) -> Vec<u8> {
+        let build: &mut BuildArea = &mut player.build;
+
+        if rebuild || dx > BuildArea::PREFERRED_VIEW_DISTANCE as i32 || dz > BuildArea::PREFERRED_VIEW_DISTANCE as i32 {
+            build.rebuild_npcs();
+        }
+
+        self.buf.pos = 0;
+        self.buf.bit_pos = 0;
+        self.updates.pos = 0;
+        self.updates.bit_pos = 0;
+
+        self.buf.bits();
+        let bytes: usize = self.write_npcs(tick, npcs, renderer, player, pos);
+        self.write_new_npcs(tick, map, npcs, renderer, player, bytes);
+        if self.updates.pos > 0 {
+            self.buf.pbit(13, 8191);
+            self.buf.bytes();
+            self.buf.pdata(&self.updates.data, 0, self.updates.pos);
+        } else {
+            self.buf.bytes();
+        }
+        return self.buf.data[0..self.buf.pos].to_vec();
+    }
+
+    #[inline]
+    fn write_npcs(
+        &mut self,
+        tick: u32,
+        npcs: &[Option<Npc>],
+        renderer: &mut NpcRenderer,
+        player: &mut Player,
+        mut bytes: usize
+    ) -> usize {
+        let len: usize = player.build.npcs.len();
+        self.buf.pbit(8, len as i32);
+        let mut index: usize = 0;
+        while index < len {
+            if index >= player.build.npcs.len() {
+                break;
+            }
+            if let nid = unsafe { *player.build.npcs.as_ptr().add(index) } {
+                if let Some(other) = unsafe { &*npcs.as_ptr().add(nid as usize) } {
+                    if other.nid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, BuildArea::PREFERRED_VIEW_DISTANCE) || !other.check_life_cycle(tick) {
+                        self.remove(player, nid);
+                        index -= 1;
+                    } else {
+                        let len: usize = renderer.highdefinitions(nid);
+                        if other.run_dir != -1 {
+                            self.run(renderer, other, len > 0 && self.fits(bytes, 1 + 2 + 3 + 3 + 1, len));
+                        } else if other.walk_dir != -1 {
+                            self.walk(renderer, other, len > 0 && self.fits(bytes, 1 + 2 + 3 + 1, len));
+                        } else if len > 0 && self.fits(bytes, 1 + 2, len) {
+                            self.extend(renderer, other);
+                        } else {
+                            self.idle();
+                        }
+                        bytes += len;
+                    }
+                } else {
+                    self.remove(player, nid);
+                    index -= 1;
+                }
+            }
+            index += 1;
+        }
+        return bytes;
+    }
+
+    #[inline]
+    fn write_new_npcs(
+        &mut self,
+        tick: u32,
+        map: &mut ZoneMap,
+        npcs: &[Option<Npc>],
+        renderer: &mut NpcRenderer,
+        player: &mut Player,
+        mut bytes: usize
+    ) {
+        for nid in player.build.get_nearby_npcs(tick, npcs, map, player.coord.x(), player.coord.y(), player.coord.z()) {
+            if player.build.npcs.contains(&nid) {
+                continue;
+            }
+            if player.build.npcs.len() >= BuildArea::PREFERRED_NPCS as usize {
+                return;
+            }
+            if let Some(other) = unsafe { &*npcs.as_ptr().add(nid as usize) } {
+                let len: usize = renderer.lowdefinitions(nid) + renderer.highdefinitions(nid);
+                // bits to add npc + extended info size + bits to break loop (13)
+                if !self.fits(bytes, 13 + 11 + 5 + 5 + 1 + 13, len) {
+                    // more npcs get added next tick
+                    return;
+                }
+                self.add(renderer, player, other, other.nid, other.ntype, other.coord.x() as i32 - player.coord.x() as i32, other.coord.z() as i32 - player.coord.z() as i32);
+                bytes += len;
+            }
+        }
+    }
+
+    #[inline]
+    fn add(
+        &mut self,
+        renderer: &mut NpcRenderer,
+        player: &mut Player,
+        other: &Npc,
+        nid: i32,
+        ntype: i32,
+        x: i32,
+        z: i32,
+    ) {
+        self.buf.pbit(13, nid);
+        self.buf.pbit(11, ntype);
+        self.buf.pbit(5, x);
+        self.buf.pbit(5, z);
+        self.buf.pbit(1, 1); // extend
+        self.lowdefinition(renderer, other);
+        player.build.npcs.push(other.nid);
+    }
+
+    #[inline]
+    fn remove(
+        &mut self,
+        player: &mut Player,
+        other: i32
+    ) {
+        self.buf.pbit(1, 1);
+        self.buf.pbit(2, 3);
+        player.build.npcs.retain(|&nid| nid != other);
+    }
+
+    #[inline]
+    fn run(
+        &mut self,
+        renderer: &mut NpcRenderer,
+        other: &Npc,
+        extend: bool
+    ) {
+        self.buf.pbit(1, 1);
+        self.buf.pbit(2, 2);
+        self.buf.pbit(3, other.walk_dir as i32);
+        self.buf.pbit(3, other.run_dir as i32);
+        if extend {
+            self.buf.pbit(1, 1);
+            self.highdefinition(renderer, other);
+        } else {
+            self.buf.pbit(1, 0);
+        }
+    }
+
+    #[inline]
+    fn walk(
+        &mut self,
+        renderer: &mut NpcRenderer,
+        other: &Npc,
+        extend: bool
+    ) {
+        self.buf.pbit(1, 1);
+        self.buf.pbit(2, 1);
+        self.buf.pbit(3, other.walk_dir as i32);
+        if extend {
+            self.buf.pbit(1, 1);
+            self.highdefinition(renderer, other);
+        } else {
+            self.buf.pbit(1, 0);
+        }
+    }
+
+    #[inline]
+    fn extend(
+        &mut self,
+        renderer: &mut NpcRenderer,
+        other: &Npc
+    ) {
+        self.buf.pbit(1, 1);
+        self.buf.pbit(2, 0);
+        self.highdefinition(renderer, other);
+    }
+
+    #[inline]
+    fn idle(&mut self) {
+        self.buf.pbit(1, 0);
+    }
+
+    #[inline]
+    fn highdefinition(
+        &mut self,
+        renderer: &mut NpcRenderer,
+        other: &Npc
+    ) {
+        self.write_blocks(renderer, other.nid, other.masks);
+    }
+
+    #[inline]
+    fn lowdefinition(
+        &mut self,
+        renderer: &mut NpcRenderer,
+        other: &Npc
+    ) {
+        let nid: i32 = other.nid;
+        let mut masks: u32 = other.masks;
+
+        if other.face_entity != -1 && !renderer.has(nid, NpcInfoProt::FaceEntity) {
+            renderer.cache(
+                nid,
+                &NpcInfoFaceEntity::new(other.face_entity),
+                NpcInfoProt::FaceEntity,
+            );
+            masks |= NpcInfoProt::FaceEntity as u32;
+        }
+
+        if !renderer.has(nid, NpcInfoProt::FaceCoord) {
+            if other.face_x != -1 {
+                renderer.cache(
+                    nid,
+                    &NpcInfoFaceCoord::new(other.face_x, other.face_z),
+                    NpcInfoProt::FaceCoord,
+                );
+            } else if other.orientation_x != -1 {
+                renderer.cache(
+                    nid,
+                    &NpcInfoFaceCoord::new(other.orientation_x, other.orientation_z),
+                    NpcInfoProt::FaceCoord,
+                );
+            } else {
+                renderer.cache(
+                    nid,
+                    &NpcInfoFaceCoord::new(CoordGrid::fine(other.coord.x(), 1), CoordGrid::fine(other.coord.z(), 1)),
+                    NpcInfoProt::FaceCoord,
+                );
+            }
+        }
+
+        masks |= NpcInfoProt::FaceCoord as u32;
+
+        self.write_blocks(renderer, nid, masks);
+    }
+
+    #[inline]
+    fn write_blocks(
+        &mut self,
+        renderer: &mut NpcRenderer,
+        nid: i32,
+        mut masks: u32,
+    ) {
+        self.updates.p1((masks & 0xff) as i32);
+        // ----
+        if masks & NpcInfoProt::Anim as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::Anim);
+        }
+        if masks & NpcInfoProt::FaceEntity as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::FaceEntity);
+        }
+        if masks & NpcInfoProt::Say as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::Say);
+        }
+        if masks & NpcInfoProt::Damage as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::Damage);
+        }
+        if masks & NpcInfoProt::ChangeType as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::ChangeType);
+        }
+        if masks & NpcInfoProt::SpotAnim as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::SpotAnim);
+        }
+        if masks & NpcInfoProt::FaceCoord as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::FaceCoord);
         }
     }
 

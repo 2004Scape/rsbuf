@@ -1,13 +1,15 @@
 use std::collections::HashMap;
 
 pub struct Zone {
-    pub players: Vec<i32>,
+    pub players: Vec<i32>, // pids
+    pub npcs: Vec<i32>, // nids
 }
 
 impl Zone {
     pub fn new() -> Zone {
         return Zone {
             players: Vec::new(),
+            npcs: Vec::new(),
         }
     }
 
@@ -17,6 +19,14 @@ impl Zone {
 
     pub fn remove_player(&mut self, player: i32) {
         self.players.retain(|&pid| pid != player);
+    }
+
+    pub fn add_npc(&mut self, npc: i32) {
+        self.npcs.push(npc);
+    }
+
+    pub fn remove_npc(&mut self, npc: i32) {
+        self.npcs.retain(|&nid| nid != npc);
     }
 }
 

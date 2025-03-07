@@ -12,7 +12,7 @@ pub struct Player {
     pub walk_dir: i8,
     pub visibility: u8,
     pub lifecycle: u8,
-    pub lifecycle_tick: u32,
+    pub lifecycle_tick: i32,
     pub build: BuildArea,
     pub masks: u32,
     pub appearance: Vec<u8>,
@@ -96,8 +96,8 @@ impl Player {
     pub fn check_life_cycle(&self, tick: u32) -> bool {
         return match self.lifecycle {
             0 => true,
-            1 => self.lifecycle_tick < tick,
-            _ => self.lifecycle_tick > tick,
+            1 => self.lifecycle_tick < tick as i32,
+            _ => self.lifecycle_tick > tick as i32,
         };
     }
 

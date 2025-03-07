@@ -3,6 +3,7 @@ use std::hash::{Hash, Hasher};
 use crate::coord::CoordGrid;
 use crate::player::Player;
 use crate::grid::ZoneMap;
+use crate::npc::Npc;
 
 #[derive(Eq, PartialEq, Clone)]
 pub struct BuildArea {
@@ -201,8 +202,46 @@ impl BuildArea {
     }
 
     #[inline]
+    pub fn get_nearby_npcs(
+        &self,
+        tick: u32,
+        npcs: &[Option<Npc>],
+        map: &mut ZoneMap,
+        x: u16,
+        y: u8,
+        z: u16
+    ) -> Vec<i32> {
+        let distance: u16 = BuildArea::PREFERRED_VIEW_DISTANCE as u16;
+        let start_x: u16 = (x.saturating_sub(distance)) >> 3;
+        let start_z: u16 = (z.saturating_sub(distance)) >> 3;
+        let end_x: u16 = (x.saturating_add(distance)) >> 3;
+        let end_z: u16 = (z.saturating_add(distance)) >> 3;
+
+        let count: usize = self.npcs.len();
+        let mut nearby: Vec<i32> = Vec::with_capacity(BuildArea::PREFERRED_NPCS as usize - count);
+
+        for zx in start_x..=end_x {
+            let zone_x: u16 = zx << 3;
+            for zz in start_z..=end_z {
+                if nearby.len() + count >= BuildArea::PREFERRED_NPCS as usize {
+                    return nearby;
+                }
+                let zone_z: u16 = zz << 3;
+                nearby.extend(
+                    map.zone(zone_x, y, zone_z).npcs
+                        .iter()
+                        .take(BuildArea::PREFERRED_NPCS as usize - nearby.len())
+                        .filter(|&&npc| self.filter_npc(tick, npcs, npc, x, y, z)),
+                );
+            }
+        }
+        return nearby
+    }
+
+    #[inline]
     fn filter_player(
-        &self, players: &[Option<Player>],
+        &self,
+        players: &[Option<Player>],
         player: i32,
         pid: i32,
         x: u16,
@@ -211,6 +250,22 @@ impl BuildArea {
     ) -> bool {
         if let Some(other) = unsafe { &*players.as_ptr().add(player as usize) } {
             return !(self.players.contains(&player) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), self.view_distance) || other.pid == -1 || other.pid == pid || other.coord.y() != y);
+        }
+        return false;
+    }
+
+    #[inline]
+    fn filter_npc(
+        &self,
+        tick: u32,
+        npcs: &[Option<Npc>],
+        npc: i32,
+        x: u16,
+        y: u8,
+        z: u16
+    ) -> bool {
+        if let Some(other) = unsafe { &*npcs.as_ptr().add(npc as usize) } {
+            return !(self.npcs.contains(&npc) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), BuildArea::PREFERRED_VIEW_DISTANCE) || other.nid == -1 || other.coord.y() != y || !other.check_life_cycle(tick));
         }
         return false;
     }

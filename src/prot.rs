@@ -12,3 +12,15 @@ pub enum PlayerInfoProt {
     SpotAnim = 0x100,
     ExactMove = 0x200,
 }
+
+#[repr(u16)]
+#[derive(Eq, Hash, PartialEq)]
+pub enum NpcInfoProt {
+    Anim = 0x2,
+    FaceEntity = 0x4,
+    Say = 0x8,
+    Damage = 0x10,
+    ChangeType = 0x20,
+    SpotAnim = 0x40,
+    FaceCoord = 0x80,
+}
