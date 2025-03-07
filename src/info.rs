@@ -125,7 +125,7 @@ impl PlayerInfo {
             if player.build.players.len() >= BuildArea::PREFERRED_PLAYERS as usize {
                 return;
             }
-            if let Some(Some(other)) = players.get(pid as usize) {
+            if let Some(other) = unsafe { &*players.as_ptr().add(pid as usize) } {
                 if other.visibility != 2 {
                     let len: usize = renderer.lowdefinitions(pid) + renderer.highdefinitions(pid);
                     // bits to add player + extended info size + bits to break loop (11)
