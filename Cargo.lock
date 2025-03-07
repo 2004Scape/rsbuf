@@ -598,7 +598,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rsbuf"
+name = "rsinfo"
 version = "1.0.0"
 dependencies = [
  "criterion",
@@ -609,7 +609,6 @@ dependencies = [
  "pem",
  "rsa",
  "wasm-bindgen",
- "web-sys",
 ]
 
 [[package]]
