@@ -1,6 +1,6 @@
 [package]
 name = "rsbuf"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 authors = ["2004Scape"]
 description = "A RuneScape update info computer."
