@@ -203,7 +203,7 @@ impl BuildArea {
 
     #[inline]
     fn filter_player(&self, players: &[Option<Player>], player: i32, pid: i32, x: u16, y: u8, z: u16) -> bool {
-        if let Some(other) = unsafe { &*players.as_ptr().add(pid as usize) } {
+        if let Some(other) = unsafe { &*players.as_ptr().add(player as usize) } {
             return !(self.players.contains(&player) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), self.view_distance) || other.pid == -1 || other.pid == pid || other.coord.y() != y);
         }
         return false;
