@@ -1,6 +1,6 @@
 [package]
 name = "rsbuf"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["2004Scape"]
 description = "A RuneScape update info computer."
@@ -14,6 +14,7 @@ keywords = [
     "webassembly"
 ]
 categories = ["game-engines", "game-development"]
+exclude = [".github", "package.json"]
 
 [dev-dependencies]
 criterion = "0.5.1"
