@@ -326,3 +326,13 @@ pub unsafe fn cleanup() {
         }
     }
 }
+
+#[wasm_bindgen(method, js_name = cleanupPlayerBuildArea)]
+pub unsafe fn cleanup_player_buildarea(pid: i32) {
+    if pid == -1 {
+        return;
+    }
+    if let Some(player) = &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
+        player.build.cleanup();
+    }
+}
