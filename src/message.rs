@@ -13,7 +13,7 @@ pub struct PlayerInfoAppearance {
 }
 
 impl PlayerInfoAppearance {
-    #[inline(always)]
+    #[inline]
     pub fn new(bytes: Vec<u8>) -> PlayerInfoAppearance {
         return PlayerInfoAppearance {
             bytes,
@@ -22,18 +22,18 @@ impl PlayerInfoAppearance {
 }
 
 impl InfoMessage for PlayerInfoAppearance {
-    #[inline(always)]
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.bytes.len() as i32);
         buf.pdata(&self.bytes, 0, self.bytes.len());
     }
 
-    #[inline(always)]
+    #[inline]
     fn test(&self) -> usize {
         return 1 + self.bytes.len();
     }
 
-    #[inline(always)]
+    #[inline]
     fn persists(&self) -> bool {
         return true;
     }
@@ -46,7 +46,7 @@ pub struct PlayerInfoFaceEntity {
 }
 
 impl PlayerInfoFaceEntity {
-    #[inline(always)]
+    #[inline]
     pub fn new(entity: i32) -> PlayerInfoFaceEntity {
         return PlayerInfoFaceEntity {
             entity,
@@ -55,17 +55,17 @@ impl PlayerInfoFaceEntity {
 }
 
 impl InfoMessage for PlayerInfoFaceEntity {
-    #[inline(always)]
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.entity);
     }
 
-    #[inline(always)]
+    #[inline]
     fn test(&self) -> usize {
         return 2;
     }
 
-    #[inline(always)]
+    #[inline]
     fn persists(&self) -> bool {
         return false;
     }
@@ -79,7 +79,7 @@ pub struct PlayerInfoFaceCoord {
 }
 
 impl PlayerInfoFaceCoord {
-    #[inline(always)]
+    #[inline]
     pub fn new(x: i32, z: i32) -> PlayerInfoFaceCoord {
         return PlayerInfoFaceCoord {
             x,
@@ -89,18 +89,18 @@ impl PlayerInfoFaceCoord {
 }
 
 impl InfoMessage for PlayerInfoFaceCoord {
-    #[inline(always)]
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.x);
         buf.p2(self.z);
     }
 
-    #[inline(always)]
+    #[inline]
     fn test(&self) -> usize {
         return 4;
     }
 
-    #[inline(always)]
+    #[inline]
     fn persists(&self) -> bool {
         return false;
     }
@@ -114,7 +114,7 @@ pub struct PlayerInfoAnim {
 }
 
 impl PlayerInfoAnim {
-    #[inline(always)]
+    #[inline]
     pub fn new(anim: i32, delay: i32) -> PlayerInfoAnim {
         return PlayerInfoAnim {
             anim,
@@ -124,18 +124,18 @@ impl PlayerInfoAnim {
 }
 
 impl InfoMessage for PlayerInfoAnim {
-    #[inline(always)]
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.anim);
         buf.p1(self.delay);
     }
 
-    #[inline(always)]
+    #[inline]
     fn test(&self) -> usize {
         return 3;
     }
 
-    #[inline(always)]
+    #[inline]
     fn persists(&self) -> bool {
         return false;
     }

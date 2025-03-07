@@ -3,12 +3,13 @@ use std::hash::{Hash, Hasher};
 use web_sys::console;
 use crate::coord::CoordGrid;
 use crate::player::Player;
+use crate::zone::ZoneMap;
 
 #[derive(Eq, PartialEq, Clone)]
 pub struct BuildArea {
     pub players: Vec<i32>,
-    pub npcs: HashSet<i32>,
-    appearances: HashMap<i32, u32>,
+    pub npcs: Vec<i32>,
+    appearances: [u32; 2048],
     force_view_distance: bool,
     pub view_distance: u8,
     last_resize: u32,
@@ -22,16 +23,22 @@ impl BuildArea {
 
     pub fn new() -> BuildArea {
         return BuildArea {
-            players: Vec::with_capacity(250),
-            npcs: HashSet::with_capacity(250),
-            appearances: HashMap::with_capacity(250),
+            players: Vec::with_capacity(BuildArea::PREFERRED_PLAYERS as usize),
+            npcs: Vec::with_capacity(BuildArea::PREFERRED_NPCS as usize),
+            appearances: [0; 2048],
             force_view_distance: false,
             view_distance: 15,
             last_resize: 0,
         }
     }
 
-    #[inline(always)]
+    pub fn cleanup(&mut self) {
+        self.players.clear();
+        self.npcs.clear();
+        self.appearances.fill(0);
+    }
+
+    #[inline]
     pub fn resize(&mut self) {
         if self.force_view_distance {
             return;
@@ -55,13 +62,13 @@ impl BuildArea {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn rebuild_npcs(&mut self) {
         // optimization to avoid sending 3 bits * observed npcs when everything has to be removed anyways
         self.npcs.clear();
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn rebuild_players(&mut self, players: &Vec<Option<Player>>, grid: &HashMap<u32, HashSet<i32>>, pid: i32, x: u16, y: u8, z: u16) {
         // optimization to avoid sending 3 bits * observed players when everything has to be removed anyways
         self.players.clear();
@@ -70,7 +77,7 @@ impl BuildArea {
         // pre calc if we can go ahead and shorten view distance
         let mut count: u8 = 0;
         let mut decrement: bool = false;
-        for _ in self.get_nearby_players(players, grid, pid, x, y, z) {
+        for _ in self.get_nearby_players_nearest(players, grid, pid, x, y, z) {
             count += 1;
             if count >= BuildArea::PREFERRED_PLAYERS {
                 decrement = true;
@@ -82,73 +89,120 @@ impl BuildArea {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn has_appearance(&self, pid: i32, tick: u32) -> bool {
-        return match self.appearances.get(&pid) {
-            Some(&appearance) => appearance == tick,
-            None => false,
+        return unsafe { *self.appearances.as_ptr().add(pid as usize) == tick }
+    }
+
+    #[inline]
+    pub fn save_appearance(&mut self, pid: i32, tick: u32) {
+        unsafe { *self.appearances.as_mut_ptr().add(pid as usize) = tick }
+    }
+
+    #[inline]
+    pub fn get_nearby_players(
+        &self,
+        players: &Vec<Option<Player>>,
+        grid: &HashMap<u32, HashSet<i32>>,
+        map: &mut ZoneMap,
+        pid: i32,
+        x: u16,
+        y: u8,
+        z: u16
+    ) -> Vec<i32> {
+        return if self.view_distance < BuildArea::PREFERRED_VIEW_DISTANCE {
+            self.get_nearby_players_nearest(players, grid, pid, x, y, z)
+        } else {
+            self.get_nearby_players_zones(players, map, pid, x, y, z)
         }
     }
 
-    #[inline(always)]
-    pub fn save_appearance(&mut self, pid: i32, tick: u32) {
-        self.appearances.insert(pid, tick);
+    #[inline]
+    pub fn get_nearby_players_zones(
+        &self,
+        players: &[Option<Player>],
+        map: &mut ZoneMap,
+        pid: i32,
+        x: u16,
+        y: u8,
+        z: u16
+    ) -> Vec<i32> {
+        let distance: u16 = self.view_distance as u16;
+        let start_x: u16 = (x.saturating_sub(distance)) >> 3;
+        let start_z: u16 = (z.saturating_sub(distance)) >> 3;
+        let end_x: u16 = (x.saturating_add(distance)) >> 3;
+        let end_z: u16 = (z.saturating_add(distance)) >> 3;
+
+        let count: usize = self.players.len();
+        let mut nearby: Vec<i32> = Vec::with_capacity(BuildArea::PREFERRED_PLAYERS as usize - count);
+
+        for zx in start_x..=end_x {
+            let zone_x: u16 = zx << 3;
+            for zz in start_z..=end_z {
+                if nearby.len() + count >= BuildArea::PREFERRED_PLAYERS as usize {
+                    return nearby;
+                }
+                let zone_z: u16 = zz << 3;
+                nearby.extend(
+                    map.zone(zone_x, y, zone_z).players
+                        .iter()
+                        .take(BuildArea::PREFERRED_PLAYERS as usize - (nearby.len() + count))
+                        .filter(|&&player| self.filter_player(players, player, pid, x, y, z)),
+                );
+            }
+        }
+        return nearby
     }
 
-    #[inline(always)]
-    pub fn get_nearby_players(
+    #[inline]
+    pub fn get_nearby_players_nearest(
         &self,
-        players2: &Vec<Option<Player>>,
+        players: &[Option<Player>],
         grid: &HashMap<u32, HashSet<i32>>,
         pid: i32,
         x: u16,
         y: u8,
         z: u16
     ) -> Vec<i32> {
-        let radius: u8 = self.view_distance * 2;
-        let min: i32 = -(radius as i32) >> 1;
-        let max: i32 = (radius as i32) >> 1;
-        let length: i32 = (radius as i32).pow(2);
+        let radius: i32 = (self.view_distance as i32) * 2;
+        let min: i32 = -(radius >> 1);
+        let max: i32 = radius >> 1;
+        let length: i32 = radius.pow(2);
 
-        let mut dx: i32 = 0;
-        let mut dz: i32 = 0;
-        let mut ldx: i32 = 0;
-        let mut ldz: i32 = -1;
+        let (mut dx, mut dz): (i32, i32) = (0, 0);
+        let (mut ldx, mut ldz): (i32, i32) = (0, -1);
 
-        let mut nearby = Vec::with_capacity(BuildArea::PREFERRED_PLAYERS as usize);
+        let count: usize = self.players.len();
+        let mut nearby: Vec<i32> = Vec::with_capacity(BuildArea::PREFERRED_PLAYERS as usize - count);
 
         for _ in 1..=length {
-            if self.players.len() + nearby.len() >= BuildArea::PREFERRED_PLAYERS as usize {
-                break;
+            if nearby.len() + count >= BuildArea::PREFERRED_PLAYERS as usize {
+                return nearby;
             }
-            if min < dx && dx <= max && min < dz && dz <= max {
-                if let Some(players) = grid.get(&CoordGrid::from(((x as i32) + dx) as u16, y, ((z as i32) + dz) as u16).coord) {
-                    for &player in players {
-                        if self.players.len() + nearby.len() >= BuildArea::PREFERRED_PLAYERS as usize {
-                            break;
-                        }
-                        if self.filter_player(players2, player, pid, x, y, z) {
-                            nearby.push(player);
-                        }
+            if (min < dx && dx <= max) && (min < dz && dz <= max) {
+                if let Some(set) = grid.get(&CoordGrid::from(((x as i32) + dx) as u16, y, ((z as i32) + dz) as u16).coord) {
+                    nearby.extend(
+                        set
+                            .iter()
+                            .take(BuildArea::PREFERRED_PLAYERS as usize - (nearby.len() + count))
+                            .filter(|&&player| self.filter_player(players, player, pid, x, y, z)),
+                    );
+                    if nearby.len() + count >= BuildArea::PREFERRED_PLAYERS as usize {
+                        return nearby;
                     }
                 }
             }
-
             if dx == dz || (dx < 0 && dx == -dz) || (dx > 0 && dx == 1 - dz) {
-                let tmp: i32 = ldx;
-                ldx = -ldz;
-                ldz = tmp;
+                (ldx, ldz) = (-ldz, ldx);
             }
-
             dx += ldx;
             dz += ldz;
         }
-
-        return nearby;
+        return nearby
     }
 
-    #[inline(always)]
-    fn filter_player(&self, players: &Vec<Option<Player>>, player: i32, pid: i32, x: u16, y: u8, z: u16) -> bool {
+    #[inline]
+    fn filter_player(&self, players: &[Option<Player>], player: i32, pid: i32, x: u16, y: u8, z: u16) -> bool {
         if let Some(Some(other)) = players.get(player as usize) {
             return !(self.players.contains(&player) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), self.view_distance) || other.pid == -1 || other.pid == pid || other.coord.y() != y);
         }

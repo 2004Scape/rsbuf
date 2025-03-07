@@ -5,22 +5,26 @@ use crate::player::Player;
 use crate::prot::PlayerInfoProt;
 
 pub struct PlayerRenderer {
-    pub caches: HashMap<PlayerInfoProt, HashMap<i32, Vec<u8>>>,
+    pub caches: HashMap<PlayerInfoProt, [Option<Vec<u8>>; 2048]>,
     pub highs: [usize; 2048],
     pub lows: [usize; 2048],
 }
 
 impl PlayerRenderer {
     pub fn new() -> PlayerRenderer {
-        let mut caches: HashMap<PlayerInfoProt, HashMap<i32, Vec<u8>>> = HashMap::with_capacity(10);
-        caches.insert(PlayerInfoProt::Appearance, HashMap::with_capacity(2048));
-        caches.insert(PlayerInfoProt::Anim, HashMap::with_capacity(2048));
-        caches.insert(PlayerInfoProt::FaceEntity, HashMap::with_capacity(2048));
-        caches.insert(PlayerInfoProt::Say, HashMap::with_capacity(2048));
-        caches.insert(PlayerInfoProt::Damage, HashMap::with_capacity(2048));
-        caches.insert(PlayerInfoProt::FaceCoord, HashMap::with_capacity(2048));
-        caches.insert(PlayerInfoProt::Chat, HashMap::with_capacity(2048));
-        caches.insert(PlayerInfoProt::SpotAnim, HashMap::with_capacity(2048));
+        fn empty_array() -> [Option<Vec<u8>>; 2048] {
+            return std::array::from_fn(|_| None)
+        }
+
+        let mut caches: HashMap<PlayerInfoProt, [Option<Vec<u8>>; 2048]> = HashMap::with_capacity(10);
+        caches.insert(PlayerInfoProt::Appearance, empty_array());
+        caches.insert(PlayerInfoProt::Anim, empty_array());
+        caches.insert(PlayerInfoProt::FaceEntity, empty_array());
+        caches.insert(PlayerInfoProt::Say, empty_array());
+        caches.insert(PlayerInfoProt::Damage, empty_array());
+        caches.insert(PlayerInfoProt::FaceCoord, empty_array());
+        caches.insert(PlayerInfoProt::Chat, empty_array());
+        caches.insert(PlayerInfoProt::SpotAnim, empty_array());
         // exact move does not get cached, that is built on demand.
         return PlayerRenderer {
             caches,
@@ -81,44 +85,51 @@ impl PlayerRenderer {
 
         if lows > 0 {
             let header: usize = PlayerRenderer::header(PlayerInfoProt::Appearance as u32 + PlayerInfoProt::FaceEntity as u32 + PlayerInfoProt::FaceCoord as u32);
-            let appearance = self.caches
-                .get(&PlayerInfoProt::Appearance)
-                .and_then(|x| x.get(&pid))
+            let appearance = self.caches[&PlayerInfoProt::Appearance]
+                .get(pid as usize)
+                .and_then(|x| x.as_ref())
                 .map_or(0, |y| y.len());
             unsafe { *self.lows.as_mut_ptr().add(pid as usize) = header + appearance + 2 + 4; } // TODO? hardcoded lengths
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn cache(&mut self, id: i32, message: &dyn InfoMessage, prot: PlayerInfoProt) -> usize {
-        let cache: &mut HashMap<i32, Vec<u8>> = self.caches.get_mut(&prot).expect("Tried to cache to empty!");
-        if cache.contains_key(&id) && !message.persists() {
-            return 0;
+        let cache = self.caches.get_mut(&prot).expect("");
+        unsafe {
+            if (*cache.as_ptr().add(id as usize)).is_some() && !message.persists() {
+                return 0;
+            }
         }
         return PlayerRenderer::encode_info(cache, id, message);
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn write(&self, buf: &mut Packet, id: i32, prot: PlayerInfoProt) {
-        let cache: &HashMap<i32, Vec<u8>> = self.caches.get(&prot).expect("Tried to write a buf not cached!");
-        self.write_block(buf, cache, id);
-    }
-
-    #[inline(always)]
-    pub fn has(&self, id: i32, prot: PlayerInfoProt) -> bool {
-        return if let Some(cache) = self.caches.get(&prot) {
-            cache.contains_key(&id)
-        } else {
-            false
+        let cache = self.caches.get(&prot).expect("");
+        unsafe {
+            if let Some(bytes) = &*cache.as_ptr().add(id as usize) {
+                self.write_block(buf, bytes, id);
+            } else {
+                panic!("Tried to write a buf not cached!");
+            }
         }
     }
 
-    #[inline(always)]
+
+    #[inline]
+    pub fn has(&self, id: i32, prot: PlayerInfoProt) -> bool {
+        let cache: &[Option<Vec<u8>>; 2048] = &self.caches[&prot];
+        unsafe { return (*cache.as_ptr().add(id as usize)).is_some(); }
+    }
+
+
+    #[inline]
     pub fn highdefinitions(&self, id: i32) -> usize {
         return unsafe { *self.highs.as_ptr().add(id as usize) };
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn lowdefinitions(&self, id: i32) -> usize {
         return unsafe { *self.lows.as_ptr().add(id as usize) };
     }
@@ -135,7 +146,7 @@ impl PlayerRenderer {
             PlayerInfoProt::SpotAnim,
         ] {
             if let Some(cache) = self.caches.get_mut(&prot) {
-                cache.clear();
+                cache.fill(None);
             }
         }
     }
@@ -146,28 +157,28 @@ impl PlayerRenderer {
             *self.lows.as_mut_ptr().add(id as usize) = 0;
         }
         if let Some(cache) = self.caches.get_mut(&PlayerInfoProt::Appearance) {
-            cache.remove(&id);
+            unsafe { *cache.as_mut_ptr().add(id as usize) = None }
         }
     }
 
-    #[inline(always)]
-    fn write_block(&self, buf: &mut Packet, messages: &HashMap<i32, Vec<u8>>, id: i32) {
-        let mut bytes: &Vec<u8> = messages.get(&id).expect("Tried to write empty block!");
-        buf.pdata(&bytes, 0, bytes.len());
+    #[inline]
+    fn write_block(&self, buf: &mut Packet, messages: &Vec<u8>, id: i32) {
+        // let bytes = messages.get(id as usize).and_then(|opt| opt.as_ref()).expect("Tried to write empty block!");
+        buf.pdata(messages, 0, messages.len());
     }
 
     // ----
 
-    #[inline(always)]
-    pub fn encode_info(messages: &mut HashMap<i32, Vec<u8>>, id: i32, message: &dyn InfoMessage) -> usize {
+    #[inline]
+    pub fn encode_info(messages: &mut [Option<Vec<u8>>; 2048], id: i32, message: &dyn InfoMessage) -> usize {
         let mut buf: Packet = Packet::new(message.test());
         message.encode(&mut buf);
         let len: usize = buf.len();
-        messages.insert(id, buf.data);
+        messages[id as usize] = Some(buf.data);
         return len;
     }
 
-    #[inline(always)]
+    #[inline]
     fn header(masks: u32) -> usize {
         let mut len: usize = 1;
         if masks > 0xff {

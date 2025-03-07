@@ -74,7 +74,7 @@ impl Packet {
     /// packet.pos += 1;
     /// assert_eq!(4, packet.remaining());
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn remaining(&self) -> i32 {
         return (self.len() - self.pos) as i32;
     }
@@ -89,7 +89,7 @@ impl Packet {
     /// let mut packet: Packet = Packet::new(1);
     /// assert_eq!(1, packet.len());
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn len(&self) -> usize {
         return self.data.len();
     }
@@ -117,7 +117,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked_mut()` fails. This should never happen if
     /// the caller ensures that there is at least 1 byte available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn p1(&mut self, value: i32) {
         unsafe { *self.data.get_unchecked_mut(self.pos) = value as u8 }
         self.pos += 1;
@@ -146,7 +146,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked_mut()` fails. This should never happen if
     /// the caller ensures that there are at least 2 bytes available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn p2(&mut self, value: i32) {
         let start: usize = self.pos;
         unsafe { self.data.get_unchecked_mut(start..start + 2) }
@@ -177,7 +177,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked_mut()` fails. This should never happen if
     /// the caller ensures that there are at least 2 bytes available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn ip2(&mut self, value: i32) {
         let start: usize = self.pos;
         unsafe { self.data.get_unchecked_mut(start..start + 2) }
@@ -208,7 +208,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked_mut()` fails. This should never happen if
     /// the caller ensures that there are at least 2 bytes available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn p3(&mut self, value: i32) {
         let start: usize = self.pos;
         unsafe { *self.data.get_unchecked_mut(start) = (value >> 16) as u8 };
@@ -240,7 +240,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked_mut()` fails. This should never happen if
     /// the caller ensures that there are at least 2 bytes available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn p4(&mut self, value: i32) {
         let start: usize = self.pos;
         unsafe { self.data.get_unchecked_mut(start..start + 4) }
@@ -271,7 +271,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked_mut()` fails. This should never happen if
     /// the caller ensures that there are at least 2 bytes available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn ip4(&mut self, value: i32) {
         let start: usize = self.pos;
         unsafe { self.data.get_unchecked_mut(start..start + 4) }
@@ -302,7 +302,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked_mut()` fails. This should never happen if
     /// the caller ensures that there are at least 2 bytes available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn p8(&mut self, value: i64) {
         let start: usize = self.pos;
         unsafe { self.data.get_unchecked_mut(start..start + 8) }
@@ -332,7 +332,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked_mut()` fails. This should never happen if
     /// the caller ensures that there are at least string length + terminator bytes available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn pjstr(&mut self, str: &str, terminator: u8) {
         let mut length: usize = self.pos;
         for byte in str.bytes() {
@@ -364,7 +364,7 @@ impl Packet {
     ///
     /// This function will panic if the `value` is outside the supported ranges (i.e., not in the interval [0, 127]
     /// or [0, 32767]). See (g1) and (g2) for additional panics from this function.
-    #[inline(always)]
+    #[inline]
     pub fn psmart(&mut self, value: i32) {
         if value >= 0 && value < 128 {
             self.p1(value);
@@ -397,7 +397,7 @@ impl Packet {
     ///
     /// This function will panic if the `value` is outside the supported ranges (i.e., not in the interval [-64, 63]
     /// or [-16384, 16383]). See (g1) and (g2) for additional panics from this function.
-    #[inline(always)]
+    #[inline]
     pub fn psmarts(&mut self, value: i32) {
         if value < 64 && value >= -64 {
             self.p1(value + 64);
@@ -439,7 +439,7 @@ impl Packet {
     ///
     /// This function will panic if the `offset` and `length` values do not fit within the bounds of the `src` slice,
     /// or if the number of bytes to be copied exceeds the capacity of the internal buffer.
-    #[inline(always)]
+    #[inline]
     pub fn pdata(&mut self, src: &Vec<u8>, offset: usize, length: usize) {
         let pos: usize = self.pos;
         unsafe { self.data.get_unchecked_mut(pos..pos + length) }
@@ -470,7 +470,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked()` fails. This should never happen if
     /// the caller ensures that there is at least 1 byte available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn g1(&mut self) -> u8 {
         self.pos += 1;
         return unsafe { *self.data.get_unchecked(self.pos - 1) };
@@ -499,7 +499,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked()` fails. This should never happen if
     /// the caller ensures that there is at least 1 byte available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn g1s(&mut self) -> i8 {
         self.pos += 1;
         return (unsafe { *self.data.get_unchecked(self.pos - 1) }) as i8;
@@ -528,7 +528,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked()` fails. This should never happen if
     /// the caller ensures that there are at least 2 bytes available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn g2(&mut self) -> u16 {
         self.pos += 2;
         let pos: usize = self.pos;
@@ -562,7 +562,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked()` fails. This should never happen if
     /// the caller ensures that there are at least 2 bytes available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn g2s(&mut self) -> i16 {
         self.pos += 2;
         let pos: usize = self.pos;
@@ -596,7 +596,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked()` fails. This should never happen if
     /// the caller ensures that there are at least 2 bytes available as required by the function's safety
     /// contract.
-    #[inline(always)]
+    #[inline]
     pub fn ig2s(&mut self) -> i16 {
         self.pos += 2;
         let pos: usize = self.pos;
@@ -631,7 +631,7 @@ impl Packet {
     /// the caller ensures that there are at least 3 bytes available as required by the function's safety
     /// contract.
     // java ints are always signed (java 8 added unsigned)
-    #[inline(always)]
+    #[inline]
     pub fn g3(&mut self) -> i32 {
         self.pos += 3;
         let pos: usize = self.pos;
@@ -667,7 +667,7 @@ impl Packet {
     /// the caller ensures that there are at least 4 bytes available as required by the function's safety
     /// contract.
     // java ints are always signed (java 8 added unsigned)
-    #[inline(always)]
+    #[inline]
     pub fn g4s(&mut self) -> i32 {
         self.pos += 4;
         let pos: usize = self.pos;
@@ -702,7 +702,7 @@ impl Packet {
     /// the caller ensures that there are at least 4 bytes available as required by the function's safety
     /// contract.
     // java ints are always signed (java 8 added unsigned)
-    #[inline(always)]
+    #[inline]
     pub fn ig4s(&mut self) -> i32 {
         self.pos += 4;
         let pos: usize = self.pos;
@@ -737,7 +737,7 @@ impl Packet {
     /// the caller ensures that there are at least 8 bytes available as required by the function's safety
     /// contract.
     // java longs are always signed (java 8 added unsigned)
-    #[inline(always)]
+    #[inline]
     pub fn g8s(&mut self) -> i64 {
         self.pos += 8;
         let pos: usize = self.pos;
@@ -773,7 +773,7 @@ impl Packet {
     /// The function will panic if the slice conversion via `get_unchecked()` or `from_utf8_unchecked()` fails. This should never happen if
     /// the caller ensures that there are at least string length + terminator bytes available as required by the function's safety
     /// contract. The caller must also ensure that the backing buffer vector will decode the string with valid UTF-8 characters.
-    #[inline(always)]
+    #[inline]
     pub fn gjstr(&mut self, terminator: u8) -> String {
         let pos: usize = self.pos;
         let mut length = pos;
@@ -815,7 +815,7 @@ impl Packet {
     /// happen if there are insufficient bytes in the buffer as required by the function's safety contract.
     /// The caller must ensure there are at least 2 bytes available from `self.pos` before calling this function.
     /// See (g1) and (g2) for additional panics from this function.
-    #[inline(always)]
+    #[inline]
     pub fn gsmart(&mut self) -> i32 {
         return if unsafe { *self.data.get_unchecked(self.pos) } < 128 {
             self.g1() as i32
@@ -854,7 +854,7 @@ impl Packet {
     /// happen if there are insufficient bytes in the buffer as required by the function's safety contract.
     /// The caller must ensure there are at least 2 bytes available from `self.pos` before calling this function.
     /// See (g1) and (g2) for additional panics from this function.
-    #[inline(always)]
+    #[inline]
     pub fn gsmarts(&mut self) -> i32 {
         return if unsafe { *self.data.get_unchecked(self.pos) } < 128 {
             self.g1() as i32 - 64
@@ -894,7 +894,7 @@ impl Packet {
     ///
     /// This function will panic if the `offset` and `length` values do not fit within the bounds of the destination slice
     /// or if the number of bytes to be copied exceeds the size of the internal buffer.
-    #[inline(always)]
+    #[inline]
     pub fn gdata(&mut self, dest: &mut Vec<u8>, offset: usize, length: usize) {
         let pos: usize = self.pos;
         unsafe { dest.get_unchecked_mut(offset..offset + length) }
@@ -916,7 +916,7 @@ impl Packet {
     /// This function does not panic.
     /// However, please note to only use bit functions while in bits mode. You must call the `bytes`
     /// function in order to switch back to byte mode to use byte functions.
-    #[inline(always)]
+    #[inline]
     pub fn bits(&mut self) {
         self.bit_pos = self.pos << 3;
     }
@@ -936,7 +936,7 @@ impl Packet {
     /// This function does not panic.
     /// However, please note to only use byte functions while in bytes mode. You must call the `bits`
     /// function in order to switch back to bit mode to use bit functions.
-    #[inline(always)]
+    #[inline]
     pub fn bytes(&mut self) {
         self.pos = (self.bit_pos + 7) >> 3;
     }
@@ -1082,7 +1082,7 @@ impl Packet {
     /// # Panics
     ///
     /// This function may panic if the computed position (`self.pos - size - 1`) leads to accessing out-of-bounds memory in `self.data`.
-    #[inline(always)]
+    #[inline]
     pub fn psize1(&mut self, size: u8) {
         unsafe { *self.data.get_unchecked_mut(self.pos - size as usize - 1) = size };
     }
@@ -1107,7 +1107,7 @@ impl Packet {
     /// # Panics
     ///
     /// This function may panic if the computed position (`self.pos - size - 2`) leads to accessing out-of-bounds memory in `self.data`.
-    #[inline(always)]
+    #[inline]
     pub fn psize2(&mut self, size: u16) {
         let pos: usize = self.pos - size as usize - 2;
         unsafe { self.data.get_unchecked_mut(pos..pos + 2) }.copy_from_slice(&size.to_be_bytes());
@@ -1133,7 +1133,7 @@ impl Packet {
     /// # Panics
     ///
     /// This function may panic if the computed position (`self.pos - size - 4`) leads to accessing out-of-bounds memory in `self.data`.
-    #[inline(always)]
+    #[inline]
     pub fn psize4(&mut self, size: u32) {
         let pos: usize = self.pos - size as usize - 4;
         unsafe { self.data.get_unchecked_mut(pos..pos + 4) }.copy_from_slice(&size.to_be_bytes());

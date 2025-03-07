@@ -90,7 +90,7 @@ impl Player {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn check_life_cycle(&self, tick: u32) -> bool {
         return match self.lifecycle {
             0 => true,

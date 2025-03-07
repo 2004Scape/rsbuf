@@ -6,6 +6,7 @@ use crate::packet::Packet;
 use crate::player::Player;
 use crate::prot::PlayerInfoProt;
 use crate::renderer::PlayerRenderer;
+use crate::zone::ZoneMap;
 
 pub struct PlayerInfo {
     pub buf: Packet,
@@ -13,7 +14,7 @@ pub struct PlayerInfo {
 }
 
 impl PlayerInfo {
-    #[inline(always)]
+    #[inline]
     pub fn new() -> PlayerInfo {
         return PlayerInfo {
             buf: Packet::new(5000),
@@ -21,13 +22,14 @@ impl PlayerInfo {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn encode(
         &mut self,
         tick: u32,
         pos: usize,
         renderer: &mut PlayerRenderer,
         players: &Vec<Option<Player>>,
+        map: &mut ZoneMap,
         grid: &HashMap<u32, HashSet<i32>>,
         player: &mut Player,
         dx: i32,
@@ -50,7 +52,7 @@ impl PlayerInfo {
         self.buf.bits();
         let bytes1: usize = self.write_local_player(renderer, player);
         let bytes2: usize = self.write_players(tick, players, renderer, player, bytes1 + pos);
-        self.write_new_players(players, renderer, grid, player, bytes2);
+        self.write_new_players(map, players, renderer, grid, player, bytes2);
         if self.updates.pos > 0 {
             self.buf.pbit(11, 2047);
             self.buf.bytes();
@@ -61,7 +63,7 @@ impl PlayerInfo {
         return self.buf.data[0..self.buf.pos].to_vec();
     }
 
-    #[inline(always)]
+    #[inline]
     fn write_local_player(&mut self, renderer: &mut PlayerRenderer, player: &Player) -> usize {
         let len: usize = renderer.highdefinitions(player.pid);
         if player.tele {
@@ -80,7 +82,7 @@ impl PlayerInfo {
         return len;
     }
 
-    #[inline(always)]
+    #[inline]
     fn write_players(&mut self, tick: u32, players: &Vec<Option<Player>>, renderer: &mut PlayerRenderer, player: &mut Player, mut bytes: usize) -> usize {
         let len: usize = player.build.players.len();
         self.buf.pbit(8, len as i32);
@@ -89,8 +91,8 @@ impl PlayerInfo {
             if index >= player.build.players.len() {
                 break;
             }
-            if let Some(&pid) = player.build.players.get(index) {
-                if let Some(Some(other)) = players.get(pid as usize) {
+            if let pid = unsafe { *player.build.players.as_ptr().add(index) } {
+                if let Some(other) = unsafe { &*players.as_ptr().add(pid as usize) } {
                     if other.pid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, player.build.view_distance) || !other.check_life_cycle(tick) || other.visibility == 2 {
                         self.remove(player, pid);
                         index -= 1;
@@ -117,9 +119,9 @@ impl PlayerInfo {
         return bytes;
     }
 
-    #[inline(always)]
-    fn write_new_players(&mut self, players: &Vec<Option<Player>>, renderer: &mut PlayerRenderer, grid: &HashMap<u32, HashSet<i32>>, player: &mut Player, mut bytes: usize) {
-        for pid in player.build.get_nearby_players(players, grid, player.pid, player.coord.x(), player.coord.y(), player.coord.z()) {
+    #[inline]
+    fn write_new_players(&mut self, map: &mut ZoneMap, players: &Vec<Option<Player>>, renderer: &mut PlayerRenderer, grid: &HashMap<u32, HashSet<i32>>, player: &mut Player, mut bytes: usize) {
+        for pid in player.build.get_nearby_players(players, grid, map, player.pid, player.coord.x(), player.coord.y(), player.coord.z()) {
             if player.build.players.len() >= BuildArea::PREFERRED_PLAYERS as usize {
                 return;
             }
@@ -138,9 +140,8 @@ impl PlayerInfo {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn add(&mut self, renderer: &mut PlayerRenderer, player: &mut Player, other: &Player, pid: i32, x: i32, z: i32, jump: bool) {
-        // console::log_1(&format!("Me: {}, Added: {}", player.pid, pid).into());
         self.buf.pbit(11, pid);
         self.buf.pbit(5, x);
         self.buf.pbit(5, z);
@@ -150,17 +151,14 @@ impl PlayerInfo {
         player.build.players.push(other.pid);
     }
 
-    #[inline(always)]
+    #[inline]
     fn remove(&mut self, player: &mut Player, other: i32) {
-        // console::log_1(&format!("Me: {}, Removed: {}", player.pid, other.pid).into());
-        if let Some(index) = player.build.players.iter().position(|&pid| pid == other) {
-            self.buf.pbit(1, 1);
-            self.buf.pbit(2, 3);
-            player.build.players.remove(index);
-        }
+        self.buf.pbit(1, 1);
+        self.buf.pbit(2, 3);
+        player.build.players.retain(|&pid| pid != other);
     }
 
-    #[inline(always)]
+    #[inline]
     fn teleport(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player, x: i32, y: i32, z: i32, jump: bool, extend: bool) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 3);
@@ -176,7 +174,7 @@ impl PlayerInfo {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn run(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player, extend: bool) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 2);
@@ -190,7 +188,7 @@ impl PlayerInfo {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn walk(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player, extend: bool) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 1);
@@ -203,19 +201,19 @@ impl PlayerInfo {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn extend(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 0);
         self.highdefinition(renderer, player, other);
     }
 
-    #[inline(always)]
+    #[inline]
     fn idle(&mut self) {
         self.buf.pbit(1, 0);
     }
 
-    #[inline(always)]
+    #[inline]
     fn highdefinition(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player) {
         let myself: bool = player.pid == other.pid;
         let mut masks: u32 = other.masks;
@@ -225,7 +223,7 @@ impl PlayerInfo {
         self.write_blocks(renderer, player, other, other.pid, masks, myself);
     }
 
-    #[inline(always)]
+    #[inline]
     fn lowdefinition(&mut self, renderer: &mut PlayerRenderer, player: &mut Player, other: &Player) {
         let pid: i32 = other.pid;
         let mut masks: u32 = other.masks;
@@ -273,7 +271,7 @@ impl PlayerInfo {
         self.write_blocks(renderer, player, other, pid, masks, false);
     }
 
-    #[inline(always)]
+    #[inline]
     fn write_blocks(&mut self, renderer: &mut PlayerRenderer, player: &Player, other: &Player, pid: i32, mut masks: u32, myself: bool) {
         if masks > 0xff {
             masks |= PlayerInfoProt::Big as u32;
@@ -297,7 +295,7 @@ impl PlayerInfo {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn fits(&self, bytes: usize, bits_to_add: usize, bytes_to_add: usize) -> bool {
         // 7 aligns to the next byte
         return ((self.buf.bit_pos + bits_to_add + 7) >> 3) + bytes + bytes_to_add <= 4997;

@@ -1,13 +1,13 @@
 #![allow(non_snake_case)]
 
 use std::collections::{HashMap, HashSet};
-use std::ptr::addr_of;
 use once_cell::sync::Lazy;
 use wasm_bindgen::prelude::wasm_bindgen;
 use crate::coord::CoordGrid;
 use crate::info::PlayerInfo;
 use crate::player::{Chat, ExactMove, Player};
 use crate::renderer::PlayerRenderer;
+use crate::zone::ZoneMap;
 
 mod coord;
 mod player;
@@ -18,11 +18,14 @@ mod prot;
 mod message;
 mod info;
 mod build;
+mod zone;
 
 static mut PLAYERS: Lazy<Vec<Option<Player>>> = Lazy::new(|| vec![None; 2048]);
 static mut PLAYER_GRID: Lazy<HashMap<u32, HashSet<i32>>> = Lazy::new(|| HashMap::with_capacity(2048));
 static mut PLAYER_RENDERER: Lazy<PlayerRenderer> = Lazy::new(PlayerRenderer::new);
 static mut PLAYER_INFO: Lazy<PlayerInfo> = Lazy::new(PlayerInfo::new);
+
+static mut ZONE_MAP: Lazy<ZoneMap> = Lazy::new(ZoneMap::new);
 
 #[wasm_bindgen(method, js_name = computePlayer)]
 pub unsafe fn compute_player(
@@ -101,6 +104,11 @@ pub unsafe fn compute_player(
             )
         };
 
+        if coord.coord != player.coord.coord {
+            &ZONE_MAP.zone(player.coord.x(), player.coord.y(), player.coord.z()).remove_player(pid);
+            &ZONE_MAP.zone(coord.x(), coord.y(), coord.z()).add_player(pid);
+        }
+
         player.coord = coord;
         player.origin = origin;
         player.tele = tele;
@@ -142,7 +150,7 @@ pub unsafe fn player_info(tick: u32, pos: usize, pid: i32, dx: i32, dz: i32, reb
     }
 
     if let Some(Some(ref mut player)) = PLAYERS.get_mut(pid as usize) {
-        return PLAYER_INFO.encode(tick, pos, &mut PLAYER_RENDERER, &PLAYERS, &PLAYER_GRID, player, dx, dz, rebuild);
+        return PLAYER_INFO.encode(tick, pos, &mut PLAYER_RENDERER, &PLAYERS, &mut ZONE_MAP, &PLAYER_GRID, player, dx, dz, rebuild);
     }
 
     return vec![];
@@ -162,6 +170,9 @@ pub unsafe fn remove_player(pid: i32) {
         return;
     }
     &PLAYER_RENDERER.removePermanent(pid);
+    if let Some(player) = &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
+        player.build.cleanup();
+    }
     *PLAYERS.as_mut_ptr().add(pid as usize) = None;
 }
 
