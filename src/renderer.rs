@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::message::{InfoMessage, PlayerInfoAnim, PlayerInfoAppearance, PlayerInfoFaceCoord, PlayerInfoFaceEntity};
+use crate::message::{InfoMessage, PlayerInfoAnim, PlayerInfoAppearance, PlayerInfoChat, PlayerInfoDamage, PlayerInfoExactMove, PlayerInfoFaceCoord, PlayerInfoFaceEntity, PlayerInfoSay, PlayerInfoSpotanim};
 use crate::packet::Packet;
 use crate::player::Player;
 use crate::prot::PlayerInfoProt;
@@ -69,6 +69,27 @@ impl PlayerRenderer {
             highs += len;
             lows += len;
         }
+        if masks & PlayerInfoProt::Say as u32 != 0 {
+            if let Some(say) = &player.say {
+                highs += self.cache(
+                    pid,
+                    &PlayerInfoSay::new(say.clone()),
+                    PlayerInfoProt::Say,
+                );
+            }
+        }
+        if masks & PlayerInfoProt::Damage as u32 != 0 {
+            highs += self.cache(
+                pid,
+                &PlayerInfoDamage::new(
+                    player.damage_taken,
+                    player.damage_type,
+                    player.current_hitpoints,
+                    player.base_hitpoints,
+                ),
+                PlayerInfoProt::Damage,
+            );
+        }
         if masks & PlayerInfoProt::FaceCoord as u32 != 0 {
             let len: usize = self.cache(
                 pid,
@@ -77,6 +98,34 @@ impl PlayerRenderer {
             );
             highs += len;
             lows += len;
+        }
+        if masks & PlayerInfoProt::Chat as u32 != 0 {
+            if let Some(chat) = &player.chat {
+                highs += self.cache(
+                    pid,
+                    &PlayerInfoChat::new(
+                        chat.bytes.clone(),
+                        chat.color as i32,
+                        chat.effect as i32,
+                        chat.ignored as i32,
+                    ),
+                    PlayerInfoProt::Chat,
+                );
+            }
+        }
+        if masks & PlayerInfoProt::SpotAnim as u32 != 0 {
+            highs += self.cache(
+                pid,
+                &PlayerInfoSpotanim::new(
+                    player.graphic_id,
+                    player.graphic_height,
+                    player.graphic_delay,
+                ),
+                PlayerInfoProt::SpotAnim,
+            );
+        }
+        if masks & PlayerInfoProt::ExactMove as u32 != 0 {
+            highs += 9;
         }
 
         if highs > 0 {
@@ -91,6 +140,20 @@ impl PlayerRenderer {
                 .map_or(0, |y| y.len());
             unsafe { *self.lows.as_mut_ptr().add(pid as usize) = header + appearance + 2 + 4; } // TODO? hardcoded lengths
         }
+    }
+
+    pub fn writeExactmove(
+        &self,
+        buf: &mut Packet,
+        start_x: i32,
+        start_z: i32,
+        end_x: i32,
+        end_z: i32,
+        begin: i32,
+        finish: i32,
+        dir: i32,
+    ) {
+        PlayerInfoExactMove::new(start_x, start_z, end_x, end_z, begin, finish, dir).encode(buf);
     }
 
     #[inline]

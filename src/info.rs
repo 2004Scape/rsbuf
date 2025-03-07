@@ -71,9 +71,16 @@ impl PlayerInfo {
     ) -> usize {
         let len: usize = renderer.highdefinitions(player.pid);
         if player.tele {
-            let x: i32 = player.coord.x() as i32;
-            let z: i32 = player.coord.z() as i32;
-            self.teleport(renderer, player, player, x - (((x >> 3) - 6) << 3), player.coord.y() as i32, z - (((z >> 3) - 6) << 3), player.jump, len > 0);
+            self.teleport(
+                renderer,
+                player,
+                player,
+                player.coord.x() as i32 - (((player.origin.x() as i32 >> 3) - 6) << 3),
+                player.coord.y() as i32,
+                player.coord.z() as i32 - (((player.origin.z() as i32 >> 3) - 6) << 3),
+                player.jump,
+                len > 0
+            );
         } else if player.run_dir != -1 {
             self.run(renderer, player, player, len > 0);
         } else if player.walk_dir != -1 {
@@ -367,8 +374,38 @@ impl PlayerInfo {
         if masks & PlayerInfoProt::FaceEntity as u32 != 0 {
             renderer.write(&mut self.updates, pid, PlayerInfoProt::FaceEntity);
         }
+        if masks & PlayerInfoProt::Say as u32 != 0 {
+            renderer.write(&mut self.updates, pid, PlayerInfoProt::Say);
+        }
+        if masks & PlayerInfoProt::Damage as u32 != 0 {
+            renderer.write(&mut self.updates, pid, PlayerInfoProt::Damage);
+        }
         if masks & PlayerInfoProt::FaceCoord as u32 != 0 {
             renderer.write(&mut self.updates, pid, PlayerInfoProt::FaceCoord);
+        }
+        if !myself && masks & PlayerInfoProt::Chat as u32 != 0 {
+            renderer.write(&mut self.updates, pid, PlayerInfoProt::Chat);
+        }
+        if masks & PlayerInfoProt::SpotAnim as u32 != 0 {
+            renderer.write(&mut self.updates, pid, PlayerInfoProt::SpotAnim);
+        }
+        if masks & PlayerInfoProt::ExactMove as u32 != 0 {
+            if let Some(exactmove) = &other.exact_move {
+                let mut x = player.origin.x() as i32;
+                x = ((x >> 3) - 6) << 3;
+                let mut z = player.origin.z() as i32;
+                z = ((z >> 3) - 6) << 3;
+                renderer.writeExactmove(
+                    &mut self.updates,
+                    exactmove.start_x - x,
+                    exactmove.start_z - z,
+                    exactmove.end_x - x,
+                    exactmove.end_z - z,
+                    exactmove.begin,
+                    exactmove.finish,
+                    exactmove.dir,
+                )
+            }
         }
     }
 

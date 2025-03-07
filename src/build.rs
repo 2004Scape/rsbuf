@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
-use web_sys::console;
 use crate::coord::CoordGrid;
 use crate::player::Player;
 use crate::zone::ZoneMap;
@@ -146,7 +145,7 @@ impl BuildArea {
                 nearby.extend(
                     map.zone(zone_x, y, zone_z).players
                         .iter()
-                        .take(BuildArea::PREFERRED_PLAYERS as usize - (nearby.len() + count))
+                        .take(BuildArea::PREFERRED_PLAYERS as usize - nearby.len())
                         .filter(|&&player| self.filter_player(players, player, pid, x, y, z)),
                 );
             }
@@ -184,7 +183,7 @@ impl BuildArea {
                     nearby.extend(
                         set
                             .iter()
-                            .take(BuildArea::PREFERRED_PLAYERS as usize - (nearby.len() + count))
+                            .take(BuildArea::PREFERRED_PLAYERS as usize - nearby.len())
                             .filter(|&&player| self.filter_player(players, player, pid, x, y, z)),
                     );
                     if nearby.len() + count >= BuildArea::PREFERRED_PLAYERS as usize {

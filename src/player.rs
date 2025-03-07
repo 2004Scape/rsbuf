@@ -23,6 +23,7 @@ pub struct Player {
     pub orientation_x: i32,
     pub orientation_z: i32,
     pub damage_taken: i32,
+    pub damage_type: i32,
     pub current_hitpoints: i32,
     pub base_hitpoints: i32,
     pub anim_id: i32,
@@ -51,7 +52,7 @@ pub struct ExactMove {
     pub end_z: i32,
     pub begin: i32,
     pub finish: i32,
-    pub dir: u8,
+    pub dir: i32,
 }
 
 impl Player {
@@ -77,6 +78,7 @@ impl Player {
             orientation_x: -1,
             orientation_z: -1,
             damage_taken: -1,
+            damage_type: -1,
             current_hitpoints: -1,
             base_hitpoints: -1,
             anim_id: -1,
@@ -98,6 +100,34 @@ impl Player {
             _ => self.lifecycle_tick > tick,
         };
     }
+
+    #[inline]
+    pub fn cleanup(&mut self) {
+        self.walk_dir = -1;
+        self.run_dir = -1;
+        self.jump = false;
+        self.tele = false;
+        self.masks = 0;
+        // self.appearance = vec![];
+        // self.last_appearance = -1;
+        // self.face_entity = -1;
+        self.face_x = -1;
+        self.face_z = -1;
+        // self.orientation_x = -1;
+        // self.orientation_z = -1;
+        self.damage_taken = -1;
+        self.damage_type = -1;
+        self.current_hitpoints = -1;
+        self.base_hitpoints = -1;
+        self.anim_id = -1;
+        self.anim_delay = -1;
+        self.say = None;
+        self.chat = None;
+        self.graphic_id = -1;
+        self.graphic_height = -1;
+        self.graphic_delay = -1;
+        self.exact_move = None;
+    }
 }
 
 impl ExactMove {
@@ -108,7 +138,7 @@ impl ExactMove {
         end_z: i32,
         begin: i32,
         finish: i32,
-        dir: u8
+        dir: i32
     ) -> ExactMove {
         return ExactMove {
             start_x,

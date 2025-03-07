@@ -51,6 +51,7 @@ pub unsafe fn compute_player(
     orientationX: i32,
     orientationZ: i32,
     damageTaken: i32,
+    damageType: i32,
     currentHitpoints: i32,
     baseHitpoints: i32,
     animId: i32,
@@ -69,15 +70,15 @@ pub unsafe fn compute_player(
     exactEndZ: i32,
     exactMoveStart: i32,
     exactMoveEnd: i32,
-    exactMoveDirection: u8,
+    exactMoveDirection: i32,
 ) {
     if pid == -1 {
         return;
     }
 
     if let Some(Some(player)) = PLAYERS.get_mut(pid as usize) {
-        let coord: CoordGrid = CoordGrid::from(x, y, z);
         let origin: CoordGrid = CoordGrid::from(originX, y, originZ);
+        let coord: CoordGrid = CoordGrid::from(x, y, z);
         let exact_move: Option<ExactMove> = match exactStartX {
             -1 => None,
             _ => Some(
@@ -127,6 +128,7 @@ pub unsafe fn compute_player(
         player.orientation_x = orientationX;
         player.orientation_z = orientationZ;
         player.damage_taken = damageTaken;
+        player.damage_type = damageType;
         player.current_hitpoints = currentHitpoints;
         player.base_hitpoints = baseHitpoints;
         player.anim_id = animId;
@@ -176,8 +178,21 @@ pub unsafe fn remove_player(pid: i32) {
     *PLAYERS.as_mut_ptr().add(pid as usize) = None;
 }
 
+#[wasm_bindgen(method, js_name = hasPlayer)]
+pub unsafe fn has_player(me: i32, them: i32) -> bool {
+    if let Some(player) = &mut *PLAYERS.as_mut_ptr().add(me as usize) {
+        return player.build.players.contains(&them);
+    }
+    return false;
+}
+
 #[wasm_bindgen(method, js_name = cleanup)]
 pub unsafe fn cleanup() {
     &PLAYER_GRID.clear();
     &PLAYER_RENDERER.removeTemporary();
+    for player in PLAYERS.iter_mut() {
+        if let Some(player) = player {
+            player.cleanup();
+        }
+    }
 }
