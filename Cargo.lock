@@ -598,7 +598,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rsinfo"
+name = "rsbuf"
 version = "1.0.0"
 dependencies = [
  "criterion",
