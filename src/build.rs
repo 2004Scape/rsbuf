@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 use crate::coord::CoordGrid;
 use crate::player::Player;
-use crate::zone::ZoneMap;
+use crate::grid::ZoneMap;
 
 #[derive(Eq, PartialEq, Clone)]
 pub struct BuildArea {

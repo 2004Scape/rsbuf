@@ -7,7 +7,7 @@ use crate::coord::CoordGrid;
 use crate::info::PlayerInfo;
 use crate::player::{Chat, ExactMove, Player};
 use crate::renderer::PlayerRenderer;
-use crate::zone::ZoneMap;
+use crate::grid::ZoneMap;
 
 mod coord;
 mod player;
@@ -18,7 +18,7 @@ mod prot;
 mod message;
 mod info;
 mod build;
-mod zone;
+mod grid;
 
 static mut PLAYERS: Lazy<Vec<Option<Player>>> = Lazy::new(|| vec![None; 2048]);
 static mut PLAYER_GRID: Lazy<HashMap<u32, HashSet<i32>>> = Lazy::new(|| HashMap::with_capacity(2048));

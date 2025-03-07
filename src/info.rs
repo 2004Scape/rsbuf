@@ -6,7 +6,7 @@ use crate::packet::Packet;
 use crate::player::Player;
 use crate::prot::PlayerInfoProt;
 use crate::renderer::PlayerRenderer;
-use crate::zone::ZoneMap;
+use crate::grid::ZoneMap;
 
 pub struct PlayerInfo {
     pub buf: Packet,
