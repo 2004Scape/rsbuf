@@ -60,7 +60,7 @@ impl PlayerInfo {
         } else {
             self.buf.bytes();
         }
-        return self.buf.data[0..self.buf.pos].to_vec();
+        return unsafe { self.buf.data.get_unchecked(0..self.buf.pos).to_vec() };
     }
 
     #[inline]
@@ -466,7 +466,7 @@ impl NpcInfo {
         } else {
             self.buf.bytes();
         }
-        return self.buf.data[0..self.buf.pos].to_vec();
+        return unsafe { self.buf.data.get_unchecked(0..self.buf.pos).to_vec() };
     }
 
     #[inline]

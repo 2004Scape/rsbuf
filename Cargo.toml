@@ -1,13 +1,14 @@
 [package]
 name = "rsbuf"
-version = "1.0.3"
+version = "225.1.0"
 edition = "2021"
 authors = ["2004Scape"]
 description = "A RuneScape update info computer."
 license = "MIT"
 license-file = "LICENSE.md"
-#repository = "https://github.com/2004scape/rsmod-pathfinder"
-#homepage = "https://github.com/2004scape/rsmod-pathfinder#readme"
+repository = "https://github.com/2004scape/rsbuf"
+homepage = "https://github.com/2004scape/rsbuf#readme"
+readme = "README.md"
 keywords = [
     "runescape",
     "rust",

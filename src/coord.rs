@@ -1,6 +1,6 @@
 use num_traits::real::Real;
 
-#[derive(Eq, Hash, PartialEq, Clone)]
+#[derive(Clone)]
 pub struct CoordGrid {
     pub coord: u32,
 }
@@ -21,11 +21,6 @@ impl CoordGrid {
     }
 
     #[inline]
-    pub fn zone_coord(&self) -> u8 {
-        return (((self.x() & 0x7) as u8) << 4) | ((self.z() & 0x7) as u8);
-    }
-
-    #[inline]
     pub fn y(&self) -> u8 {
         return ((self.coord >> 28) & 0x3) as u8;
     }
@@ -38,35 +33,6 @@ impl CoordGrid {
     #[inline]
     pub fn z(&self) -> u16 {
         return (self.coord & 0x3fff) as u16;
-    }
-
-    #[inline]
-    pub fn distance(&self, other: &CoordGrid) -> u16 {
-        let dx: u16 = (self.x() as i16)
-            .wrapping_sub(other.x() as i16)
-            .unsigned_abs();
-        let dz: u16 = (self.z() as i16)
-            .wrapping_sub(other.z() as i16)
-            .unsigned_abs();
-        return dx.max(dz);
-    }
-
-    #[inline]
-    pub fn movecoord(&self, x: u16, y: u8, z: u16) -> CoordGrid {
-        return CoordGrid::from(
-            self.x().wrapping_add(x),
-            self.y().wrapping_add(y),
-            self.z().wrapping_add(z),
-        );
-    }
-
-    #[inline]
-    pub fn movecoord_other(&self, other: &CoordGrid) -> CoordGrid {
-        return CoordGrid::from(
-            self.x().wrapping_add(other.x()),
-            self.y().wrapping_add(other.y()),
-            self.z().wrapping_add(other.z()),
-        );
     }
 
     #[inline]

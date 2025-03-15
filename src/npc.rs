@@ -1,6 +1,6 @@
 use crate::coord::CoordGrid;
 
-#[derive(Eq, Hash, PartialEq, Clone)]
+#[derive(Clone)]
 pub struct Npc {
     pub coord: CoordGrid,
     pub nid: i32,

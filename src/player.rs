@@ -1,7 +1,7 @@
 use crate::build::BuildArea;
 use crate::coord::CoordGrid;
 
-#[derive(Eq, Hash, PartialEq, Clone)]
+#[derive(Clone)]
 pub struct Player {
     pub coord: CoordGrid,
     pub origin: CoordGrid,
@@ -36,7 +36,7 @@ pub struct Player {
     pub exact_move: Option<ExactMove>,
 }
 
-#[derive(Eq, Hash, PartialEq, Clone)]
+#[derive(Clone)]
 pub struct Chat {
     pub bytes: Vec<u8>,
     pub color: u8,
@@ -44,7 +44,7 @@ pub struct Chat {
     pub ignored: u8,
 }
 
-#[derive(Eq, Hash, PartialEq, Clone)]
+#[derive(Clone)]
 pub struct ExactMove {
     pub start_x: i32,
     pub start_z: i32,

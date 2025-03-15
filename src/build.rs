@@ -5,7 +5,7 @@ use crate::player::Player;
 use crate::grid::ZoneMap;
 use crate::npc::Npc;
 
-#[derive(Eq, PartialEq, Clone)]
+#[derive(Clone)]
 pub struct BuildArea {
     pub players: Vec<i32>,
     pub npcs: Vec<i32>,
@@ -27,7 +27,7 @@ impl BuildArea {
             npcs: Vec::with_capacity(BuildArea::PREFERRED_NPCS as usize),
             appearances: [0; 2048],
             force_view_distance: false,
-            view_distance: 15,
+            view_distance: BuildArea::PREFERRED_VIEW_DISTANCE,
             last_resize: 0,
         }
     }

@@ -1,3 +1,4 @@
+use std::array::from_fn;
 use std::collections::HashMap;
 use crate::message::{InfoMessage, NpcInfoAnim, NpcInfoChangeType, NpcInfoDamage, NpcInfoFaceCoord, NpcInfoFaceEntity, NpcInfoSay, NpcInfoSpotanim, PlayerInfoAnim, PlayerInfoAppearance, PlayerInfoChat, PlayerInfoDamage, PlayerInfoExactMove, PlayerInfoFaceCoord, PlayerInfoFaceEntity, PlayerInfoSay, PlayerInfoSpotanim};
 use crate::npc::Npc;
@@ -13,19 +14,15 @@ pub struct PlayerRenderer {
 
 impl PlayerRenderer {
     pub fn new() -> PlayerRenderer {
-        fn empty_array() -> [Option<Vec<u8>>; 2048] {
-            return std::array::from_fn(|_| None)
-        }
-
-        let mut caches: HashMap<PlayerInfoProt, [Option<Vec<u8>>; 2048]> = HashMap::with_capacity(10);
-        caches.insert(PlayerInfoProt::Appearance, empty_array());
-        caches.insert(PlayerInfoProt::Anim, empty_array());
-        caches.insert(PlayerInfoProt::FaceEntity, empty_array());
-        caches.insert(PlayerInfoProt::Say, empty_array());
-        caches.insert(PlayerInfoProt::Damage, empty_array());
-        caches.insert(PlayerInfoProt::FaceCoord, empty_array());
-        caches.insert(PlayerInfoProt::Chat, empty_array());
-        caches.insert(PlayerInfoProt::SpotAnim, empty_array());
+        let mut caches: HashMap<PlayerInfoProt, [Option<Vec<u8>>; 2048]> = HashMap::with_capacity(8);
+        caches.insert(PlayerInfoProt::Appearance, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::Anim, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::FaceEntity, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::Say, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::Damage, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::FaceCoord, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::Chat, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::SpotAnim, from_fn(|_| None));
         // exact move does not get cached, that is built on demand.
         return PlayerRenderer {
             caches,
@@ -159,7 +156,7 @@ impl PlayerRenderer {
 
     #[inline]
     pub fn cache(&mut self, id: i32, message: &dyn InfoMessage, prot: PlayerInfoProt) -> usize {
-        let cache: &mut [Option<Vec<u8>>; 2048] = self.caches.get_mut(&prot).expect("");
+        let cache: &mut [Option<Vec<u8>>; 2048] = self.caches.get_mut(&prot).expect("[PlayerRenderer] Prot not found in cache!");
         unsafe {
             if (*cache.as_ptr().add(id as usize)).is_some() && !message.persists() {
                 return 0;
@@ -170,12 +167,12 @@ impl PlayerRenderer {
 
     #[inline]
     pub fn write(&self, buf: &mut Packet, id: i32, prot: PlayerInfoProt) {
-        let cache: &[Option<Vec<u8>>; 2048] = self.caches.get(&prot).expect("");
+        let cache: &[Option<Vec<u8>>; 2048] = self.caches.get(&prot).expect("[PlayerRenderer] Prot not found in cache for write!");
         unsafe {
             if let Some(bytes) = &*cache.as_ptr().add(id as usize) {
-                self.write_block(buf, bytes, id);
+                buf.pdata(bytes, 0, bytes.len());
             } else {
-                panic!("Tried to write a buf not cached!");
+                panic!("[PlayerRenderer] Tried to write a buf not cached!");
             }
         }
     }
@@ -225,12 +222,6 @@ impl PlayerRenderer {
         }
     }
 
-    #[inline]
-    fn write_block(&self, buf: &mut Packet, messages: &Vec<u8>, id: i32) {
-        // let bytes = messages.get(id as usize).and_then(|opt| opt.as_ref()).expect("Tried to write empty block!");
-        buf.pdata(messages, 0, messages.len());
-    }
-
     // ----
 
     #[inline]
@@ -260,18 +251,14 @@ pub struct NpcRenderer {
 
 impl NpcRenderer {
     pub fn new() -> NpcRenderer {
-        fn empty_array() -> [Option<Vec<u8>>; 8192] {
-            return std::array::from_fn(|_| None)
-        }
-
-        let mut caches: HashMap<NpcInfoProt, [Option<Vec<u8>>; 8192]> = HashMap::with_capacity(10);
-        caches.insert(NpcInfoProt::Anim, empty_array());
-        caches.insert(NpcInfoProt::FaceEntity, empty_array());
-        caches.insert(NpcInfoProt::Say, empty_array());
-        caches.insert(NpcInfoProt::Damage, empty_array());
-        caches.insert(NpcInfoProt::ChangeType, empty_array());
-        caches.insert(NpcInfoProt::SpotAnim, empty_array());
-        caches.insert(NpcInfoProt::FaceCoord, empty_array());
+        let mut caches: HashMap<NpcInfoProt, [Option<Vec<u8>>; 8192]> = HashMap::with_capacity(7);
+        caches.insert(NpcInfoProt::Anim, from_fn(|_| None));
+        caches.insert(NpcInfoProt::FaceEntity, from_fn(|_| None));
+        caches.insert(NpcInfoProt::Say, from_fn(|_| None));
+        caches.insert(NpcInfoProt::Damage, from_fn(|_| None));
+        caches.insert(NpcInfoProt::ChangeType, from_fn(|_| None));
+        caches.insert(NpcInfoProt::SpotAnim, from_fn(|_| None));
+        caches.insert(NpcInfoProt::FaceCoord, from_fn(|_| None));
         return NpcRenderer {
             caches,
             highs: [0; 8192],
@@ -367,7 +354,7 @@ impl NpcRenderer {
 
     #[inline]
     pub fn cache(&mut self, id: i32, message: &dyn InfoMessage, prot: NpcInfoProt) -> usize {
-        let cache: &mut [Option<Vec<u8>>; 8192] = self.caches.get_mut(&prot).expect("");
+        let cache: &mut [Option<Vec<u8>>; 8192] = self.caches.get_mut(&prot).expect("[NpcRenderer] Prot not found in cache for write!");
         unsafe {
             if (*cache.as_ptr().add(id as usize)).is_some() && !message.persists() {
                 return 0;
@@ -378,12 +365,12 @@ impl NpcRenderer {
 
     #[inline]
     pub fn write(&self, buf: &mut Packet, id: i32, prot: NpcInfoProt) {
-        let cache: &[Option<Vec<u8>>; 8192] = self.caches.get(&prot).expect("");
+        let cache: &[Option<Vec<u8>>; 8192] = self.caches.get(&prot).expect("[NpcRenderer] Prot not found in cache for write!");
         unsafe {
             if let Some(bytes) = &*cache.as_ptr().add(id as usize) {
-                self.write_block(buf, bytes, id);
+                buf.pdata(bytes, 0, bytes.len());
             } else {
-                panic!("Tried to write a buf not cached!");
+                panic!("[NpcRenderer] Tried to write a buf not cached!");
             }
         }
     }
@@ -428,12 +415,6 @@ impl NpcRenderer {
             *self.highs.as_mut_ptr().add(id as usize) = 0;
             *self.lows.as_mut_ptr().add(id as usize) = 0;
         }
-    }
-
-    #[inline]
-    fn write_block(&self, buf: &mut Packet, messages: &Vec<u8>, id: i32) {
-        // let bytes = messages.get(id as usize).and_then(|opt| opt.as_ref()).expect("Tried to write empty block!");
-        buf.pdata(messages, 0, messages.len());
     }
 
     // ----
