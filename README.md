@@ -2,6 +2,14 @@
 
 ----
 
+## ✨ Installing
+
+> 🔗 https://www.npmjs.com/package/@2004scape/rsbuf
+>
+> `npm i @2004scape/rsbuf`
+
+----
+
 ## Contributor Notes
 
 ```shell
