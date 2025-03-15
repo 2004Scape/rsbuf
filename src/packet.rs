@@ -984,7 +984,7 @@ impl Packet {
         let mut result: u8 = 0;
 
         while n > remaining {
-            result |= (unsafe { self.data.get_unchecked(byte_pos) } & (1 << remaining) - 1)
+            result |= (unsafe { *self.data.as_ptr().add(byte_pos) } & (1 << remaining) - 1)
                 << (n - remaining);
             byte_pos += 1;
             n -= remaining;
@@ -992,10 +992,10 @@ impl Packet {
         }
 
         if n == remaining {
-            result |= unsafe { self.data.get_unchecked(byte_pos) } & (1 << remaining) - 1;
+            result |= unsafe { *self.data.as_ptr().add(byte_pos) } & (1 << remaining) - 1;
         } else {
             result |=
-                (unsafe { self.data.get_unchecked(byte_pos) } >> (remaining - n)) & (1 << n) - 1;
+                (unsafe { *self.data.as_ptr().add(byte_pos) } >> (remaining - n)) & (1 << n) - 1;
         }
         return result as i32;
     }
@@ -1044,9 +1044,9 @@ impl Packet {
 
         while n > remaining {
             let shift: i32 = ((1 << remaining) - 1) as i32;
-            let byte: i32 = unsafe { *self.data.get_unchecked(byte_pos) } as i32;
+            let byte: i32 = unsafe { *self.data.as_ptr().add(byte_pos) } as i32;
             unsafe {
-                *self.data.get_unchecked_mut(byte_pos) =
+                *self.data.as_mut_ptr().add(byte_pos) =
                     ((byte & !shift) | ((val >> (n - remaining)) & shift)) as u8
             }
             byte_pos += 1;
@@ -1056,9 +1056,9 @@ impl Packet {
 
         let r: i32 = (remaining - n) as i32;
         let shift: i32 = (1 << n) - 1;
-        let byte: i32 = unsafe { *self.data.get_unchecked(byte_pos) } as i32;
+        let byte: i32 = unsafe { *self.data.as_ptr().add(byte_pos) } as i32;
         unsafe {
-            *self.data.get_unchecked_mut(byte_pos) = ((byte & (!shift << r)) | ((val & shift) << r)) as u8
+            *self.data.as_mut_ptr().add(byte_pos) = ((byte & (!shift << r)) | ((val & shift) << r)) as u8
         }
     }
 

@@ -117,15 +117,15 @@ impl PlayerInfo {
                     } else {
                         let len: usize = renderer.highdefinitions(pid);
                         if other.run_dir != -1 {
-                            self.run(renderer, player, other, len > 0 && self.fits(bytes, 1 + 2 + 3 + 3 + 1, len));
+                            self.run(renderer, player, other, len > 0 && self.fits(bytes + 2, 1 + 2 + 3 + 3 + 1, len));
                         } else if other.walk_dir != -1 {
-                            self.walk(renderer, player, other, len > 0 && self.fits(bytes, 1 + 2 + 3 + 1, len));
-                        } else if len > 0 && self.fits(bytes, 1 + 2, len) {
+                            self.walk(renderer, player, other, len > 0 && self.fits(bytes + 2, 1 + 2 + 3 + 1, len));
+                        } else if len > 0 && self.fits(bytes + 2, 1 + 2, len) {
                             self.extend(renderer, player, other);
                         } else {
                             self.idle();
                         }
-                        bytes += len;
+                        bytes += len + 2;
                     }
                 } else {
                     self.remove(player, pid);
@@ -158,12 +158,12 @@ impl PlayerInfo {
                 if other.visibility != 2 {
                     let len: usize = renderer.lowdefinitions(pid) + renderer.highdefinitions(pid);
                     // bits to add player + extended info size + bits to break loop (11)
-                    if !self.fits(bytes, 11 + 5 + 5 + 1 + 1 + 11, len) {
+                    if !self.fits(bytes + 2, 11 + 5 + 5 + 1 + 1 + 11, len) {
                         // more players get added next tick
                         return;
                     }
                     self.add(renderer, player, other, other.pid, other.coord.x() as i32 - player.coord.x() as i32, other.coord.z() as i32 - player.coord.z() as i32, other.jump);
-                    bytes += len;
+                    bytes += len + 2;
                 }
             }
         }
@@ -493,15 +493,15 @@ impl NpcInfo {
                     } else {
                         let len: usize = renderer.highdefinitions(nid);
                         if other.run_dir != -1 {
-                            self.run(renderer, other, len > 0 && self.fits(bytes, 1 + 2 + 3 + 3 + 1, len));
+                            self.run(renderer, other, len > 0 && self.fits(bytes + 1, 1 + 2 + 3 + 3 + 1, len));
                         } else if other.walk_dir != -1 {
-                            self.walk(renderer, other, len > 0 && self.fits(bytes, 1 + 2 + 3 + 1, len));
-                        } else if len > 0 && self.fits(bytes, 1 + 2, len) {
+                            self.walk(renderer, other, len > 0 && self.fits(bytes + 1, 1 + 2 + 3 + 1, len));
+                        } else if len > 0 && self.fits(bytes + 1, 1 + 2, len) {
                             self.extend(renderer, other);
                         } else {
                             self.idle();
                         }
-                        bytes += len;
+                        bytes += len + 1;
                     }
                 } else {
                     self.remove(player, nid);
@@ -533,12 +533,12 @@ impl NpcInfo {
             if let Some(other) = unsafe { &*npcs.as_ptr().add(nid as usize) } {
                 let len: usize = renderer.lowdefinitions(nid) + renderer.highdefinitions(nid);
                 // bits to add npc + extended info size + bits to break loop (13)
-                if !self.fits(bytes, 13 + 11 + 5 + 5 + 1 + 13, len) {
+                if !self.fits(bytes + 1, 13 + 11 + 5 + 5 + 1 + 13, len) {
                     // more npcs get added next tick
                     return;
                 }
                 self.add(renderer, player, other, other.nid, other.ntype, other.coord.x() as i32 - player.coord.x() as i32, other.coord.z() as i32 - player.coord.z() as i32);
-                bytes += len;
+                bytes += len + 1;
             }
         }
     }
