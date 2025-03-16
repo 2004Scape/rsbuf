@@ -12,7 +12,7 @@ pub struct IdBitSet {
 }
 
 impl IdBitSet {
-    fn new(len: usize, capacity: usize) -> IdBitSet {
+    pub fn new(len: usize, capacity: usize) -> IdBitSet {
         return IdBitSet {
             bits: vec![0; len / 32],
             ids: Vec::with_capacity(capacity),
@@ -24,13 +24,21 @@ impl IdBitSet {
     }
 
     pub fn insert(&mut self, id: i32) {
+        if self.contains(id) {
+            return;
+        }
         unsafe { *self.bits.as_mut_ptr().add((id >> 5) as usize) |= 1 << (id & 0x1f) };
         self.ids.push(id);
     }
 
     pub fn remove(&mut self, id: i32) {
+        if !self.contains(id) {
+            return;
+        }
         unsafe { *self.bits.as_mut_ptr().add((id >> 5) as usize) &= !(1 << (id & 0x1f)) };
-        self.ids.retain(|&x| x != id);
+        if let Some(index) = self.ids.iter().position(|&x| x == id) {
+            self.ids.remove(index);
+        }
     }
 
     pub fn len(&self) -> usize {

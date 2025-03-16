@@ -10,15 +10,15 @@ use crate::renderer::{NpcRenderer, PlayerRenderer};
 use crate::grid::ZoneMap;
 use crate::npc::Npc;
 
-mod coord;
-mod player;
-
 pub mod packet;
 pub mod renderer;
+pub mod build;
+
+mod coord;
+mod player;
 mod prot;
 mod message;
 mod info;
-mod build;
 mod grid;
 mod npc;
 

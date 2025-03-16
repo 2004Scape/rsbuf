@@ -1,6 +1,6 @@
 [package]
 name = "rsbuf"
-version = "225.1.2"
+version = "225.1.3"
 edition = "2021"
 authors = ["2004Scape"]
 description = "A RuneScape update info computer."
@@ -34,6 +34,10 @@ crate-type = ["cdylib", "lib"]
 
 [[bench]]
 name = "packet"
+harness = false
+
+[[bench]]
+name = "build"
 harness = false
 
 [profile.release]
