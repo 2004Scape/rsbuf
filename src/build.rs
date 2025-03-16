@@ -6,9 +6,51 @@ use crate::grid::ZoneMap;
 use crate::npc::Npc;
 
 #[derive(Clone)]
+pub struct IdBitSet {
+    bits: Vec<i32>,
+    ids: Vec<i32>,
+}
+
+impl IdBitSet {
+    fn new(len: usize, capacity: usize) -> IdBitSet {
+        return IdBitSet {
+            bits: vec![0; len / 32],
+            ids: Vec::with_capacity(capacity),
+        }
+    }
+
+    pub fn contains(&self, id: i32) -> bool {
+        return unsafe { *self.bits.as_ptr().add((id >> 5) as usize) & (1 << (id & 0x1f)) != 0 };
+    }
+
+    pub fn insert(&mut self, id: i32) {
+        unsafe { *self.bits.as_mut_ptr().add((id >> 5) as usize) |= 1 << (id & 0x1f) };
+        self.ids.push(id);
+    }
+
+    pub fn remove(&mut self, id: i32) {
+        unsafe { *self.bits.as_mut_ptr().add((id >> 5) as usize) &= !(1 << (id & 0x1f)) };
+        self.ids.retain(|&x| x != id);
+    }
+
+    pub fn len(&self) -> usize {
+        return self.ids.len();
+    }
+
+    pub fn as_ptr(&self) -> *const i32 {
+        return self.ids.as_ptr();
+    }
+
+    fn clear(&mut self) {
+        self.bits.fill(0);
+        self.ids.clear();
+    }
+}
+
+#[derive(Clone)]
 pub struct BuildArea {
-    pub players: Vec<i32>,
-    pub npcs: Vec<i32>,
+    pub players: IdBitSet,
+    pub npcs: IdBitSet,
     appearances: [u32; 2048],
     force_view_distance: bool,
     pub view_distance: u8,
@@ -23,8 +65,8 @@ impl BuildArea {
 
     pub fn new() -> BuildArea {
         return BuildArea {
-            players: Vec::with_capacity(BuildArea::PREFERRED_PLAYERS as usize),
-            npcs: Vec::with_capacity(BuildArea::PREFERRED_NPCS as usize),
+            players: IdBitSet::new(2048, BuildArea::PREFERRED_PLAYERS as usize), // 64 bitset
+            npcs: IdBitSet::new(8192, BuildArea::PREFERRED_NPCS as usize), // 256 bitset
             appearances: [0; 2048],
             force_view_distance: false,
             view_distance: BuildArea::PREFERRED_VIEW_DISTANCE,
@@ -249,7 +291,7 @@ impl BuildArea {
         z: u16
     ) -> bool {
         if let Some(other) = unsafe { &*players.as_ptr().add(player as usize) } {
-            return !(self.players.contains(&player) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), self.view_distance) || other.pid == -1 || other.pid == pid || other.coord.y() != y);
+            return !(self.players.contains(player) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), self.view_distance) || other.pid == -1 || other.pid == pid || other.coord.y() != y);
         }
         return false;
     }
@@ -265,7 +307,7 @@ impl BuildArea {
         z: u16
     ) -> bool {
         if let Some(other) = unsafe { &*npcs.as_ptr().add(npc as usize) } {
-            return !(self.npcs.contains(&npc) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), BuildArea::PREFERRED_VIEW_DISTANCE) || other.nid == -1 || other.coord.y() != y || !other.check_life_cycle(tick));
+            return !(self.npcs.contains(npc) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), BuildArea::PREFERRED_VIEW_DISTANCE) || other.nid == -1 || other.coord.y() != y || !other.check_life_cycle(tick));
         }
         return false;
     }

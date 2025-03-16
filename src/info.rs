@@ -148,7 +148,7 @@ impl PlayerInfo {
         mut bytes: usize
     ) {
         for pid in player.build.get_nearby_players(players, grid, map, player.pid, player.coord.x(), player.coord.y(), player.coord.z()) {
-            if player.build.players.contains(&pid) {
+            if player.build.players.contains(pid) {
                 continue;
             }
             if player.build.players.len() >= BuildArea::PREFERRED_PLAYERS as usize {
@@ -186,7 +186,7 @@ impl PlayerInfo {
         self.buf.pbit(1, if jump { 1 } else { 0 });
         self.buf.pbit(1, 1); // extend
         self.lowdefinition(renderer, player, other);
-        player.build.players.push(other.pid);
+        player.build.players.insert(other.pid);
     }
 
     #[inline]
@@ -197,7 +197,7 @@ impl PlayerInfo {
     ) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 3);
-        player.build.players.retain(|&pid| pid != other);
+        player.build.players.remove(other);
     }
 
     #[inline]
@@ -524,7 +524,7 @@ impl NpcInfo {
         mut bytes: usize
     ) {
         for nid in player.build.get_nearby_npcs(tick, npcs, map, player.coord.x(), player.coord.y(), player.coord.z()) {
-            if player.build.npcs.contains(&nid) {
+            if player.build.npcs.contains(nid) {
                 continue;
             }
             if player.build.npcs.len() >= BuildArea::PREFERRED_NPCS as usize {
@@ -560,7 +560,7 @@ impl NpcInfo {
         self.buf.pbit(5, z);
         self.buf.pbit(1, 1); // extend
         self.lowdefinition(renderer, other);
-        player.build.npcs.push(other.nid);
+        player.build.npcs.insert(other.nid);
     }
 
     #[inline]
@@ -571,7 +571,7 @@ impl NpcInfo {
     ) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 3);
-        player.build.npcs.retain(|&nid| nid != other);
+        player.build.npcs.remove(other);
     }
 
     #[inline]

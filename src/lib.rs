@@ -197,8 +197,11 @@ pub unsafe fn remove_player(pid: i32) {
 
 #[wasm_bindgen(method, js_name = hasPlayer)]
 pub unsafe fn has_player(pid: i32, other: i32) -> bool {
+    if pid == -1 || other == -1 {
+        return false;
+    }
     if let Some(player) = &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        return player.build.players.contains(&other);
+        return player.build.players.contains(other);
     }
     return false;
 }
@@ -304,8 +307,11 @@ pub unsafe fn remove_npc(nid: i32) {
 
 #[wasm_bindgen(method, js_name = hasNpc)]
 pub unsafe fn has_npc(pid: i32, nid: i32) -> bool {
+    if pid == -1 || nid == -1 {
+        return false;
+    }
     if let Some(player) = &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        return player.build.npcs.contains(&nid);
+        return player.build.npcs.contains(nid);
     }
     return false;
 }
