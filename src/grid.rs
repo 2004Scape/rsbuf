@@ -6,6 +6,7 @@ pub struct Zone {
 }
 
 impl Zone {
+    #[inline]
     pub fn new() -> Zone {
         return Zone {
             players: Vec::new(),
@@ -35,6 +36,7 @@ pub struct ZoneMap {
 }
 
 impl ZoneMap {
+    #[inline]
     pub fn new() -> ZoneMap {
         return ZoneMap {
             zones: HashMap::with_capacity(0xffffff),

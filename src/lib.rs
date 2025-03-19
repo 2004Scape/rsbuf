@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 use std::collections::{HashMap, HashSet};
+use std::ptr::{addr_of, addr_of_mut};
 use once_cell::sync::Lazy;
 use wasm_bindgen::prelude::wasm_bindgen;
 use crate::coord::CoordGrid;
@@ -9,6 +10,7 @@ use crate::player::{Chat, ExactMove, Player};
 use crate::renderer::{NpcRenderer, PlayerRenderer};
 use crate::grid::ZoneMap;
 use crate::npc::Npc;
+use crate::visibility::Visibility;
 
 pub mod packet;
 pub mod renderer;
@@ -21,6 +23,7 @@ mod message;
 mod info;
 mod grid;
 mod npc;
+mod visibility;
 
 static mut PLAYERS: Lazy<Vec<Option<Player>>> = Lazy::new(|| vec![None; 2048]);
 static mut PLAYER_GRID: Lazy<HashMap<u32, HashSet<i32>>> = Lazy::new(|| HashMap::with_capacity(2048));
@@ -33,7 +36,7 @@ static mut NPC_INFO: Lazy<NpcInfo> = Lazy::new(NpcInfo::new);
 
 static mut ZONE_MAP: Lazy<ZoneMap> = Lazy::new(ZoneMap::new);
 
-#[wasm_bindgen(method, js_name = computePlayer)]
+#[wasm_bindgen(js_name = computePlayer)]
 pub unsafe fn compute_player(
     x: u16,
     y: u8,
@@ -45,9 +48,8 @@ pub unsafe fn compute_player(
     jump: bool,
     runDir: i8,
     walkDir: i8,
-    visibility: u8,
-    lifecycle: u8,
-    lifecycleTick: i32,
+    visibility: Visibility,
+    active: bool,
     masks: u32,
     appearance: Vec<u8>,
     lastAppearance: i32,
@@ -112,8 +114,8 @@ pub unsafe fn compute_player(
         };
 
         if coord.coord != player.coord.coord {
-            &ZONE_MAP.zone(player.coord.x(), player.coord.y(), player.coord.z()).remove_player(pid);
-            &ZONE_MAP.zone(coord.x(), coord.y(), coord.z()).add_player(pid);
+            ZONE_MAP.zone(player.coord.x(), player.coord.y(), player.coord.z()).remove_player(pid);
+            ZONE_MAP.zone(coord.x(), coord.y(), coord.z()).add_player(pid);
         }
 
         player.coord = coord;
@@ -123,8 +125,7 @@ pub unsafe fn compute_player(
         player.run_dir = runDir;
         player.walk_dir = walkDir;
         player.visibility = visibility;
-        player.lifecycle = lifecycle;
-        player.lifecycle_tick = lifecycleTick;
+        player.active = active;
         player.masks = masks;
         player.appearance = appearance;
         player.last_appearance = lastAppearance;
@@ -146,25 +147,24 @@ pub unsafe fn compute_player(
         player.graphic_delay = graphicDelay;
         player.exact_move = exact_move;
 
-        &PLAYER_RENDERER.compute_info(&player);
-        &PLAYER_GRID.entry(player.coord.coord).or_insert_with(HashSet::new).insert(pid);
+        PLAYER_RENDERER.compute_info(&player);
+        PLAYER_GRID.entry(player.coord.coord).or_insert_with(HashSet::new).insert(pid);
     }
 }
 
-#[wasm_bindgen(method, js_name = playerInfo)]
-pub unsafe fn player_info(tick: u32, pos: usize, pid: i32, dx: i32, dz: i32, rebuild: bool) -> Vec<u8> {
+#[wasm_bindgen(js_name = playerInfo)]
+pub unsafe fn player_info(pos: usize, pid: i32, dx: i32, dz: i32, rebuild: bool) -> Vec<u8> {
     if pid == -1 {
         return vec![];
     }
 
     if let Some(Some(ref mut player)) = PLAYERS.get_mut(pid as usize) {
         return PLAYER_INFO.encode(
-            tick,
             pos,
-            &mut PLAYER_RENDERER,
-            &PLAYERS,
-            &mut ZONE_MAP,
-            &PLAYER_GRID,
+            &mut **addr_of_mut!(PLAYER_RENDERER),
+            &**addr_of!(PLAYERS),
+            &mut **addr_of_mut!(ZONE_MAP),
+            &**addr_of!(PLAYER_GRID),
             player,
             dx,
             dz,
@@ -175,7 +175,7 @@ pub unsafe fn player_info(tick: u32, pos: usize, pid: i32, dx: i32, dz: i32, reb
     return vec![];
 }
 
-#[wasm_bindgen(method, js_name = addPlayer)]
+#[wasm_bindgen(js_name = addPlayer)]
 pub unsafe fn add_player(pid: i32) {
     if pid == -1 {
         return;
@@ -183,19 +183,34 @@ pub unsafe fn add_player(pid: i32) {
     *PLAYERS.as_mut_ptr().add(pid as usize) = Some(Player::new(pid));
 }
 
-#[wasm_bindgen(method, js_name = removePlayer)]
+#[wasm_bindgen(js_name = removePlayer)]
 pub unsafe fn remove_player(pid: i32) {
     if pid == -1 {
         return;
     }
-    &PLAYER_RENDERER.removePermanent(pid);
+    PLAYER_RENDERER.removePermanent(pid);
     if let Some(player) = &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
+        let len: usize = player.build.players.len();
+        let mut index: usize = 0;
+        while index < len {
+            if index >= player.build.players.len() {
+                break;
+            }
+            match unsafe { *player.build.npcs.as_ptr().add(index) } {
+                nid => {
+                    if let Some(npc) = unsafe { &mut *NPCS.as_mut_ptr().add(nid as usize) } {
+                        npc.observers = (npc.observers - 1).max(0);
+                    }
+                }
+            }
+            index += 1;
+        }
         player.build.cleanup();
     }
     *PLAYERS.as_mut_ptr().add(pid as usize) = None;
 }
 
-#[wasm_bindgen(method, js_name = hasPlayer)]
+#[wasm_bindgen(js_name = hasPlayer)]
 pub unsafe fn has_player(pid: i32, other: i32) -> bool {
     if pid == -1 || other == -1 {
         return false;
@@ -206,7 +221,7 @@ pub unsafe fn has_player(pid: i32, other: i32) -> bool {
     return false;
 }
 
-#[wasm_bindgen(method, js_name = computeNpc)]
+#[wasm_bindgen(js_name = computeNpc)]
 pub unsafe fn compute_npc(
     x: u16,
     y: u8,
@@ -216,8 +231,7 @@ pub unsafe fn compute_npc(
     tele: bool,
     runDir: i8,
     walkDir: i8,
-    lifecycle: u8,
-    lifecycleTick: i32,
+    active: bool,
     masks: u32,
     faceEntity: i32,
     faceX: i32,
@@ -243,8 +257,8 @@ pub unsafe fn compute_npc(
         let coord: CoordGrid = CoordGrid::from(x, y, z);
 
         if coord.coord != npc.coord.coord {
-            &ZONE_MAP.zone(npc.coord.x(), npc.coord.y(), npc.coord.z()).remove_npc(nid);
-            &ZONE_MAP.zone(coord.x(), coord.y(), coord.z()).add_npc(nid);
+            ZONE_MAP.zone(npc.coord.x(), npc.coord.y(), npc.coord.z()).remove_npc(nid);
+            ZONE_MAP.zone(coord.x(), coord.y(), coord.z()).add_npc(nid);
         }
 
         npc.ntype = ntype;
@@ -252,8 +266,7 @@ pub unsafe fn compute_npc(
         npc.tele = tele;
         npc.run_dir = runDir;
         npc.walk_dir = walkDir;
-        npc.lifecycle = lifecycle;
-        npc.lifecycle_tick = lifecycleTick;
+        npc.active = active;
         npc.masks = masks;
         npc.face_entity = faceEntity;
         npc.face_x = faceX;
@@ -271,24 +284,33 @@ pub unsafe fn compute_npc(
         npc.graphic_height = graphicHeight;
         npc.graphic_delay = graphicDelay;
 
-        &NPC_RENDERER.compute_info(&npc);
+        NPC_RENDERER.compute_info(&npc);
     }
 }
 
-#[wasm_bindgen(method, js_name = npcInfo)]
-pub unsafe fn npc_info(tick: u32, pos: usize, pid: i32, dx: i32, dz: i32, rebuild: bool) -> Vec<u8> {
+#[wasm_bindgen(js_name = npcInfo)]
+pub unsafe fn npc_info(pos: usize, pid: i32, dx: i32, dz: i32, rebuild: bool) -> Vec<u8> {
     if pid == -1 {
         return vec![];
     }
 
     if let Some(Some(ref mut player)) = PLAYERS.get_mut(pid as usize) {
-        return NPC_INFO.encode(tick, pos, &mut NPC_RENDERER, &NPCS, &mut ZONE_MAP, player, dx, dz, rebuild);
+        return NPC_INFO.encode(
+            pos,
+            &mut **addr_of_mut!(NPC_RENDERER),
+            &mut **addr_of_mut!(NPCS),
+            &mut **addr_of_mut!(ZONE_MAP),
+            player,
+            dx,
+            dz,
+            rebuild
+        );
     }
 
     return vec![];
 }
 
-#[wasm_bindgen(method, js_name = addNpc)]
+#[wasm_bindgen(js_name = addNpc)]
 pub unsafe fn add_npc(nid: i32, ntype: i32) {
     if nid == -1 || ntype == -1 {
         return;
@@ -296,16 +318,16 @@ pub unsafe fn add_npc(nid: i32, ntype: i32) {
     *NPCS.as_mut_ptr().add(nid as usize) = Some(Npc::new(nid, ntype));
 }
 
-#[wasm_bindgen(method, js_name = removeNpc)]
+#[wasm_bindgen(js_name = removeNpc)]
 pub unsafe fn remove_npc(nid: i32) {
     if nid == -1 {
         return;
     }
-    &NPC_RENDERER.removePermanent(nid);
+    NPC_RENDERER.removePermanent(nid);
     *NPCS.as_mut_ptr().add(nid as usize) = None;
 }
 
-#[wasm_bindgen(method, js_name = hasNpc)]
+#[wasm_bindgen(js_name = hasNpc)]
 pub unsafe fn has_npc(pid: i32, nid: i32) -> bool {
     if pid == -1 || nid == -1 {
         return false;
@@ -316,11 +338,22 @@ pub unsafe fn has_npc(pid: i32, nid: i32) -> bool {
     return false;
 }
 
-#[wasm_bindgen(method, js_name = cleanup)]
+#[wasm_bindgen(js_name = getNpcObservers)]
+pub unsafe fn get_npc_observers(nid: i32) -> i32 {
+    if nid == -1 {
+        return 0;
+    }
+    if let Some(npc) = &*NPCS.as_ptr().add(nid as usize) {
+        return npc.observers as i32;
+    }
+    return 0;
+}
+
+#[wasm_bindgen(js_name = cleanup)]
 pub unsafe fn cleanup() {
-    &PLAYER_GRID.clear();
-    &PLAYER_RENDERER.removeTemporary();
-    &NPC_RENDERER.removeTemporary();
+    PLAYER_GRID.clear();
+    PLAYER_RENDERER.removeTemporary();
+    NPC_RENDERER.removeTemporary();
     for player in PLAYERS.iter_mut() {
         if let Some(player) = player {
             player.cleanup();
@@ -333,7 +366,7 @@ pub unsafe fn cleanup() {
     }
 }
 
-#[wasm_bindgen(method, js_name = cleanupPlayerBuildArea)]
+#[wasm_bindgen(js_name = cleanupPlayerBuildArea)]
 pub unsafe fn cleanup_player_buildarea(pid: i32) {
     if pid == -1 {
         return;

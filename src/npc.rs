@@ -8,8 +8,7 @@ pub struct Npc {
     pub tele: bool,
     pub run_dir: i8,
     pub walk_dir: i8,
-    pub lifecycle: u8,
-    pub lifecycle_tick: i32,
+    pub active: bool,
     pub masks: u32,
     pub face_entity: i32,
     pub face_x: i32,
@@ -26,10 +25,12 @@ pub struct Npc {
     pub graphic_id: i32,
     pub graphic_height: i32,
     pub graphic_delay: i32,
+    pub observers: usize,
 }
 
 impl Npc {
-    pub fn new(nid: i32, ntype: i32) -> Self {
+    #[inline]
+    pub fn new(nid: i32, ntype: i32) -> Npc {
         return Npc {
             coord: CoordGrid::from(0, 0, 0),
             nid,
@@ -37,8 +38,7 @@ impl Npc {
             tele: false,
             run_dir: -1,
             walk_dir: -1,
-            lifecycle: 0,
-            lifecycle_tick: 0,
+            active: false,
             masks: 0,
             face_entity: -1,
             face_x: -1,
@@ -55,16 +55,8 @@ impl Npc {
             graphic_id: -1,
             graphic_height: -1,
             graphic_delay: -1,
+            observers: 0,
         }
-    }
-
-    #[inline]
-    pub fn check_life_cycle(&self, tick: u32) -> bool {
-        return match self.lifecycle {
-            0 => true,
-            1 => self.lifecycle_tick < tick as i32,
-            _ => self.lifecycle_tick > tick as i32,
-        };
     }
 
     #[inline]

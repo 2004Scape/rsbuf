@@ -1,5 +1,6 @@
 use crate::build::BuildArea;
 use crate::coord::CoordGrid;
+use crate::visibility::Visibility;
 
 #[derive(Clone)]
 pub struct Player {
@@ -10,9 +11,8 @@ pub struct Player {
     pub jump: bool,
     pub run_dir: i8,
     pub walk_dir: i8,
-    pub visibility: u8,
-    pub lifecycle: u8,
-    pub lifecycle_tick: i32,
+    pub visibility: Visibility,
+    pub active: bool,
     pub build: BuildArea,
     pub masks: u32,
     pub appearance: Vec<u8>,
@@ -56,6 +56,7 @@ pub struct ExactMove {
 }
 
 impl Player {
+    #[inline]
     pub fn new(pid: i32) -> Player {
         return Player {
             coord: CoordGrid::from(0, 0, 0),
@@ -65,9 +66,8 @@ impl Player {
             jump: false,
             run_dir: -1,
             walk_dir: -1,
-            visibility: 0,
-            lifecycle: 0,
-            lifecycle_tick: 0,
+            visibility: Visibility::DEFAULT,
+            active: false,
             build: BuildArea::new(),
             masks: 0,
             appearance: vec![],
@@ -90,15 +90,6 @@ impl Player {
             graphic_delay: -1,
             exact_move: None,
         }
-    }
-
-    #[inline]
-    pub fn check_life_cycle(&self, tick: u32) -> bool {
-        return match self.lifecycle {
-            0 => true,
-            1 => self.lifecycle_tick < tick as i32,
-            _ => self.lifecycle_tick > tick as i32,
-        };
     }
 
     #[inline]
@@ -131,6 +122,7 @@ impl Player {
 }
 
 impl ExactMove {
+    #[inline]
     pub fn new(
         start_x: i32,
         start_z: i32,
@@ -153,6 +145,7 @@ impl ExactMove {
 }
 
 impl Chat {
+    #[inline]
     pub fn new(
         bytes: Vec<u8>,
         color: u8,

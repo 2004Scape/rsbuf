@@ -24,6 +24,7 @@ impl Packet {
     ///
     /// let packet: Packet = Packet::new(5);
     /// ```
+    #[inline]
     pub fn new(len: usize) -> Packet {
         return Packet {
             data: vec![0; len],

@@ -12,6 +12,7 @@ pub struct IdBitSet {
 }
 
 impl IdBitSet {
+    #[inline]
     pub fn new(len: usize, capacity: usize) -> IdBitSet {
         return IdBitSet {
             bits: vec![0; len / 32],
@@ -19,10 +20,12 @@ impl IdBitSet {
         }
     }
 
+    #[inline]
     pub fn contains(&self, id: i32) -> bool {
         return unsafe { *self.bits.as_ptr().add((id >> 5) as usize) & (1 << (id & 0x1f)) != 0 };
     }
 
+    #[inline]
     pub fn insert(&mut self, id: i32) {
         if self.contains(id) {
             return;
@@ -31,6 +34,7 @@ impl IdBitSet {
         self.ids.push(id);
     }
 
+    #[inline]
     pub fn remove(&mut self, id: i32) {
         if !self.contains(id) {
             return;
@@ -41,14 +45,17 @@ impl IdBitSet {
         }
     }
 
+    #[inline]
     pub fn len(&self) -> usize {
         return self.ids.len();
     }
 
+    #[inline]
     pub fn as_ptr(&self) -> *const i32 {
         return self.ids.as_ptr();
     }
 
+    #[inline]
     fn clear(&mut self) {
         self.bits.fill(0);
         self.ids.clear();
@@ -71,6 +78,7 @@ impl BuildArea {
     pub const PREFERRED_NPCS: u8 = 255;
     pub const PREFERRED_VIEW_DISTANCE: u8 = 15;
 
+    #[inline]
     pub fn new() -> BuildArea {
         return BuildArea {
             players: IdBitSet::new(2048, BuildArea::PREFERRED_PLAYERS as usize), // 64 bitset
@@ -82,6 +90,7 @@ impl BuildArea {
         }
     }
 
+    #[inline]
     pub fn cleanup(&mut self) {
         self.players.clear();
         self.npcs.clear();
@@ -254,7 +263,6 @@ impl BuildArea {
     #[inline]
     pub fn get_nearby_npcs(
         &self,
-        tick: u32,
         npcs: &[Option<Npc>],
         map: &mut ZoneMap,
         x: u16,
@@ -281,7 +289,7 @@ impl BuildArea {
                     map.zone(zone_x, y, zone_z).npcs
                         .iter()
                         .take(BuildArea::PREFERRED_NPCS as usize - nearby.len())
-                        .filter(|&&npc| self.filter_npc(tick, npcs, npc, x, y, z)),
+                        .filter(|&&npc| self.filter_npc(npcs, npc, x, y, z)),
                 );
             }
         }
@@ -307,7 +315,6 @@ impl BuildArea {
     #[inline]
     fn filter_npc(
         &self,
-        tick: u32,
         npcs: &[Option<Npc>],
         npc: i32,
         x: u16,
@@ -315,7 +322,7 @@ impl BuildArea {
         z: u16
     ) -> bool {
         if let Some(other) = unsafe { &*npcs.as_ptr().add(npc as usize) } {
-            return !(self.npcs.contains(npc) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), BuildArea::PREFERRED_VIEW_DISTANCE) || other.nid == -1 || other.coord.y() != y || !other.check_life_cycle(tick));
+            return !(self.npcs.contains(npc) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), BuildArea::PREFERRED_VIEW_DISTANCE) || other.nid == -1 || other.coord.y() != y || !other.active);
         }
         return false;
     }

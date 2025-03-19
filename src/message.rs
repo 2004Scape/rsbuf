@@ -154,6 +154,7 @@ pub struct PlayerInfoSay {
 }
 
 impl PlayerInfoSay {
+    #[inline]
     pub fn new(say: String) -> PlayerInfoSay {
         return PlayerInfoSay {
             say,
@@ -188,6 +189,7 @@ pub struct PlayerInfoDamage {
 }
 
 impl PlayerInfoDamage {
+    #[inline]
     pub fn new(
         damage: i32,
         damage_type: i32,
@@ -233,6 +235,7 @@ pub struct PlayerInfoChat {
 }
 
 impl PlayerInfoChat {
+    #[inline]
     pub fn new(
         bytes: Vec<u8>,
         color: i32,
@@ -278,6 +281,7 @@ pub struct PlayerInfoSpotanim {
 }
 
 impl PlayerInfoSpotanim {
+    #[inline]
     pub fn new(
         graphic_id: i32,
         graphic_height: i32,
@@ -322,6 +326,7 @@ pub struct PlayerInfoExactMove {
 }
 
 impl PlayerInfoExactMove {
+    #[inline]
     pub fn new(
         start_x: i32,
         start_z: i32,
@@ -481,6 +486,7 @@ pub struct NpcInfoSay {
 }
 
 impl NpcInfoSay {
+    #[inline]
     pub fn new(say: String) -> NpcInfoSay {
         return NpcInfoSay {
             say,
@@ -515,6 +521,7 @@ pub struct NpcInfoDamage {
 }
 
 impl NpcInfoDamage {
+    #[inline]
     pub fn new(
         damage: i32,
         damage_type: i32,
@@ -557,6 +564,7 @@ pub struct NpcInfoChangeType {
 }
 
 impl NpcInfoChangeType {
+    #[inline]
     pub fn new(change_type: i32) -> NpcInfoChangeType {
         return NpcInfoChangeType {
             change_type,
@@ -587,6 +595,7 @@ pub struct NpcInfoSpotanim {
 }
 
 impl NpcInfoSpotanim {
+    #[inline]
     pub fn new(
         graphic_id: i32,
         graphic_height: i32,

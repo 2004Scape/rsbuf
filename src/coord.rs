@@ -1,5 +1,3 @@
-use num_traits::real::Real;
-
 #[derive(Clone)]
 pub struct CoordGrid {
     pub coord: u32,

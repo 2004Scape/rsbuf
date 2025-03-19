@@ -13,16 +13,17 @@ pub struct PlayerRenderer {
 }
 
 impl PlayerRenderer {
+    #[inline]
     pub fn new() -> PlayerRenderer {
         let mut caches: HashMap<PlayerInfoProt, [Option<Vec<u8>>; 2048]> = HashMap::with_capacity(8);
-        caches.insert(PlayerInfoProt::Appearance, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::Anim, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::FaceEntity, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::Say, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::Damage, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::FaceCoord, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::Chat, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::SpotAnim, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::APPEARANCE, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::ANIM, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::FACE_ENTITY, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::SAY, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::DAMAGE, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::FACE_COORD, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::CHAT, from_fn(|_| None));
+        caches.insert(PlayerInfoProt::SPOT_ANIM, from_fn(|_| None));
         // exact move does not get cached, that is built on demand.
         return PlayerRenderer {
             caches,
@@ -31,6 +32,7 @@ impl PlayerRenderer {
         }
     }
 
+    #[inline]
     pub fn compute_info(&mut self, player: &Player) {
         let masks: u32 = player.masks;
         let pid: i32 = player.pid;
@@ -42,41 +44,41 @@ impl PlayerRenderer {
         let mut highs: usize = 0;
         let mut lows: usize = 0;
 
-        if masks & PlayerInfoProt::Appearance as u32 != 0 {
+        if masks & PlayerInfoProt::APPEARANCE as u32 != 0 {
             let len: usize = self.cache(
                 pid,
                 &PlayerInfoAppearance::new(player.appearance.clone()),
-                PlayerInfoProt::Appearance,
+                PlayerInfoProt::APPEARANCE,
             );
             highs += len;
             lows += len;
         }
-        if masks & PlayerInfoProt::Anim as u32 != 0 {
+        if masks & PlayerInfoProt::ANIM as u32 != 0 {
             highs += self.cache(
                 pid,
                 &PlayerInfoAnim::new(player.anim_id, player.anim_delay),
-                PlayerInfoProt::Anim,
+                PlayerInfoProt::ANIM,
             );
         }
-        if masks & PlayerInfoProt::FaceEntity as u32 != 0 {
+        if masks & PlayerInfoProt::FACE_ENTITY as u32 != 0 {
             let len: usize = self.cache(
                 pid,
                 &PlayerInfoFaceEntity::new(player.face_entity),
-                PlayerInfoProt::FaceEntity,
+                PlayerInfoProt::FACE_ENTITY,
             );
             highs += len;
             lows += len;
         }
-        if masks & PlayerInfoProt::Say as u32 != 0 {
+        if masks & PlayerInfoProt::SAY as u32 != 0 {
             if let Some(say) = &player.say {
                 highs += self.cache(
                     pid,
                     &PlayerInfoSay::new(say.clone()),
-                    PlayerInfoProt::Say,
+                    PlayerInfoProt::SAY,
                 );
             }
         }
-        if masks & PlayerInfoProt::Damage as u32 != 0 {
+        if masks & PlayerInfoProt::DAMAGE as u32 != 0 {
             highs += self.cache(
                 pid,
                 &PlayerInfoDamage::new(
@@ -85,19 +87,19 @@ impl PlayerRenderer {
                     player.current_hitpoints,
                     player.base_hitpoints,
                 ),
-                PlayerInfoProt::Damage,
+                PlayerInfoProt::DAMAGE,
             );
         }
-        if masks & PlayerInfoProt::FaceCoord as u32 != 0 {
+        if masks & PlayerInfoProt::FACE_COORD as u32 != 0 {
             let len: usize = self.cache(
                 pid,
                 &PlayerInfoFaceCoord::new(player.face_x, player.face_z),
-                PlayerInfoProt::FaceCoord,
+                PlayerInfoProt::FACE_COORD,
             );
             highs += len;
             lows += len;
         }
-        if masks & PlayerInfoProt::Chat as u32 != 0 {
+        if masks & PlayerInfoProt::CHAT as u32 != 0 {
             if let Some(chat) = &player.chat {
                 highs += self.cache(
                     pid,
@@ -107,11 +109,11 @@ impl PlayerRenderer {
                         chat.effect as i32,
                         chat.ignored as i32,
                     ),
-                    PlayerInfoProt::Chat,
+                    PlayerInfoProt::CHAT,
                 );
             }
         }
-        if masks & PlayerInfoProt::SpotAnim as u32 != 0 {
+        if masks & PlayerInfoProt::SPOT_ANIM as u32 != 0 {
             highs += self.cache(
                 pid,
                 &PlayerInfoSpotanim::new(
@@ -119,10 +121,10 @@ impl PlayerRenderer {
                     player.graphic_height,
                     player.graphic_delay,
                 ),
-                PlayerInfoProt::SpotAnim,
+                PlayerInfoProt::SPOT_ANIM,
             );
         }
-        if masks & PlayerInfoProt::ExactMove as u32 != 0 {
+        if masks & PlayerInfoProt::EXACT_MOVE as u32 != 0 {
             highs += 9;
         }
 
@@ -131,8 +133,8 @@ impl PlayerRenderer {
         }
 
         if lows > 0 {
-            let header: usize = PlayerRenderer::header(PlayerInfoProt::Appearance as u32 + PlayerInfoProt::FaceEntity as u32 + PlayerInfoProt::FaceCoord as u32);
-            let appearance = self.caches[&PlayerInfoProt::Appearance]
+            let header: usize = PlayerRenderer::header(PlayerInfoProt::APPEARANCE as u32 + PlayerInfoProt::FACE_ENTITY as u32 + PlayerInfoProt::FACE_COORD as u32);
+            let appearance = self.caches[&PlayerInfoProt::APPEARANCE]
                 .get(pid as usize)
                 .and_then(|x| x.as_ref())
                 .map_or(0, |y| y.len());
@@ -140,6 +142,7 @@ impl PlayerRenderer {
         }
     }
 
+    #[inline]
     pub fn writeExactmove(
         &self,
         buf: &mut Packet,
@@ -195,16 +198,17 @@ impl PlayerRenderer {
         return unsafe { *self.lows.as_ptr().add(id as usize) };
     }
 
+    #[inline]
     pub fn removeTemporary(&mut self) {
         self.highs.fill(0);
         for prot in [
-            PlayerInfoProt::Anim,
-            PlayerInfoProt::FaceEntity,
-            PlayerInfoProt::Say,
-            PlayerInfoProt::Damage,
-            PlayerInfoProt::FaceCoord,
-            PlayerInfoProt::Chat,
-            PlayerInfoProt::SpotAnim,
+            PlayerInfoProt::ANIM,
+            PlayerInfoProt::FACE_ENTITY,
+            PlayerInfoProt::SAY,
+            PlayerInfoProt::DAMAGE,
+            PlayerInfoProt::FACE_COORD,
+            PlayerInfoProt::CHAT,
+            PlayerInfoProt::SPOT_ANIM,
         ] {
             if let Some(cache) = self.caches.get_mut(&prot) {
                 cache.fill(None);
@@ -212,12 +216,13 @@ impl PlayerRenderer {
         }
     }
 
+    #[inline]
     pub fn removePermanent(&mut self, id: i32) {
         unsafe {
             *self.highs.as_mut_ptr().add(id as usize) = 0;
             *self.lows.as_mut_ptr().add(id as usize) = 0;
         }
-        if let Some(cache) = self.caches.get_mut(&PlayerInfoProt::Appearance) {
+        if let Some(cache) = self.caches.get_mut(&PlayerInfoProt::APPEARANCE) {
             unsafe { *cache.as_mut_ptr().add(id as usize) = None }
         }
     }
@@ -250,15 +255,16 @@ pub struct NpcRenderer {
 }
 
 impl NpcRenderer {
+    #[inline]
     pub fn new() -> NpcRenderer {
         let mut caches: HashMap<NpcInfoProt, [Option<Vec<u8>>; 8192]> = HashMap::with_capacity(7);
-        caches.insert(NpcInfoProt::Anim, from_fn(|_| None));
-        caches.insert(NpcInfoProt::FaceEntity, from_fn(|_| None));
-        caches.insert(NpcInfoProt::Say, from_fn(|_| None));
-        caches.insert(NpcInfoProt::Damage, from_fn(|_| None));
-        caches.insert(NpcInfoProt::ChangeType, from_fn(|_| None));
-        caches.insert(NpcInfoProt::SpotAnim, from_fn(|_| None));
-        caches.insert(NpcInfoProt::FaceCoord, from_fn(|_| None));
+        caches.insert(NpcInfoProt::ANIM, from_fn(|_| None));
+        caches.insert(NpcInfoProt::FACE_ENTITY, from_fn(|_| None));
+        caches.insert(NpcInfoProt::SAY, from_fn(|_| None));
+        caches.insert(NpcInfoProt::DAMAGE, from_fn(|_| None));
+        caches.insert(NpcInfoProt::CHANGE_TYPE, from_fn(|_| None));
+        caches.insert(NpcInfoProt::SPOT_ANIM, from_fn(|_| None));
+        caches.insert(NpcInfoProt::FACE_COORD, from_fn(|_| None));
         return NpcRenderer {
             caches,
             highs: [0; 8192],
@@ -266,6 +272,7 @@ impl NpcRenderer {
         }
     }
 
+    #[inline]
     pub fn compute_info(&mut self, npc: &Npc) {
         let masks: u32 = npc.masks;
         let nid: i32 = npc.nid;
@@ -277,32 +284,32 @@ impl NpcRenderer {
         let mut highs: usize = 0;
         let mut lows: usize = 0;
 
-        if masks & NpcInfoProt::Anim as u32 != 0 {
+        if masks & NpcInfoProt::ANIM as u32 != 0 {
             highs += self.cache(
                 nid,
                 &NpcInfoAnim::new(npc.anim_id, npc.anim_delay),
-                NpcInfoProt::Anim,
+                NpcInfoProt::ANIM,
             );
         }
-        if masks & NpcInfoProt::FaceEntity as u32 != 0 {
+        if masks & NpcInfoProt::FACE_ENTITY as u32 != 0 {
             let len: usize = self.cache(
                 nid,
                 &NpcInfoFaceEntity::new(npc.face_entity),
-                NpcInfoProt::FaceEntity,
+                NpcInfoProt::FACE_ENTITY,
             );
             highs += len;
             lows += len;
         }
-        if masks & NpcInfoProt::Say as u32 != 0 {
+        if masks & NpcInfoProt::SAY as u32 != 0 {
             if let Some(say) = &npc.say {
                 highs += self.cache(
                     nid,
                     &NpcInfoSay::new(say.clone()),
-                    NpcInfoProt::Say,
+                    NpcInfoProt::SAY,
                 );
             }
         }
-        if masks & NpcInfoProt::Damage as u32 != 0 {
+        if masks & NpcInfoProt::DAMAGE as u32 != 0 {
             highs += self.cache(
                 nid,
                 &NpcInfoDamage::new(
@@ -311,17 +318,17 @@ impl NpcRenderer {
                     npc.current_hitpoints,
                     npc.base_hitpoints,
                 ),
-                NpcInfoProt::Damage,
+                NpcInfoProt::DAMAGE,
             );
         }
-        if masks & NpcInfoProt::ChangeType as u32 != 0 {
+        if masks & NpcInfoProt::CHANGE_TYPE as u32 != 0 {
             highs += self.cache(
                 nid,
                 &NpcInfoChangeType::new(npc.ntype),
-                NpcInfoProt::ChangeType,
+                NpcInfoProt::CHANGE_TYPE,
             );
         }
-        if masks & NpcInfoProt::SpotAnim as u32 != 0 {
+        if masks & NpcInfoProt::SPOT_ANIM as u32 != 0 {
             highs += self.cache(
                 nid,
                 &NpcInfoSpotanim::new(
@@ -329,14 +336,14 @@ impl NpcRenderer {
                     npc.graphic_height,
                     npc.graphic_delay,
                 ),
-                NpcInfoProt::SpotAnim,
+                NpcInfoProt::SPOT_ANIM,
             );
         }
-        if masks & NpcInfoProt::FaceCoord as u32 != 0 {
+        if masks & NpcInfoProt::FACE_COORD as u32 != 0 {
             let len: usize = self.cache(
                 nid,
                 &NpcInfoFaceCoord::new(npc.face_x, npc.face_z),
-                NpcInfoProt::FaceCoord,
+                NpcInfoProt::FACE_COORD,
             );
             highs += len;
             lows += len;
@@ -347,7 +354,7 @@ impl NpcRenderer {
         }
 
         if lows > 0 {
-            let header: usize = NpcRenderer::header(NpcInfoProt::FaceEntity as u32 + NpcInfoProt::FaceCoord as u32);
+            let header: usize = NpcRenderer::header(NpcInfoProt::FACE_ENTITY as u32 + NpcInfoProt::FACE_COORD as u32);
             unsafe { *self.lows.as_mut_ptr().add(nid as usize) = header + 2 + 4; } // TODO? hardcoded lengths
         }
     }
@@ -393,16 +400,17 @@ impl NpcRenderer {
         return unsafe { *self.lows.as_ptr().add(id as usize) };
     }
 
+    #[inline]
     pub fn removeTemporary(&mut self) {
         self.highs.fill(0);
         for prot in [
-            NpcInfoProt::Anim,
-            NpcInfoProt::FaceEntity,
-            NpcInfoProt::Say,
-            NpcInfoProt::Damage,
-            NpcInfoProt::ChangeType,
-            NpcInfoProt::SpotAnim,
-            NpcInfoProt::FaceCoord,
+            NpcInfoProt::ANIM,
+            NpcInfoProt::FACE_ENTITY,
+            NpcInfoProt::SAY,
+            NpcInfoProt::DAMAGE,
+            NpcInfoProt::CHANGE_TYPE,
+            NpcInfoProt::SPOT_ANIM,
+            NpcInfoProt::FACE_COORD,
         ] {
             if let Some(cache) = self.caches.get_mut(&prot) {
                 cache.fill(None);
@@ -410,6 +418,7 @@ impl NpcRenderer {
         }
     }
 
+    #[inline]
     pub fn removePermanent(&mut self, id: i32) {
         unsafe {
             *self.highs.as_mut_ptr().add(id as usize) = 0;
