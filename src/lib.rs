@@ -190,10 +190,10 @@ pub unsafe fn remove_player(pid: i32) {
     }
     PLAYER_RENDERER.removePermanent(pid);
     if let Some(player) = &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        let len: usize = player.build.players.len();
+        let len: usize = player.build.npcs.len();
         let mut index: usize = 0;
         while index < len {
-            if index >= player.build.players.len() {
+            if index >= player.build.npcs.len() {
                 break;
             }
             match unsafe { *player.build.npcs.as_ptr().add(index) } {
