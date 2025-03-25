@@ -5,8 +5,8 @@ pub struct CoordGrid {
 
 impl CoordGrid {
     #[inline]
-    pub const fn new(coord: u32) -> CoordGrid {
-        return CoordGrid { packed: coord };
+    pub const fn new(packed: u32) -> CoordGrid {
+        return CoordGrid { packed };
     }
 
     #[inline]
