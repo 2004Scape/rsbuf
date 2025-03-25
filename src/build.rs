@@ -3,7 +3,6 @@ use crate::grid::ZoneMap;
 use crate::npc::Npc;
 use crate::player::Player;
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
 
 #[derive(Clone)]
 pub struct IdBitSet {
@@ -325,15 +324,5 @@ impl BuildArea {
             return !(self.npcs.contains(npc) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), BuildArea::PREFERRED_VIEW_DISTANCE) || other.nid == -1 || other.coord.y() != y || !other.active);
         }
         return false;
-    }
-}
-
-impl Hash for BuildArea {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        // self.players.hash(state);
-        // self.appearances.hash(state);
-        self.force_view_distance.hash(state);
-        self.view_distance.hash(state);
-        self.last_resize.hash(state);
     }
 }

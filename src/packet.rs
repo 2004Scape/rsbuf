@@ -982,10 +982,10 @@ impl Packet {
         let mut byte_pos: usize = pos >> 3;
         let mut remaining: usize = 8 - (pos & 7);
 
-        let mut result: u8 = 0;
+        let mut result: i32 = 0;
 
         while n > remaining {
-            result |= (unsafe { *self.data.as_ptr().add(byte_pos) } & (1 << remaining) - 1)
+            result |= (unsafe { *self.data.as_ptr().add(byte_pos) as i32 } & (1 << remaining) - 1)
                 << (n - remaining);
             byte_pos += 1;
             n -= remaining;
@@ -993,12 +993,12 @@ impl Packet {
         }
 
         if n == remaining {
-            result |= unsafe { *self.data.as_ptr().add(byte_pos) } & (1 << remaining) - 1;
+            result |= unsafe { *self.data.as_ptr().add(byte_pos) as i32 } & (1 << remaining) - 1;
         } else {
             result |=
-                (unsafe { *self.data.as_ptr().add(byte_pos) } >> (remaining - n)) & (1 << n) - 1;
+                (unsafe { *self.data.as_ptr().add(byte_pos) as i32 } >> (remaining - n)) & (1 << n) - 1;
         }
-        return result as i32;
+        return result;
     }
 
     /// Writes a specified number of bits to the internal buffer, starting from the current bit position (`self.bit_pos`).
