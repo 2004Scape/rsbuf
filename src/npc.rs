@@ -30,7 +30,7 @@ pub struct Npc {
 
 impl Npc {
     #[inline]
-    pub fn new(nid: i32, ntype: i32) -> Npc {
+    pub const fn new(nid: i32, ntype: i32) -> Npc {
         return Npc {
             coord: CoordGrid::from(0, 0, 0),
             nid,

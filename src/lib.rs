@@ -1,16 +1,16 @@
 #![allow(non_snake_case)]
 
-use std::collections::{HashMap, HashSet};
-use std::ptr::{addr_of, addr_of_mut};
-use once_cell::sync::Lazy;
-use wasm_bindgen::prelude::wasm_bindgen;
 use crate::coord::CoordGrid;
+use crate::grid::ZoneMap;
 use crate::info::{NpcInfo, PlayerInfo};
+use crate::npc::Npc;
 use crate::player::{Chat, ExactMove, Player};
 use crate::renderer::{NpcRenderer, PlayerRenderer};
-use crate::grid::ZoneMap;
-use crate::npc::Npc;
 use crate::visibility::Visibility;
+use once_cell::sync::Lazy;
+use std::collections::HashMap;
+use std::ptr::{addr_of, addr_of_mut};
+use wasm_bindgen::prelude::wasm_bindgen;
 
 pub mod packet;
 pub mod renderer;
@@ -26,7 +26,7 @@ mod npc;
 mod visibility;
 
 static mut PLAYERS: Lazy<Vec<Option<Player>>> = Lazy::new(|| vec![None; 2048]);
-static mut PLAYER_GRID: Lazy<HashMap<u32, HashSet<i32>>> = Lazy::new(|| HashMap::with_capacity(2048));
+static mut PLAYER_GRID: Lazy<HashMap<u32, Vec<i32>>> = Lazy::new(|| HashMap::with_capacity(2048));
 static mut PLAYER_RENDERER: Lazy<PlayerRenderer> = Lazy::new(PlayerRenderer::new);
 static mut PLAYER_INFO: Lazy<PlayerInfo> = Lazy::new(PlayerInfo::new);
 
@@ -113,7 +113,7 @@ pub unsafe fn compute_player(
             )
         };
 
-        if coord.coord != player.coord.coord {
+        if coord.packed != player.coord.packed && (CoordGrid::zone(coord.x()) != CoordGrid::zone(player.coord.x()) || CoordGrid::zone(coord.z()) != CoordGrid::zone(player.coord.z()) || coord.y() != player.coord.y()) {
             ZONE_MAP.zone(player.coord.x(), player.coord.y(), player.coord.z()).remove_player(pid);
             ZONE_MAP.zone(coord.x(), coord.y(), coord.z()).add_player(pid);
         }
@@ -148,7 +148,7 @@ pub unsafe fn compute_player(
         player.exact_move = exact_move;
 
         PLAYER_RENDERER.compute_info(&player);
-        PLAYER_GRID.entry(player.coord.coord).or_insert_with(HashSet::new).insert(pid);
+        PLAYER_GRID.entry(player.coord.packed).or_insert_with(Vec::new).push(pid);
     }
 }
 
@@ -256,7 +256,7 @@ pub unsafe fn compute_npc(
     if let Some(Some(npc)) = NPCS.get_mut(nid as usize) {
         let coord: CoordGrid = CoordGrid::from(x, y, z);
 
-        if coord.coord != npc.coord.coord {
+        if coord.packed != npc.coord.packed && (CoordGrid::zone(coord.x()) != CoordGrid::zone(npc.coord.x()) || CoordGrid::zone(coord.z()) != CoordGrid::zone(npc.coord.z()) || coord.y() != npc.coord.y()) {
             ZONE_MAP.zone(npc.coord.x(), npc.coord.y(), npc.coord.z()).remove_npc(nid);
             ZONE_MAP.zone(coord.x(), coord.y(), coord.z()).add_npc(nid);
         }

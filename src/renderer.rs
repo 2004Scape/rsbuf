@@ -1,5 +1,3 @@
-use std::array::from_fn;
-use std::collections::HashMap;
 use crate::message::{InfoMessage, NpcInfoAnim, NpcInfoChangeType, NpcInfoDamage, NpcInfoFaceCoord, NpcInfoFaceEntity, NpcInfoSay, NpcInfoSpotanim, PlayerInfoAnim, PlayerInfoAppearance, PlayerInfoChat, PlayerInfoDamage, PlayerInfoExactMove, PlayerInfoFaceCoord, PlayerInfoFaceEntity, PlayerInfoSay, PlayerInfoSpotanim};
 use crate::npc::Npc;
 use crate::packet::Packet;
@@ -7,23 +5,24 @@ use crate::player::Player;
 use crate::prot::{NpcInfoProt, PlayerInfoProt};
 
 pub struct PlayerRenderer {
-    pub caches: HashMap<PlayerInfoProt, [Option<Vec<u8>>; 2048]>,
-    pub highs: [usize; 2048],
-    pub lows: [usize; 2048],
+    caches: Vec<Vec<Option<Vec<u8>>>>,
+    highs: [usize; 2048],
+    lows: [usize; 2048],
 }
 
 impl PlayerRenderer {
     #[inline]
     pub fn new() -> PlayerRenderer {
-        let mut caches: HashMap<PlayerInfoProt, [Option<Vec<u8>>; 2048]> = HashMap::with_capacity(8);
-        caches.insert(PlayerInfoProt::APPEARANCE, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::ANIM, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::FACE_ENTITY, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::SAY, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::DAMAGE, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::FACE_COORD, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::CHAT, from_fn(|_| None));
-        caches.insert(PlayerInfoProt::SPOT_ANIM, from_fn(|_| None));
+        let mut caches: Vec<Vec<Option<Vec<u8>>>> = vec![vec![None; 2048]; 8];
+        // the ordering here does not matter.
+        caches[PlayerInfoProt::APPEARANCE.to_index()] = vec![None; 2048];
+        caches[PlayerInfoProt::ANIM.to_index()] = vec![None; 2048];
+        caches[PlayerInfoProt::FACE_ENTITY.to_index()] = vec![None; 2048];
+        caches[PlayerInfoProt::SAY.to_index()] = vec![None; 2048];
+        caches[PlayerInfoProt::DAMAGE.to_index()] = vec![None; 2048];
+        caches[PlayerInfoProt::FACE_COORD.to_index()] = vec![None; 2048];
+        caches[PlayerInfoProt::CHAT.to_index()] = vec![None; 2048];
+        caches[PlayerInfoProt::SPOT_ANIM.to_index()] = vec![None; 2048];
         // exact move does not get cached, that is built on demand.
         return PlayerRenderer {
             caches,
@@ -43,6 +42,8 @@ impl PlayerRenderer {
 
         let mut highs: usize = 0;
         let mut lows: usize = 0;
+
+        // the ordering here does not matter.
 
         if masks & PlayerInfoProt::APPEARANCE as u32 != 0 {
             let len: usize = self.cache(
@@ -134,11 +135,13 @@ impl PlayerRenderer {
 
         if lows > 0 {
             let header: usize = PlayerRenderer::header(PlayerInfoProt::APPEARANCE as u32 + PlayerInfoProt::FACE_ENTITY as u32 + PlayerInfoProt::FACE_COORD as u32);
-            let appearance = self.caches[&PlayerInfoProt::APPEARANCE]
-                .get(pid as usize)
-                .and_then(|x| x.as_ref())
-                .map_or(0, |y| y.len());
-            unsafe { *self.lows.as_mut_ptr().add(pid as usize) = header + appearance + 2 + 4; } // TODO? hardcoded lengths
+            unsafe {
+                let appearance = (*self.caches.as_ptr().add(PlayerInfoProt::APPEARANCE.to_index()))
+                    .get(pid as usize)
+                    .and_then(|x| x.as_ref())
+                    .map_or(0, |y| y.len());
+                *self.lows.as_mut_ptr().add(pid as usize) = header + appearance + 2 + 4; // TODO? hardcoded lengths
+            }
         }
     }
 
@@ -159,19 +162,19 @@ impl PlayerRenderer {
 
     #[inline]
     pub fn cache(&mut self, id: i32, message: &dyn InfoMessage, prot: PlayerInfoProt) -> usize {
-        let cache: &mut [Option<Vec<u8>>; 2048] = self.caches.get_mut(&prot).expect("[PlayerRenderer] Prot not found in cache!");
         unsafe {
+            let cache: &mut Vec<Option<Vec<u8>>> = &mut *self.caches.as_mut_ptr().add(prot.to_index());
             if (*cache.as_ptr().add(id as usize)).is_some() && !message.persists() {
                 return 0;
             }
+            return PlayerRenderer::encode_info(cache, id, message);
         }
-        return PlayerRenderer::encode_info(cache, id, message);
     }
 
     #[inline]
     pub fn write(&self, buf: &mut Packet, id: i32, prot: PlayerInfoProt) {
-        let cache: &[Option<Vec<u8>>; 2048] = self.caches.get(&prot).expect("[PlayerRenderer] Prot not found in cache for write!");
         unsafe {
+            let cache: &Vec<Option<Vec<u8>>> = &*self.caches.as_ptr().add(prot.to_index());
             if let Some(bytes) = &*cache.as_ptr().add(id as usize) {
                 buf.pdata(bytes, 0, bytes.len());
             } else {
@@ -183,18 +186,20 @@ impl PlayerRenderer {
 
     #[inline]
     pub fn has(&self, id: i32, prot: PlayerInfoProt) -> bool {
-        let cache: &[Option<Vec<u8>>; 2048] = &self.caches[&prot];
-        unsafe { return (*cache.as_ptr().add(id as usize)).is_some(); }
+        unsafe {
+            let cache: &Vec<Option<Vec<u8>>> = &*self.caches.as_ptr().add(prot.to_index());
+            return (*cache.as_ptr().add(id as usize)).is_some();
+        }
     }
 
 
     #[inline]
-    pub fn highdefinitions(&self, id: i32) -> usize {
+    pub const fn highdefinitions(&self, id: i32) -> usize {
         return unsafe { *self.highs.as_ptr().add(id as usize) };
     }
 
     #[inline]
-    pub fn lowdefinitions(&self, id: i32) -> usize {
+    pub const fn lowdefinitions(&self, id: i32) -> usize {
         return unsafe { *self.lows.as_ptr().add(id as usize) };
     }
 
@@ -202,17 +207,15 @@ impl PlayerRenderer {
     pub fn removeTemporary(&mut self) {
         self.highs.fill(0);
         for prot in [
-            PlayerInfoProt::ANIM,
-            PlayerInfoProt::FACE_ENTITY,
-            PlayerInfoProt::SAY,
-            PlayerInfoProt::DAMAGE,
-            PlayerInfoProt::FACE_COORD,
-            PlayerInfoProt::CHAT,
-            PlayerInfoProt::SPOT_ANIM,
+            PlayerInfoProt::ANIM.to_index(),
+            PlayerInfoProt::FACE_ENTITY.to_index(),
+            PlayerInfoProt::SAY.to_index(),
+            PlayerInfoProt::DAMAGE.to_index(),
+            PlayerInfoProt::FACE_COORD.to_index(),
+            PlayerInfoProt::CHAT.to_index(),
+            PlayerInfoProt::SPOT_ANIM.to_index(),
         ] {
-            if let Some(cache) = self.caches.get_mut(&prot) {
-                cache.fill(None);
-            }
+            unsafe { (*self.caches.as_mut_ptr().add(prot)).fill(None); }
         }
     }
 
@@ -221,25 +224,23 @@ impl PlayerRenderer {
         unsafe {
             *self.highs.as_mut_ptr().add(id as usize) = 0;
             *self.lows.as_mut_ptr().add(id as usize) = 0;
-        }
-        if let Some(cache) = self.caches.get_mut(&PlayerInfoProt::APPEARANCE) {
-            unsafe { *cache.as_mut_ptr().add(id as usize) = None }
+            *(*self.caches.as_mut_ptr().add(PlayerInfoProt::APPEARANCE.to_index())).as_mut_ptr().add(id as usize) = None
         }
     }
 
     // ----
 
     #[inline]
-    pub fn encode_info(messages: &mut [Option<Vec<u8>>; 2048], id: i32, message: &dyn InfoMessage) -> usize {
+    pub fn encode_info(messages: &mut Vec<Option<Vec<u8>>>, id: i32, message: &dyn InfoMessage) -> usize {
         let mut buf: Packet = Packet::new(message.test());
         message.encode(&mut buf);
         let len: usize = buf.len();
-        messages[id as usize] = Some(buf.data);
+        unsafe { *messages.as_mut_ptr().add(id as usize) = Some(buf.data) };
         return len;
     }
 
     #[inline]
-    fn header(masks: u32) -> usize {
+    const fn header(masks: u32) -> usize {
         let mut len: usize = 1;
         if masks > 0xff {
             len += 1;
@@ -249,22 +250,23 @@ impl PlayerRenderer {
 }
 
 pub struct NpcRenderer {
-    pub caches: HashMap<NpcInfoProt, [Option<Vec<u8>>; 8192]>,
-    pub highs: [usize; 8192],
-    pub lows: [usize; 8192],
+    caches: Vec<Vec<Option<Vec<u8>>>>,
+    highs: [usize; 8192],
+    lows: [usize; 8192],
 }
 
 impl NpcRenderer {
     #[inline]
     pub fn new() -> NpcRenderer {
-        let mut caches: HashMap<NpcInfoProt, [Option<Vec<u8>>; 8192]> = HashMap::with_capacity(7);
-        caches.insert(NpcInfoProt::ANIM, from_fn(|_| None));
-        caches.insert(NpcInfoProt::FACE_ENTITY, from_fn(|_| None));
-        caches.insert(NpcInfoProt::SAY, from_fn(|_| None));
-        caches.insert(NpcInfoProt::DAMAGE, from_fn(|_| None));
-        caches.insert(NpcInfoProt::CHANGE_TYPE, from_fn(|_| None));
-        caches.insert(NpcInfoProt::SPOT_ANIM, from_fn(|_| None));
-        caches.insert(NpcInfoProt::FACE_COORD, from_fn(|_| None));
+        let mut caches: Vec<Vec<Option<Vec<u8>>>> = vec![vec![None; 8192]; 7];
+        // the ordering here does not matter.
+        caches[NpcInfoProt::ANIM.to_index()] = vec![None; 8192];
+        caches[NpcInfoProt::FACE_ENTITY.to_index()] = vec![None; 8192];
+        caches[NpcInfoProt::SAY.to_index()] = vec![None; 8192];
+        caches[NpcInfoProt::DAMAGE.to_index()] = vec![None; 8192];
+        caches[NpcInfoProt::CHANGE_TYPE.to_index()] = vec![None; 8192];
+        caches[NpcInfoProt::SPOT_ANIM.to_index()] = vec![None; 8192];
+        caches[NpcInfoProt::FACE_COORD.to_index()] = vec![None; 8192];
         return NpcRenderer {
             caches,
             highs: [0; 8192],
@@ -283,6 +285,8 @@ impl NpcRenderer {
 
         let mut highs: usize = 0;
         let mut lows: usize = 0;
+
+        // the ordering here does not matter.
 
         if masks & NpcInfoProt::ANIM as u32 != 0 {
             highs += self.cache(
@@ -361,19 +365,19 @@ impl NpcRenderer {
 
     #[inline]
     pub fn cache(&mut self, id: i32, message: &dyn InfoMessage, prot: NpcInfoProt) -> usize {
-        let cache: &mut [Option<Vec<u8>>; 8192] = self.caches.get_mut(&prot).expect("[NpcRenderer] Prot not found in cache for write!");
         unsafe {
+            let cache: &mut Vec<Option<Vec<u8>>> = &mut *self.caches.as_mut_ptr().add(prot.to_index());
             if (*cache.as_ptr().add(id as usize)).is_some() && !message.persists() {
                 return 0;
             }
+            return NpcRenderer::encode_info(cache, id, message);
         }
-        return NpcRenderer::encode_info(cache, id, message);
     }
 
     #[inline]
     pub fn write(&self, buf: &mut Packet, id: i32, prot: NpcInfoProt) {
-        let cache: &[Option<Vec<u8>>; 8192] = self.caches.get(&prot).expect("[NpcRenderer] Prot not found in cache for write!");
         unsafe {
+            let cache: &Vec<Option<Vec<u8>>> = &*self.caches.as_ptr().add(prot.to_index());
             if let Some(bytes) = &*cache.as_ptr().add(id as usize) {
                 buf.pdata(bytes, 0, bytes.len());
             } else {
@@ -385,18 +389,20 @@ impl NpcRenderer {
 
     #[inline]
     pub fn has(&self, id: i32, prot: NpcInfoProt) -> bool {
-        let cache: &[Option<Vec<u8>>; 8192] = &self.caches[&prot];
-        unsafe { return (*cache.as_ptr().add(id as usize)).is_some(); }
+        unsafe {
+            let cache: &Vec<Option<Vec<u8>>> = &*self.caches.as_ptr().add(prot.to_index());
+            return (*cache.as_ptr().add(id as usize)).is_some();
+        }
     }
 
 
     #[inline]
-    pub fn highdefinitions(&self, id: i32) -> usize {
+    pub const fn highdefinitions(&self, id: i32) -> usize {
         return unsafe { *self.highs.as_ptr().add(id as usize) };
     }
 
     #[inline]
-    pub fn lowdefinitions(&self, id: i32) -> usize {
+    pub const fn lowdefinitions(&self, id: i32) -> usize {
         return unsafe { *self.lows.as_ptr().add(id as usize) };
     }
 
@@ -404,17 +410,15 @@ impl NpcRenderer {
     pub fn removeTemporary(&mut self) {
         self.highs.fill(0);
         for prot in [
-            NpcInfoProt::ANIM,
-            NpcInfoProt::FACE_ENTITY,
-            NpcInfoProt::SAY,
-            NpcInfoProt::DAMAGE,
-            NpcInfoProt::CHANGE_TYPE,
-            NpcInfoProt::SPOT_ANIM,
-            NpcInfoProt::FACE_COORD,
+            NpcInfoProt::ANIM.to_index(),
+            NpcInfoProt::FACE_ENTITY.to_index(),
+            NpcInfoProt::SAY.to_index(),
+            NpcInfoProt::DAMAGE.to_index(),
+            NpcInfoProt::CHANGE_TYPE.to_index(),
+            NpcInfoProt::SPOT_ANIM.to_index(),
+            NpcInfoProt::FACE_COORD.to_index(),
         ] {
-            if let Some(cache) = self.caches.get_mut(&prot) {
-                cache.fill(None);
-            }
+            unsafe { (*self.caches.as_mut_ptr().add(prot)).fill(None); }
         }
     }
 
@@ -429,16 +433,16 @@ impl NpcRenderer {
     // ----
 
     #[inline]
-    pub fn encode_info(messages: &mut [Option<Vec<u8>>; 8192], id: i32, message: &dyn InfoMessage) -> usize {
+    pub fn encode_info(messages: &mut Vec<Option<Vec<u8>>>, id: i32, message: &dyn InfoMessage) -> usize {
         let mut buf: Packet = Packet::new(message.test());
         message.encode(&mut buf);
         let len: usize = buf.len();
-        messages[id as usize] = Some(buf.data);
+        unsafe { *messages.as_mut_ptr().add(id as usize) = Some(buf.data) };
         return len;
     }
 
     #[inline]
-    fn header(masks: u32) -> usize {
+    const fn header(masks: u32) -> usize {
         let mut len: usize = 1;
         if masks > 0xff {
             len += 1;

@@ -1,57 +1,64 @@
+use nohash_hasher::{BuildNoHashHasher, IntMap, IntSet};
 use std::collections::HashMap;
 
 pub struct Zone {
-    pub players: Vec<i32>, // pids
-    pub npcs: Vec<i32>, // nids
+    pub players: IntSet<i32>, // pids
+    pub npcs: IntSet<i32>, // nids
 }
 
 impl Zone {
     #[inline]
     pub fn new() -> Zone {
         return Zone {
-            players: Vec::new(),
-            npcs: Vec::new(),
+            players: IntSet::default(),
+            npcs: IntSet::default(),
         }
     }
 
+    #[inline]
     pub fn add_player(&mut self, player: i32) {
-        self.players.push(player);
+        self.players.insert(player);
     }
 
+    #[inline]
     pub fn remove_player(&mut self, player: i32) {
-        self.players.retain(|&pid| pid != player);
+        self.players.remove(&player);
     }
 
+    #[inline]
     pub fn add_npc(&mut self, npc: i32) {
-        self.npcs.push(npc);
+        self.npcs.insert(npc);
     }
 
+    #[inline]
     pub fn remove_npc(&mut self, npc: i32) {
-        self.npcs.retain(|&nid| nid != npc);
+        self.npcs.remove(&npc);
     }
 }
 
 pub struct ZoneMap {
-    pub zones: HashMap<u32, Zone>,
+    pub zones: IntMap<u32, Zone>,
 }
 
 impl ZoneMap {
     #[inline]
     pub fn new() -> ZoneMap {
+        let mut zones: HashMap<u32, Zone, BuildNoHashHasher<u32>> = IntMap::default();
+        zones.reserve(0xffffff);
         return ZoneMap {
-            zones: HashMap::with_capacity(0xffffff),
+            zones,
         }
     }
 
     #[inline]
-    pub fn zone_index(x: u16, y: u8, z: u16) -> u32 {
+    pub const fn zone_index(x: u16, y: u8, z: u16) -> u32 {
         return (((x >> 3) & 0x7ff) as u32)
             | ((((z >> 3) & 0x7ff) as u32) << 11)
             | (((y & 0x3) as u32) << 22);
     }
 
     #[inline]
-    pub fn unpack_index(index: u32) -> (u16, u8, u16) {
+    pub const fn unpack_index(index: u32) -> (u16, u8, u16) {
         let x: u16 = ((index & 0x7ff) << 3) as u16;
         let z: u16 = (((index >> 11) & 0x7ff) << 3) as u16;
         let y: u8 = (index >> 22) as u8;
@@ -60,10 +67,9 @@ impl ZoneMap {
 
     #[inline]
     pub fn zone(&mut self, x: u16, y: u8, z: u16) -> &mut Zone {
-        let zone_index: u32 = ZoneMap::zone_index(x, y, z);
         return self
             .zones
-            .entry(zone_index)
+            .entry(ZoneMap::zone_index(x, y, z))
             .or_insert(Zone::new());
     }
 }

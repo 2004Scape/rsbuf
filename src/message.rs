@@ -9,12 +9,12 @@ pub trait InfoMessage {
 // ---- players
 
 pub struct PlayerInfoAppearance {
-    pub bytes: Vec<u8>,
+    bytes: Vec<u8>,
 }
 
 impl PlayerInfoAppearance {
     #[inline]
-    pub fn new(bytes: Vec<u8>) -> PlayerInfoAppearance {
+    pub const fn new(bytes: Vec<u8>) -> PlayerInfoAppearance {
         return PlayerInfoAppearance {
             bytes,
         };
@@ -42,12 +42,12 @@ impl InfoMessage for PlayerInfoAppearance {
 // ----
 
 pub struct PlayerInfoFaceEntity {
-    pub entity: i32,
+    entity: i32,
 }
 
 impl PlayerInfoFaceEntity {
     #[inline]
-    pub fn new(entity: i32) -> PlayerInfoFaceEntity {
+    pub const fn new(entity: i32) -> PlayerInfoFaceEntity {
         return PlayerInfoFaceEntity {
             entity,
         }
@@ -74,13 +74,13 @@ impl InfoMessage for PlayerInfoFaceEntity {
 // ----
 
 pub struct PlayerInfoFaceCoord {
-    pub x: i32,
-    pub z: i32,
+    x: i32,
+    z: i32,
 }
 
 impl PlayerInfoFaceCoord {
     #[inline]
-    pub fn new(
+    pub const fn new(
         x: i32,
         z: i32
     ) -> PlayerInfoFaceCoord {
@@ -112,13 +112,13 @@ impl InfoMessage for PlayerInfoFaceCoord {
 // ----
 
 pub struct PlayerInfoAnim {
-    pub anim: i32,
-    pub delay: i32,
+    anim: i32,
+    delay: i32,
 }
 
 impl PlayerInfoAnim {
     #[inline]
-    pub fn new(
+    pub const fn new(
         anim: i32,
         delay: i32
     ) -> PlayerInfoAnim {
@@ -150,12 +150,12 @@ impl InfoMessage for PlayerInfoAnim {
 // ----
 
 pub struct PlayerInfoSay {
-    pub say: String
+    say: String
 }
 
 impl PlayerInfoSay {
     #[inline]
-    pub fn new(say: String) -> PlayerInfoSay {
+    pub const fn new(say: String) -> PlayerInfoSay {
         return PlayerInfoSay {
             say,
         }
@@ -182,15 +182,15 @@ impl InfoMessage for PlayerInfoSay {
 // ----
 
 pub struct PlayerInfoDamage {
-    pub damage: i32,
-    pub damage_type: i32,
-    pub current_hitpoints: i32,
-    pub base_hitpoints: i32,
+    damage: i32,
+    damage_type: i32,
+    current_hitpoints: i32,
+    base_hitpoints: i32,
 }
 
 impl PlayerInfoDamage {
     #[inline]
-    pub fn new(
+    pub const fn new(
         damage: i32,
         damage_type: i32,
         current_hitpoints: i32,
@@ -236,7 +236,7 @@ pub struct PlayerInfoChat {
 
 impl PlayerInfoChat {
     #[inline]
-    pub fn new(
+    pub const fn new(
         bytes: Vec<u8>,
         color: i32,
         effect: i32,
@@ -275,14 +275,14 @@ impl InfoMessage for PlayerInfoChat {
 // ----
 
 pub struct PlayerInfoSpotanim {
-    pub graphic_id: i32,
-    pub graphic_height: i32,
-    pub graphic_delay: i32,
+    graphic_id: i32,
+    graphic_height: i32,
+    graphic_delay: i32,
 }
 
 impl PlayerInfoSpotanim {
     #[inline]
-    pub fn new(
+    pub const fn new(
         graphic_id: i32,
         graphic_height: i32,
         graphic_delay: i32
@@ -316,18 +316,18 @@ impl InfoMessage for PlayerInfoSpotanim {
 // ----
 
 pub struct PlayerInfoExactMove {
-    pub start_x: i32,
-    pub start_z: i32,
-    pub end_x: i32,
-    pub end_z: i32,
-    pub begin: i32,
-    pub finish: i32,
-    pub dir: i32
+    start_x: i32,
+    start_z: i32,
+    end_x: i32,
+    end_z: i32,
+    begin: i32,
+    finish: i32,
+    dir: i32
 }
 
 impl PlayerInfoExactMove {
     #[inline]
-    pub fn new(
+    pub const fn new(
         start_x: i32,
         start_z: i32,
         end_x: i32,
@@ -374,12 +374,12 @@ impl InfoMessage for PlayerInfoExactMove {
 // ---- npcs
 
 pub struct NpcInfoFaceEntity {
-    pub entity: i32,
+    entity: i32,
 }
 
 impl NpcInfoFaceEntity {
     #[inline]
-    pub fn new(entity: i32) -> NpcInfoFaceEntity {
+    pub const fn new(entity: i32) -> NpcInfoFaceEntity {
         return NpcInfoFaceEntity {
             entity,
         }
@@ -406,13 +406,13 @@ impl InfoMessage for NpcInfoFaceEntity {
 // ----
 
 pub struct NpcInfoFaceCoord {
-    pub x: i32,
-    pub z: i32,
+    x: i32,
+    z: i32,
 }
 
 impl NpcInfoFaceCoord {
     #[inline]
-    pub fn new(
+    pub const fn new(
         x: i32,
         z: i32
     ) -> NpcInfoFaceCoord {
@@ -444,13 +444,13 @@ impl InfoMessage for NpcInfoFaceCoord {
 // ----
 
 pub struct NpcInfoAnim {
-    pub anim: i32,
-    pub delay: i32,
+    anim: i32,
+    delay: i32,
 }
 
 impl NpcInfoAnim {
     #[inline]
-    pub fn new(
+    pub const fn new(
         anim: i32,
         delay: i32
     ) -> NpcInfoAnim {
@@ -482,12 +482,12 @@ impl InfoMessage for NpcInfoAnim {
 // ----
 
 pub struct NpcInfoSay {
-    pub say: String
+    say: String
 }
 
 impl NpcInfoSay {
     #[inline]
-    pub fn new(say: String) -> NpcInfoSay {
+    pub const fn new(say: String) -> NpcInfoSay {
         return NpcInfoSay {
             say,
         }
@@ -514,15 +514,15 @@ impl InfoMessage for NpcInfoSay {
 // ----
 
 pub struct NpcInfoDamage {
-    pub damage: i32,
-    pub damage_type: i32,
-    pub current_hitpoints: i32,
-    pub base_hitpoints: i32,
+    damage: i32,
+    damage_type: i32,
+    current_hitpoints: i32,
+    base_hitpoints: i32,
 }
 
 impl NpcInfoDamage {
     #[inline]
-    pub fn new(
+    pub const fn new(
         damage: i32,
         damage_type: i32,
         current_hitpoints: i32,
@@ -560,12 +560,12 @@ impl InfoMessage for NpcInfoDamage {
 // ----
 
 pub struct NpcInfoChangeType {
-    pub change_type: i32,
+    change_type: i32,
 }
 
 impl NpcInfoChangeType {
     #[inline]
-    pub fn new(change_type: i32) -> NpcInfoChangeType {
+    pub const fn new(change_type: i32) -> NpcInfoChangeType {
         return NpcInfoChangeType {
             change_type,
         }
@@ -589,14 +589,14 @@ impl InfoMessage for NpcInfoChangeType {
 // ----
 
 pub struct NpcInfoSpotanim {
-    pub graphic_id: i32,
-    pub graphic_height: i32,
-    pub graphic_delay: i32,
+    graphic_id: i32,
+    graphic_height: i32,
+    graphic_delay: i32,
 }
 
 impl NpcInfoSpotanim {
     #[inline]
-    pub fn new(
+    pub const fn new(
         graphic_id: i32,
         graphic_height: i32,
         graphic_delay: i32
