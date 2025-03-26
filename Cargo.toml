@@ -1,6 +1,6 @@
 [package]
 name = "rsbuf"
-version = "225.1.5"
+version = "225.1.7"
 edition = "2021"
 authors = ["2004Scape"]
 description = "A RuneScape update info computer."
@@ -28,6 +28,7 @@ pem = "3.0.4"
 num-traits = "0.2.19"
 once_cell = "1.20.2"
 getrandom = { version = "0.2.15", features = ["js"] }
+nohash-hasher = "0.2.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]

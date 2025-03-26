@@ -1,9 +1,8 @@
-use std::collections::{HashMap, HashSet};
-use std::hash::{Hash, Hasher};
 use crate::coord::CoordGrid;
-use crate::player::Player;
 use crate::grid::ZoneMap;
 use crate::npc::Npc;
+use crate::player::Player;
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct IdBitSet {
@@ -51,8 +50,8 @@ impl IdBitSet {
     }
 
     #[inline]
-    pub fn as_ptr(&self) -> *const i32 {
-        return self.ids.as_ptr();
+    pub fn iter(&self) -> Vec<i32> {
+        return self.ids.iter().cloned().collect();
     }
 
     #[inline]
@@ -128,7 +127,7 @@ impl BuildArea {
     }
 
     #[inline]
-    pub fn rebuild_players(&mut self, players: &[Option<Player>], grid: &HashMap<u32, HashSet<i32>>, pid: i32, x: u16, y: u8, z: u16) {
+    pub fn rebuild_players(&mut self, players: &[Option<Player>], grid: &HashMap<u32, Vec<i32>>, pid: i32, x: u16, y: u8, z: u16) {
         // optimization to avoid sending 3 bits * observed players when everything has to be removed anyways
         self.players.clear();
         self.last_resize = 0;
@@ -149,7 +148,7 @@ impl BuildArea {
     }
 
     #[inline]
-    pub fn has_appearance(&self, pid: i32, tick: u32) -> bool {
+    pub const fn has_appearance(&self, pid: i32, tick: u32) -> bool {
         return unsafe { *self.appearances.as_ptr().add(pid as usize) == tick }
     }
 
@@ -162,7 +161,7 @@ impl BuildArea {
     pub fn get_nearby_players(
         &self,
         players: &[Option<Player>],
-        grid: &HashMap<u32, HashSet<i32>>,
+        grid: &HashMap<u32, Vec<i32>>,
         map: &mut ZoneMap,
         pid: i32,
         x: u16,
@@ -217,7 +216,7 @@ impl BuildArea {
     pub fn get_nearby_players_nearest(
         &self,
         players: &[Option<Player>],
-        grid: &HashMap<u32, HashSet<i32>>,
+        grid: &HashMap<u32, Vec<i32>>,
         pid: i32,
         x: u16,
         y: u8,
@@ -239,7 +238,7 @@ impl BuildArea {
                 return nearby;
             }
             if (min < dx && dx <= max) && (min < dz && dz <= max) {
-                if let Some(set) = grid.get(&CoordGrid::from(((x as i32) + dx) as u16, y, ((z as i32) + dz) as u16).coord) {
+                if let Some(set) = grid.get(&CoordGrid::from(((x as i32) + dx) as u16, y, ((z as i32) + dz) as u16).packed) {
                     nearby.extend(
                         set
                             .iter()
@@ -325,15 +324,5 @@ impl BuildArea {
             return !(self.npcs.contains(npc) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), BuildArea::PREFERRED_VIEW_DISTANCE) || other.nid == -1 || other.coord.y() != y || !other.active);
         }
         return false;
-    }
-}
-
-impl Hash for BuildArea {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        // self.players.hash(state);
-        // self.appearances.hash(state);
-        self.force_view_distance.hash(state);
-        self.view_distance.hash(state);
-        self.last_resize.hash(state);
     }
 }

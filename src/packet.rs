@@ -1,10 +1,10 @@
-use std::io::Error;
 use num_bigint::BigInt;
 use num_traits::identities::One;
 use pem::{parse, Pem};
 use rsa::pkcs8::DecodePrivateKey;
-use rsa::RsaPrivateKey;
 use rsa::traits::{PrivateKeyParts, PublicKeyParts};
+use rsa::RsaPrivateKey;
+use std::io::Error;
 
 #[derive(Clone)]
 pub struct Packet {
@@ -44,7 +44,7 @@ impl Packet {
     ///
     /// let packet: Packet = Packet::from(vec![0; 128]);
     /// ```
-    pub fn from(data: Vec<u8>) -> Packet {
+    pub const fn from(data: Vec<u8>) -> Packet {
         return Packet {
             data,
             pos: 0,
@@ -120,7 +120,7 @@ impl Packet {
     /// contract.
     #[inline]
     pub fn p1(&mut self, value: i32) {
-        unsafe { *self.data.get_unchecked_mut(self.pos) = value as u8 }
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = value as u8 }
         self.pos += 1;
     }
 
@@ -474,7 +474,7 @@ impl Packet {
     #[inline]
     pub fn g1(&mut self) -> u8 {
         self.pos += 1;
-        return unsafe { *self.data.get_unchecked(self.pos - 1) };
+        return unsafe { *self.data.as_ptr().add(self.pos - 1) };
     }
 
     /// Reads one byte from the internal buffer, interprets them as a signed 8-bit integer (`i8`),
@@ -982,10 +982,10 @@ impl Packet {
         let mut byte_pos: usize = pos >> 3;
         let mut remaining: usize = 8 - (pos & 7);
 
-        let mut result: u8 = 0;
+        let mut result: i32 = 0;
 
         while n > remaining {
-            result |= (unsafe { *self.data.as_ptr().add(byte_pos) } & (1 << remaining) - 1)
+            result |= (unsafe { *self.data.as_ptr().add(byte_pos) as i32 } & (1 << remaining) - 1)
                 << (n - remaining);
             byte_pos += 1;
             n -= remaining;
@@ -993,12 +993,12 @@ impl Packet {
         }
 
         if n == remaining {
-            result |= unsafe { *self.data.as_ptr().add(byte_pos) } & (1 << remaining) - 1;
+            result |= unsafe { *self.data.as_ptr().add(byte_pos) as i32 } & (1 << remaining) - 1;
         } else {
             result |=
-                (unsafe { *self.data.as_ptr().add(byte_pos) } >> (remaining - n)) & (1 << n) - 1;
+                (unsafe { *self.data.as_ptr().add(byte_pos) as i32 } >> (remaining - n)) & (1 << n) - 1;
         }
-        return result as i32;
+        return result;
     }
 
     /// Writes a specified number of bits to the internal buffer, starting from the current bit position (`self.bit_pos`).
@@ -1044,7 +1044,7 @@ impl Packet {
         let mut remaining: usize = 8 - (pos & 7);
 
         while n > remaining {
-            let shift: i32 = ((1 << remaining) - 1) as i32;
+            let shift: i32 = (1 << remaining) - 1;
             let byte: i32 = unsafe { *self.data.as_ptr().add(byte_pos) } as i32;
             unsafe {
                 *self.data.as_mut_ptr().add(byte_pos) =

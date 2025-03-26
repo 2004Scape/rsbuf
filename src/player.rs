@@ -123,7 +123,7 @@ impl Player {
 
 impl ExactMove {
     #[inline]
-    pub fn new(
+    pub const fn new(
         start_x: i32,
         start_z: i32,
         end_x: i32,
@@ -146,7 +146,7 @@ impl ExactMove {
 
 impl Chat {
     #[inline]
-    pub fn new(
+    pub const fn new(
         bytes: Vec<u8>,
         color: u8,
         effect: u8,

@@ -1,18 +1,18 @@
-use std::collections::{HashMap, HashSet};
 use crate::build::BuildArea;
 use crate::coord::CoordGrid;
+use crate::grid::ZoneMap;
 use crate::message::{NpcInfoFaceCoord, NpcInfoFaceEntity, PlayerInfoFaceCoord, PlayerInfoFaceEntity};
+use crate::npc::Npc;
 use crate::packet::Packet;
 use crate::player::Player;
 use crate::prot::{NpcInfoProt, PlayerInfoProt};
 use crate::renderer::{NpcRenderer, PlayerRenderer};
-use crate::grid::ZoneMap;
-use crate::npc::Npc;
 use crate::visibility::Visibility;
+use std::collections::HashMap;
 
 pub struct PlayerInfo {
-    pub buf: Packet,
-    pub updates: Packet,
+    buf: Packet,
+    updates: Packet,
 }
 
 impl PlayerInfo {
@@ -36,7 +36,7 @@ impl PlayerInfo {
         renderer: &mut PlayerRenderer,
         players: &[Option<Player>],
         map: &mut ZoneMap,
-        grid: &HashMap<u32, HashSet<i32>>,
+        grid: &HashMap<u32, Vec<i32>>,
         player: &mut Player,
         dx: i32,
         dz: i32,
@@ -107,39 +107,28 @@ impl PlayerInfo {
         player: &mut Player,
         mut bytes: usize
     ) -> usize {
-        let len: usize = player.build.players.len();
-        self.buf.pbit(8, len as i32);
-        let mut index: usize = 0;
-        while index < len {
-            if index >= player.build.players.len() {
-                break;
-            }
-            match unsafe { *player.build.players.as_ptr().add(index) } {
-                pid => {
-                    if let Some(other) = unsafe { &*players.as_ptr().add(pid as usize) } {
-                        if other.pid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, player.build.view_distance) || !other.active || other.visibility == Visibility::HARD {
-                            self.remove(player, pid);
-                            index -= 1;
-                        } else {
-                            let len: usize = renderer.highdefinitions(pid);
-                            if other.run_dir != -1 {
-                                self.run(renderer, player, other, len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_RUN, len));
-                            } else if other.walk_dir != -1 {
-                                self.walk(renderer, player, other, len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_WALK, len));
-                            } else if len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_EXTEND, len) {
-                                self.extend(renderer, player, other);
-                            } else {
-                                self.idle();
-                            }
-                            bytes += len + 2;
-                        }
-                    } else {
+        self.buf.pbit(8, player.build.players.len() as i32);
+        for pid in player.build.players.iter() {
+            match unsafe { &*players.as_ptr().add(pid as usize) } {
+                Some(other) => {
+                    if other.pid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, player.build.view_distance) || !other.active || other.visibility == Visibility::HARD {
                         self.remove(player, pid);
-                        index -= 1;
+                    } else {
+                        let len: usize = renderer.highdefinitions(pid);
+                        if other.run_dir != -1 {
+                            self.run(renderer, player, other, len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_RUN, len));
+                        } else if other.walk_dir != -1 {
+                            self.walk(renderer, player, other, len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_WALK, len));
+                        } else if len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_EXTEND, len) {
+                            self.extend(renderer, player, other);
+                        } else {
+                            self.idle();
+                        }
+                        bytes += len + 2;
                     }
                 }
+                _ => self.remove(player, pid),
             }
-            index += 1;
         }
         return bytes;
     }
@@ -150,7 +139,7 @@ impl PlayerInfo {
         map: &mut ZoneMap,
         players: &[Option<Player>],
         renderer: &mut PlayerRenderer,
-        grid: &HashMap<u32, HashSet<i32>>,
+        grid: &HashMap<u32, Vec<i32>>,
         player: &mut Player,
         mut bytes: usize
     ) {
@@ -296,12 +285,11 @@ impl PlayerInfo {
         player: &Player,
         other: &Player
     ) {
-        let myself: bool = player.pid == other.pid;
         let mut masks: u32 = other.masks;
-        if myself {
+        if player.pid == other.pid {
             masks &= !(PlayerInfoProt::CHAT as u32);
         }
-        self.write_blocks(renderer, player, other, other.pid, masks, myself);
+        self.write_blocks(renderer, player, other, masks);
     }
 
     #[inline]
@@ -354,7 +342,7 @@ impl PlayerInfo {
 
         masks |= PlayerInfoProt::FACE_COORD as u32;
 
-        self.write_blocks(renderer, player, other, pid, masks, false);
+        self.write_blocks(renderer, player, other, masks);
     }
 
     #[inline]
@@ -363,48 +351,42 @@ impl PlayerInfo {
         renderer: &mut PlayerRenderer,
         player: &Player,
         other: &Player,
-        pid: i32,
-        mut masks: u32,
-        myself: bool
+        masks: u32,
     ) {
         if masks > 0xff {
-            masks |= PlayerInfoProt::BIG as u32;
-        }
-        self.updates.p1((masks & 0xff) as i32);
-        if masks & PlayerInfoProt::BIG as u32 != 0 {
-            self.updates.p1((masks >> 8) as i32);
+            self.updates.ip2(masks as i32 | PlayerInfoProt::BIG as i32);
+        } else {
+            self.updates.p1(masks as i32);
         }
         // ----
         if masks & PlayerInfoProt::APPEARANCE as u32 != 0 {
-            renderer.write(&mut self.updates, pid, PlayerInfoProt::APPEARANCE);
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::APPEARANCE);
         }
         if masks & PlayerInfoProt::ANIM as u32 != 0 {
-            renderer.write(&mut self.updates, pid, PlayerInfoProt::ANIM);
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::ANIM);
         }
         if masks & PlayerInfoProt::FACE_ENTITY as u32 != 0 {
-            renderer.write(&mut self.updates, pid, PlayerInfoProt::FACE_ENTITY);
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::FACE_ENTITY);
         }
         if masks & PlayerInfoProt::SAY as u32 != 0 {
-            renderer.write(&mut self.updates, pid, PlayerInfoProt::SAY);
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::SAY);
         }
         if masks & PlayerInfoProt::DAMAGE as u32 != 0 {
-            renderer.write(&mut self.updates, pid, PlayerInfoProt::DAMAGE);
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::DAMAGE);
         }
         if masks & PlayerInfoProt::FACE_COORD as u32 != 0 {
-            renderer.write(&mut self.updates, pid, PlayerInfoProt::FACE_COORD);
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::FACE_COORD);
         }
-        if !myself && masks & PlayerInfoProt::CHAT as u32 != 0 {
-            renderer.write(&mut self.updates, pid, PlayerInfoProt::CHAT);
+        if masks & PlayerInfoProt::CHAT as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::CHAT);
         }
         if masks & PlayerInfoProt::SPOT_ANIM as u32 != 0 {
-            renderer.write(&mut self.updates, pid, PlayerInfoProt::SPOT_ANIM);
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::SPOT_ANIM);
         }
         if masks & PlayerInfoProt::EXACT_MOVE as u32 != 0 {
             if let Some(exactmove) = &other.exact_move {
-                let mut x = player.origin.x() as i32;
-                x = ((x >> 3) - 6) << 3;
-                let mut z = player.origin.z() as i32;
-                z = ((z >> 3) - 6) << 3;
+                let x: i32 = (((player.origin.x() as i32) >> 3) - 6) << 3;
+                let z: i32 = (((player.origin.z() as i32) >> 3) - 6) << 3;
                 renderer.writeExactmove(
                     &mut self.updates,
                     exactmove.start_x - x,
@@ -420,15 +402,15 @@ impl PlayerInfo {
     }
 
     #[inline]
-    fn fits(&self, bytes: usize, bits_to_add: usize, bytes_to_add: usize) -> bool {
+    const fn fits(&self, bytes: usize, bits_to_add: usize, bytes_to_add: usize) -> bool {
         // 7 aligns to the next byte
         return ((self.buf.bit_pos + bits_to_add + 7) >> 3) + bytes + bytes_to_add <= 4997;
     }
 }
 
 pub struct NpcInfo {
-    pub buf: Packet,
-    pub updates: Packet,
+    buf: Packet,
+    updates: Packet,
 }
 
 impl NpcInfo {
@@ -489,40 +471,29 @@ impl NpcInfo {
         player: &mut Player,
         mut bytes: usize
     ) -> usize {
-        let len: usize = player.build.npcs.len();
-        self.buf.pbit(8, len as i32);
-        let mut index: usize = 0;
-        while index < len {
-            if index >= player.build.npcs.len() {
-                break;
-            }
-            match unsafe { *player.build.npcs.as_ptr().add(index) } {
-                nid => {
-                    if let Some(other) = unsafe { &mut *npcs.as_mut_ptr().add(nid as usize) } {
-                        if other.nid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, BuildArea::PREFERRED_VIEW_DISTANCE) || !other.active {
-                            self.remove(player, nid);
-                            other.observers = (other.observers - 1).max(0);
-                            index -= 1;
-                        } else {
-                            let len: usize = renderer.highdefinitions(nid);
-                            if other.run_dir != -1 {
-                                self.run(renderer, other, len > 0 && self.fits(bytes + 1, NpcInfo::BITS_RUN, len));
-                            } else if other.walk_dir != -1 {
-                                self.walk(renderer, other, len > 0 && self.fits(bytes + 1, NpcInfo::BITS_WALK, len));
-                            } else if len > 0 && self.fits(bytes + 1, NpcInfo::BITS_EXTEND, len) {
-                                self.extend(renderer, other);
-                            } else {
-                                self.idle();
-                            }
-                            bytes += len + 1;
-                        }
-                    } else {
+        self.buf.pbit(8, player.build.npcs.len() as i32);
+        for nid in player.build.npcs.iter() {
+            match unsafe { &mut *npcs.as_mut_ptr().add(nid as usize) } {
+                Some(other) => {
+                    if other.nid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, BuildArea::PREFERRED_VIEW_DISTANCE) || !other.active {
                         self.remove(player, nid);
-                        index -= 1;
+                        other.observers = (other.observers - 1).max(0);
+                    } else {
+                        let len: usize = renderer.highdefinitions(nid);
+                        if other.run_dir != -1 {
+                            self.run(renderer, other, len > 0 && self.fits(bytes + 1, NpcInfo::BITS_RUN, len));
+                        } else if other.walk_dir != -1 {
+                            self.walk(renderer, other, len > 0 && self.fits(bytes + 1, NpcInfo::BITS_WALK, len));
+                        } else if len > 0 && self.fits(bytes + 1, NpcInfo::BITS_EXTEND, len) {
+                            self.extend(renderer, other);
+                        } else {
+                            self.idle();
+                        }
+                        bytes += len + 1;
                     }
                 }
+                _ => self.remove(player, nid),
             }
-            index += 1;
         }
         return bytes;
     }
@@ -704,6 +675,8 @@ impl NpcInfo {
     ) {
         self.updates.p1((masks & 0xff) as i32);
         // ----
+        // an optimization *could* be made where all of these are just 1 block of bytes...
+        // the same could NOT be done for players bcuz of how exact_move works...
         if masks & NpcInfoProt::ANIM as u32 != 0 {
             renderer.write(&mut self.updates, nid, NpcInfoProt::ANIM);
         }
@@ -728,7 +701,7 @@ impl NpcInfo {
     }
 
     #[inline]
-    fn fits(&self, bytes: usize, bits_to_add: usize, bytes_to_add: usize) -> bool {
+    const fn fits(&self, bytes: usize, bits_to_add: usize, bytes_to_add: usize) -> bool {
         // 7 aligns to the next byte
         return ((self.buf.bit_pos + bits_to_add + 7) >> 3) + bytes + bytes_to_add <= 4997;
     }

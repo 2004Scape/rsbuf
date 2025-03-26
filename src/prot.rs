@@ -18,6 +18,25 @@ pub enum PlayerInfoProt {
     EXACT_MOVE = 0x200,
 }
 
+impl PlayerInfoProt {
+    #[inline]
+    pub const fn to_index(self) -> usize {
+        // the ordering here does not matter.
+        return match self {
+            PlayerInfoProt::APPEARANCE => 0,
+            PlayerInfoProt::ANIM => 1,
+            PlayerInfoProt::FACE_ENTITY => 2,
+            PlayerInfoProt::SAY => 3,
+            PlayerInfoProt::DAMAGE => 4,
+            PlayerInfoProt::FACE_COORD => 5,
+            PlayerInfoProt::CHAT => 6,
+            PlayerInfoProt::SPOT_ANIM => 7,
+            PlayerInfoProt::BIG => 255, // unused
+            PlayerInfoProt::EXACT_MOVE => 255, // unused
+        }
+    }
+}
+
 #[repr(u16)]
 #[derive(Eq, Hash, PartialEq)]
 #[wasm_bindgen]
@@ -29,4 +48,20 @@ pub enum NpcInfoProt {
     CHANGE_TYPE = 0x20,
     SPOT_ANIM = 0x40,
     FACE_COORD = 0x80,
+}
+
+impl NpcInfoProt {
+    #[inline]
+    pub const fn to_index(self) -> usize {
+        // the ordering here does not matter.
+        return match self {
+            NpcInfoProt::ANIM => 0,
+            NpcInfoProt::FACE_ENTITY => 1,
+            NpcInfoProt::SAY => 2,
+            NpcInfoProt::DAMAGE => 3,
+            NpcInfoProt::CHANGE_TYPE => 4,
+            NpcInfoProt::SPOT_ANIM => 5,
+            NpcInfoProt::FACE_COORD => 6,
+        }
+    }
 }
