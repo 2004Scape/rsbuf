@@ -191,21 +191,10 @@ pub unsafe fn remove_player(pid: i32) {
     if let Some(player) = &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
         // remove player from zone.
         ZONE_MAP.zone(player.coord.x(), player.coord.y(), player.coord.z()).remove_player(pid);
-
-        let len: usize = player.build.npcs.len();
-        let mut index: usize = 0;
-        while index < len {
-            if index >= player.build.npcs.len() {
-                break;
+        for nid in player.build.npcs.iter() {
+            if let Some(npc) = unsafe { &mut *NPCS.as_mut_ptr().add(nid as usize) } {
+                npc.observers = (npc.observers - 1).max(0);
             }
-            match unsafe { *player.build.npcs.as_ptr().add(index) } {
-                nid => {
-                    if let Some(npc) = unsafe { &mut *NPCS.as_mut_ptr().add(nid as usize) } {
-                        npc.observers = (npc.observers - 1).max(0);
-                    }
-                }
-            }
-            index += 1;
         }
         player.build.cleanup();
     }

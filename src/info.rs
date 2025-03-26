@@ -107,42 +107,28 @@ impl PlayerInfo {
         player: &mut Player,
         mut bytes: usize
     ) -> usize {
-        let len: usize = player.build.players.len();
-        self.buf.pbit(8, len as i32);
-        let mut index: usize = 0;
-        while index < len {
-            if index >= player.build.players.len() {
-                break;
-            }
-            match unsafe { *player.build.players.as_ptr().add(index) } {
-                pid => {
-                    match unsafe { &*players.as_ptr().add(pid as usize) } {
-                        Some(other) => {
-                            if other.pid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, player.build.view_distance) || !other.active || other.visibility == Visibility::HARD {
-                                self.remove(player, pid);
-                                index -= 1;
-                            } else {
-                                let len: usize = renderer.highdefinitions(pid);
-                                if other.run_dir != -1 {
-                                    self.run(renderer, player, other, len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_RUN, len));
-                                } else if other.walk_dir != -1 {
-                                    self.walk(renderer, player, other, len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_WALK, len));
-                                } else if len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_EXTEND, len) {
-                                    self.extend(renderer, player, other);
-                                } else {
-                                    self.idle();
-                                }
-                                bytes += len + 2;
-                            }
+        self.buf.pbit(8, player.build.players.len() as i32);
+        for pid in player.build.players.iter() {
+            match unsafe { &*players.as_ptr().add(pid as usize) } {
+                Some(other) => {
+                    if other.pid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, player.build.view_distance) || !other.active || other.visibility == Visibility::HARD {
+                        self.remove(player, pid);
+                    } else {
+                        let len: usize = renderer.highdefinitions(pid);
+                        if other.run_dir != -1 {
+                            self.run(renderer, player, other, len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_RUN, len));
+                        } else if other.walk_dir != -1 {
+                            self.walk(renderer, player, other, len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_WALK, len));
+                        } else if len > 0 && self.fits(bytes + 2, PlayerInfo::BITS_EXTEND, len) {
+                            self.extend(renderer, player, other);
+                        } else {
+                            self.idle();
                         }
-                        _ => {
-                            self.remove(player, pid);
-                            index -= 1;
-                        }
+                        bytes += len + 2;
                     }
                 }
+                _ => self.remove(player, pid),
             }
-            index += 1;
         }
         return bytes;
     }
@@ -365,14 +351,12 @@ impl PlayerInfo {
         renderer: &mut PlayerRenderer,
         player: &Player,
         other: &Player,
-        mut masks: u32,
+        masks: u32,
     ) {
         if masks > 0xff {
-            masks |= PlayerInfoProt::BIG as u32;
-        }
-        self.updates.p1((masks & 0xff) as i32);
-        if masks & PlayerInfoProt::BIG as u32 != 0 {
-            self.updates.p1((masks >> 8) as i32);
+            self.updates.ip2(masks as i32 | PlayerInfoProt::BIG as i32);
+        } else {
+            self.updates.p1(masks as i32);
         }
         // ----
         if masks & PlayerInfoProt::APPEARANCE as u32 != 0 {
@@ -487,43 +471,29 @@ impl NpcInfo {
         player: &mut Player,
         mut bytes: usize
     ) -> usize {
-        let len: usize = player.build.npcs.len();
-        self.buf.pbit(8, len as i32);
-        let mut index: usize = 0;
-        while index < len {
-            if index >= player.build.npcs.len() {
-                break;
-            }
-            match unsafe { *player.build.npcs.as_ptr().add(index) } {
-                nid => {
-                    match unsafe { &mut *npcs.as_mut_ptr().add(nid as usize) } {
-                        Some(other) => {
-                            if other.nid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, BuildArea::PREFERRED_VIEW_DISTANCE) || !other.active {
-                                self.remove(player, nid);
-                                other.observers = (other.observers - 1).max(0);
-                                index -= 1;
-                            } else {
-                                let len: usize = renderer.highdefinitions(nid);
-                                if other.run_dir != -1 {
-                                    self.run(renderer, other, len > 0 && self.fits(bytes + 1, NpcInfo::BITS_RUN, len));
-                                } else if other.walk_dir != -1 {
-                                    self.walk(renderer, other, len > 0 && self.fits(bytes + 1, NpcInfo::BITS_WALK, len));
-                                } else if len > 0 && self.fits(bytes + 1, NpcInfo::BITS_EXTEND, len) {
-                                    self.extend(renderer, other);
-                                } else {
-                                    self.idle();
-                                }
-                                bytes += len + 1;
-                            }
+        self.buf.pbit(8, player.build.npcs.len() as i32);
+        for nid in player.build.npcs.iter() {
+            match unsafe { &mut *npcs.as_mut_ptr().add(nid as usize) } {
+                Some(other) => {
+                    if other.nid == -1 || other.tele || other.coord.y() != player.coord.y() || !CoordGrid::within_distance_sw(&player.coord, &other.coord, BuildArea::PREFERRED_VIEW_DISTANCE) || !other.active {
+                        self.remove(player, nid);
+                        other.observers = (other.observers - 1).max(0);
+                    } else {
+                        let len: usize = renderer.highdefinitions(nid);
+                        if other.run_dir != -1 {
+                            self.run(renderer, other, len > 0 && self.fits(bytes + 1, NpcInfo::BITS_RUN, len));
+                        } else if other.walk_dir != -1 {
+                            self.walk(renderer, other, len > 0 && self.fits(bytes + 1, NpcInfo::BITS_WALK, len));
+                        } else if len > 0 && self.fits(bytes + 1, NpcInfo::BITS_EXTEND, len) {
+                            self.extend(renderer, other);
+                        } else {
+                            self.idle();
                         }
-                        _ => {
-                            self.remove(player, nid);
-                            index -= 1;
-                        }
+                        bytes += len + 1;
                     }
                 }
+                _ => self.remove(player, nid),
             }
-            index += 1;
         }
         return bytes;
     }

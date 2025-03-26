@@ -50,8 +50,8 @@ impl IdBitSet {
     }
 
     #[inline]
-    pub fn as_ptr(&self) -> *const i32 {
-        return self.ids.as_ptr();
+    pub fn iter(&self) -> Vec<i32> {
+        return self.ids.iter().cloned().collect();
     }
 
     #[inline]

@@ -13,19 +13,9 @@ pub struct PlayerRenderer {
 impl PlayerRenderer {
     #[inline]
     pub fn new() -> PlayerRenderer {
-        let mut caches: Vec<Vec<Option<Vec<u8>>>> = vec![vec![None; 2048]; 8];
-        // the ordering here does not matter.
-        caches[PlayerInfoProt::APPEARANCE.to_index()] = vec![None; 2048];
-        caches[PlayerInfoProt::ANIM.to_index()] = vec![None; 2048];
-        caches[PlayerInfoProt::FACE_ENTITY.to_index()] = vec![None; 2048];
-        caches[PlayerInfoProt::SAY.to_index()] = vec![None; 2048];
-        caches[PlayerInfoProt::DAMAGE.to_index()] = vec![None; 2048];
-        caches[PlayerInfoProt::FACE_COORD.to_index()] = vec![None; 2048];
-        caches[PlayerInfoProt::CHAT.to_index()] = vec![None; 2048];
-        caches[PlayerInfoProt::SPOT_ANIM.to_index()] = vec![None; 2048];
         // exact move does not get cached, that is built on demand.
         return PlayerRenderer {
-            caches,
+            caches: vec![vec![None; 2048]; 8],
             highs: [0; 2048],
             lows: [0; 2048],
         }
@@ -174,11 +164,9 @@ impl PlayerRenderer {
     #[inline]
     pub fn write(&self, buf: &mut Packet, id: i32, prot: PlayerInfoProt) {
         unsafe {
-            let cache: &Vec<Option<Vec<u8>>> = &*self.caches.as_ptr().add(prot.to_index());
-            if let Some(bytes) = &*cache.as_ptr().add(id as usize) {
-                buf.pdata(bytes, 0, bytes.len());
-            } else {
-                panic!("[PlayerRenderer] Tried to write a buf not cached!");
+            match &*(&*self.caches.as_ptr().add(prot.to_index())).as_ptr().add(id as usize) {
+                Some(bytes) => buf.pdata(bytes, 0, bytes.len()),
+                _ => panic!("[PlayerRenderer] Tried to write a buf not cached!"),
             }
         }
     }
@@ -186,10 +174,7 @@ impl PlayerRenderer {
 
     #[inline]
     pub fn has(&self, id: i32, prot: PlayerInfoProt) -> bool {
-        unsafe {
-            let cache: &Vec<Option<Vec<u8>>> = &*self.caches.as_ptr().add(prot.to_index());
-            return (*cache.as_ptr().add(id as usize)).is_some();
-        }
+        return unsafe { (*(&*self.caches.as_ptr().add(prot.to_index())).as_ptr().add(id as usize)).is_some() };
     }
 
 
@@ -258,17 +243,8 @@ pub struct NpcRenderer {
 impl NpcRenderer {
     #[inline]
     pub fn new() -> NpcRenderer {
-        let mut caches: Vec<Vec<Option<Vec<u8>>>> = vec![vec![None; 8192]; 7];
-        // the ordering here does not matter.
-        caches[NpcInfoProt::ANIM.to_index()] = vec![None; 8192];
-        caches[NpcInfoProt::FACE_ENTITY.to_index()] = vec![None; 8192];
-        caches[NpcInfoProt::SAY.to_index()] = vec![None; 8192];
-        caches[NpcInfoProt::DAMAGE.to_index()] = vec![None; 8192];
-        caches[NpcInfoProt::CHANGE_TYPE.to_index()] = vec![None; 8192];
-        caches[NpcInfoProt::SPOT_ANIM.to_index()] = vec![None; 8192];
-        caches[NpcInfoProt::FACE_COORD.to_index()] = vec![None; 8192];
         return NpcRenderer {
-            caches,
+            caches: vec![vec![None; 8192]; 7],
             highs: [0; 8192],
             lows: [0; 8192],
         }
@@ -377,11 +353,9 @@ impl NpcRenderer {
     #[inline]
     pub fn write(&self, buf: &mut Packet, id: i32, prot: NpcInfoProt) {
         unsafe {
-            let cache: &Vec<Option<Vec<u8>>> = &*self.caches.as_ptr().add(prot.to_index());
-            if let Some(bytes) = &*cache.as_ptr().add(id as usize) {
-                buf.pdata(bytes, 0, bytes.len());
-            } else {
-                panic!("[NpcRenderer] Tried to write a buf not cached!");
+            match &*(&*self.caches.as_ptr().add(prot.to_index())).as_ptr().add(id as usize) {
+                Some(bytes) => buf.pdata(bytes, 0, bytes.len()),
+                _ => panic!("[NpcRenderer] Tried to write a buf not cached!"),
             }
         }
     }
@@ -389,10 +363,7 @@ impl NpcRenderer {
 
     #[inline]
     pub fn has(&self, id: i32, prot: NpcInfoProt) -> bool {
-        unsafe {
-            let cache: &Vec<Option<Vec<u8>>> = &*self.caches.as_ptr().add(prot.to_index());
-            return (*cache.as_ptr().add(id as usize)).is_some();
-        }
+        return unsafe { (*(&*self.caches.as_ptr().add(prot.to_index())).as_ptr().add(id as usize)).is_some() };
     }
 
 
