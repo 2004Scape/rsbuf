@@ -188,8 +188,10 @@ pub unsafe fn remove_player(pid: i32) {
     if pid == -1 {
         return;
     }
-    PLAYER_RENDERER.removePermanent(pid);
     if let Some(player) = &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
+        // remove player from zone.
+        ZONE_MAP.zone(player.coord.x(), player.coord.y(), player.coord.z()).remove_player(pid);
+
         let len: usize = player.build.npcs.len();
         let mut index: usize = 0;
         while index < len {
@@ -207,6 +209,7 @@ pub unsafe fn remove_player(pid: i32) {
         }
         player.build.cleanup();
     }
+    PLAYER_RENDERER.removePermanent(pid);
     *PLAYERS.as_mut_ptr().add(pid as usize) = None;
 }
 
@@ -322,6 +325,10 @@ pub unsafe fn add_npc(nid: i32, ntype: i32) {
 pub unsafe fn remove_npc(nid: i32) {
     if nid == -1 {
         return;
+    }
+    if let Some(npc) = &*NPCS.as_ptr().add(nid as usize) {
+        // remove npc from zone.
+        ZONE_MAP.zone(npc.coord.x(), npc.coord.y(), npc.coord.z()).remove_npc(nid);
     }
     NPC_RENDERER.removePermanent(nid);
     *NPCS.as_mut_ptr().add(nid as usize) = None;
