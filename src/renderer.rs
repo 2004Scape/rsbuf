@@ -153,11 +153,12 @@ impl PlayerRenderer {
     #[inline]
     pub fn cache(&mut self, id: i32, message: &dyn InfoMessage, prot: PlayerInfoProt) -> usize {
         unsafe {
+            let persist: bool = prot == PlayerInfoProt::APPEARANCE;
             let cache: &mut Vec<Option<Vec<u8>>> = &mut *self.caches.as_mut_ptr().add(prot.to_index());
-            if (*cache.as_ptr().add(id as usize)).is_some() && !message.persists() {
-                return 0;
-            }
-            return PlayerRenderer::encode_info(cache, id, message);
+            return match *cache.as_ptr().add(id as usize) {
+                None => PlayerRenderer::encode_info(cache, id, message),
+                Some(_) => if !persist { 0 } else { PlayerRenderer::encode_info(cache, id, message) },
+            };
         }
     }
 
@@ -343,10 +344,10 @@ impl NpcRenderer {
     pub fn cache(&mut self, id: i32, message: &dyn InfoMessage, prot: NpcInfoProt) -> usize {
         unsafe {
             let cache: &mut Vec<Option<Vec<u8>>> = &mut *self.caches.as_mut_ptr().add(prot.to_index());
-            if (*cache.as_ptr().add(id as usize)).is_some() && !message.persists() {
-                return 0;
-            }
-            return NpcRenderer::encode_info(cache, id, message);
+            return match *cache.as_ptr().add(id as usize) {
+                None => NpcRenderer::encode_info(cache, id, message),
+                Some(_) => 0,
+            };
         }
     }
 

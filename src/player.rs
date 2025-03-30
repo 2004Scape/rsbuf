@@ -1,6 +1,10 @@
 use crate::build::BuildArea;
 use crate::coord::CoordGrid;
+use crate::message::{MessageEncoder, OutgoingPacket};
+use crate::packet::Packet;
+use crate::priority::ServerProtPriority;
 use crate::visibility::Visibility;
+use std::collections::VecDeque;
 
 #[derive(Clone)]
 pub struct Player {
@@ -34,6 +38,7 @@ pub struct Player {
     pub graphic_height: i32,
     pub graphic_delay: i32,
     pub exact_move: Option<ExactMove>,
+    pub write_queue: VecDeque<OutgoingPacket>,
 }
 
 #[derive(Clone)]
@@ -89,7 +94,22 @@ impl Player {
             graphic_height: -1,
             graphic_delay: -1,
             exact_move: None,
+            write_queue: VecDeque::new(),
         }
+    }
+
+    #[inline]
+    pub fn write(&mut self, message: &dyn MessageEncoder) -> Option<OutgoingPacket> {
+        let mut buf: Packet = Packet::new(message.test());
+        message.encode(&mut buf);
+        let out: OutgoingPacket = OutgoingPacket::new(Some(buf.data), message.id(), message.length());
+        return match message.priority() {
+            ServerProtPriority::Buffered => {
+                self.write_queue.push_back(out);
+                return None;
+            },
+            ServerProtPriority::Immediate => Some(out),
+        };
     }
 
     #[inline]
@@ -118,6 +138,7 @@ impl Player {
         self.graphic_height = -1;
         self.graphic_delay = -1;
         self.exact_move = None;
+        self.write_queue.clear();
     }
 }
 
