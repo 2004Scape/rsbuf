@@ -1,0 +1,43 @@
+use crate::message::MessageDecoder;
+use crate::packet::Packet;
+use crate::prot::ClientProt;
+use wasm_bindgen::prelude::wasm_bindgen;
+
+#[wasm_bindgen]
+pub struct ReportAbuse {
+    #[wasm_bindgen(readonly)]
+    pub offender: i64,
+    #[wasm_bindgen(readonly)]
+    pub reason: u8,
+    #[wasm_bindgen(readonly)]
+    pub mute: bool,
+}
+
+#[wasm_bindgen]
+impl ReportAbuse {
+    pub fn new(
+        offender: i64,
+        reason: u8,
+        mute: bool,
+    ) -> ReportAbuse {
+        return ReportAbuse {
+            offender,
+            reason,
+            mute,
+        }
+    }
+}
+
+impl MessageDecoder<ReportAbuse> for ReportAbuse {
+    fn length() -> i32 {
+        return 10;
+    }
+
+    fn decode(_: ClientProt, buf: &mut Packet) -> ReportAbuse {
+        return ReportAbuse::new(
+            buf.g8s(),
+            buf.g1(),
+            buf.g1() == 1,
+        );
+    }
+}
