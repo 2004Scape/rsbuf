@@ -1,6 +1,5 @@
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ServerInternalProt;
 
 pub struct IfOpenChat {
@@ -25,11 +24,6 @@ impl MessageEncoder for IfOpenChat {
     #[inline]
     fn length(&self) -> i32 {
         return 2;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Buffered;
     }
 
     #[inline]

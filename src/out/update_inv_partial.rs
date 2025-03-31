@@ -1,6 +1,5 @@
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ServerInternalProt;
 
 pub struct UpdateInvPartial {
@@ -33,11 +32,6 @@ impl MessageEncoder for UpdateInvPartial {
     #[inline]
     fn length(&self) -> i32 {
         return -2;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Immediate;
     }
 
     #[inline]

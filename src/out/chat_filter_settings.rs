@@ -1,6 +1,5 @@
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ServerInternalProt;
 
 pub struct ChatFilterSettings {
@@ -33,11 +32,6 @@ impl MessageEncoder for ChatFilterSettings {
     #[inline]
     fn length(&self) -> i32 {
         return 3;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Buffered;
     }
 
     #[inline]

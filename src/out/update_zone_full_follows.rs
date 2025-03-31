@@ -1,7 +1,6 @@
 use crate::coord::CoordGrid;
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ServerInternalProt;
 
 pub struct UpdateZoneFullFollows {
@@ -37,11 +36,6 @@ impl MessageEncoder for UpdateZoneFullFollows {
     #[inline]
     fn length(&self) -> i32 {
         return 2;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Immediate;
     }
 
     #[inline]

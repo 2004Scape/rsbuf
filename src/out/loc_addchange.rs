@@ -1,6 +1,5 @@
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ServerInternalProt;
 
 pub struct LocAddChange {
@@ -36,11 +35,6 @@ impl MessageEncoder for LocAddChange {
     #[inline]
     fn length(&self) -> i32 {
         return 4;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Immediate;
     }
 
     #[inline]

@@ -1,7 +1,6 @@
 use crate::coord::CoordGrid;
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ServerInternalProt;
 
 pub struct MapProjAnim {
@@ -63,11 +62,6 @@ impl MessageEncoder for MapProjAnim {
     #[inline]
     fn length(&self) -> i32 {
         return 15;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Immediate;
     }
 
     #[inline]

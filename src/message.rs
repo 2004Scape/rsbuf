@@ -1,5 +1,4 @@
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ClientProt;
 
 pub trait InfoMessage {
@@ -10,7 +9,6 @@ pub trait InfoMessage {
 pub trait MessageEncoder {
     fn id(&self) -> i32;
     fn length(&self) -> i32;
-    fn priority(&self) -> ServerProtPriority;
     fn encode(&self, buf: &mut Packet);
     fn test(&self) -> usize;
 }
@@ -19,32 +17,6 @@ pub trait MessageDecoder<T> {
     fn length() -> i32;
     fn decode(prot: ClientProt, buf: Packet) -> T;
 }
-
-// #[wasm_bindgen]
-// #[derive(Clone)]
-// pub struct OutgoingPacket {
-//     #[wasm_bindgen(getter_with_clone, readonly)]
-//     pub bytes: Option<Vec<u8>>,
-//     #[wasm_bindgen(readonly)]
-//     pub id: i32,
-//     #[wasm_bindgen(readonly)]
-//     pub length: i32,
-// }
-//
-// impl OutgoingPacket {
-//     #[inline]
-//     pub fn new(
-//         bytes: Option<Vec<u8>>,
-//         id: i32,
-//         length: i32
-//     ) -> OutgoingPacket {
-//         return OutgoingPacket {
-//             bytes,
-//             id,
-//             length,
-//         }
-//     }
-// }
 
 #[derive(Clone)]
 pub struct IncomingPacket {

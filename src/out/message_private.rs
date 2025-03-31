@@ -1,7 +1,6 @@
 use crate::message::MessageEncoder;
 use crate::pack::WordPack;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ServerInternalProt;
 
 pub struct MessagePrivateOut {
@@ -37,11 +36,6 @@ impl MessageEncoder for MessagePrivateOut {
     #[inline]
     fn length(&self) -> i32 {
         return -1;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Immediate;
     }
 
     #[inline]

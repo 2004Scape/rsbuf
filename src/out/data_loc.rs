@@ -1,6 +1,5 @@
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ServerInternalProt;
 
 pub struct DataLoc {
@@ -39,11 +38,6 @@ impl MessageEncoder for DataLoc {
     #[inline]
     fn length(&self) -> i32 {
         return -2;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Immediate;
     }
 
     #[inline]
@@ -90,11 +84,6 @@ impl MessageEncoder for DataLocDone {
     #[inline]
     fn length(&self) -> i32 {
         return 2;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Immediate;
     }
 
     #[inline]

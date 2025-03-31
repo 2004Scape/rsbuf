@@ -1,7 +1,6 @@
 use crate::coord::CoordGrid;
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ServerInternalProt;
 
 pub struct LocMerge {
@@ -63,11 +62,6 @@ impl MessageEncoder for LocMerge {
     #[inline]
     fn length(&self) -> i32 {
         return 14;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Immediate;
     }
     #[inline]
 

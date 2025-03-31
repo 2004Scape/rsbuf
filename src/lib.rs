@@ -120,7 +120,6 @@ mod message;
 mod grid;
 mod npc;
 mod visibility;
-mod priority;
 mod category;
 mod r#in;
 mod out;
@@ -135,6 +134,11 @@ macro_rules! read {
     };
 }
 
+// these priorities are important for cases where the content developer wants to be aware of the
+// bandwidth implications their script may run into and how it impacts the player experience
+
+// counted as part of the buffer_full command
+// alternate names: LOW, CONTENT
 macro_rules! buffer {
     ($fn_name:ident, $js_name:literal, $struct:ty, ($($arg_name:ident: $arg_ty:ty),*), ($($arg_val:ident),*)) => {
         #[wasm_bindgen(js_name = $js_name)]
@@ -150,6 +154,8 @@ macro_rules! buffer {
     };
 }
 
+// not counted as part of the buffer_full command
+// alternate names: HIGH, ESSENTIAL, ENGINE
 macro_rules! write {
     ($fn_name:ident, $js_name:literal, $struct:ty, ($($arg_name:ident: $arg_ty:ty),*), ($($arg_val:ident),*)) => {
         #[wasm_bindgen(js_name = $js_name)]
@@ -533,7 +539,7 @@ write!(data_loc, "dataLoc", DataLoc, (x: i32, z: i32, offset: i32, length: i32, 
 write!(data_loc_done, "dataLocDone", DataLocDone, (x: i32, z: i32), (x, z));
 buffer!(enable_tracking, "enableTracking", EnableTracking, (), ());
 buffer!(finish_tracking, "finishTracking", FinishTracking, (), ());
-buffer!(hint_arrow, "hintArrow", HintArrow, (arrow: i32, nid: i32, pid2: i32, x: i32, z: i32, y: i32), (arrow, nid, pid2, x, z, y));
+buffer!(hint_arrow, "hintArrow", HintArrow, (arrow: i32, nid: i32, pid2: i32, x: i32, z: i32, y: i32), (arrow, nid, pid2, x, z, y)); // todo: what should priority be?
 buffer!(if_close, "ifClose", IfClose, (), ());
 buffer!(if_open_chat, "ifOpenChat", IfOpenChat, (component: i32), (component));
 buffer!(if_open_main, "ifOpenMain", IfOpenMain, (component: i32), (component));
@@ -568,7 +574,7 @@ write!(obj_count, "objCount", ObjCount, (coord: i32, obj: i32, oldCount: i32, ne
 write!(obj_del, "objDel", ObjDel, (coord: i32, obj: i32), (coord, obj));
 write!(obj_reveal, "objReveal", ObjReveal, (coord: i32, obj: i32, count: i32, receiver: i32), (coord, obj, count, receiver));
 write!(rebuild_normal, "rebuildNormal", RebuildNormal, (x: i32, z: i32, squares: Vec<u16>, maps: Vec<i32>, locs: Vec<i32>), (x, z, squares, maps, locs));
-write!(reset_anims, "resetAnims", ResetAnims, (), ());
+write!(reset_anims, "resetAnims", ResetAnims, (), ()); // todo: what should priority be?
 write!(reset_clientvarcache, "resetClientVarCache", ResetClientVarCache, (), ());
 buffer!(set_multiway, "setMultiway", SetMultiway, (hidden: bool), (hidden));
 buffer!(synth_sound, "synthSound", SynthSound, (synth: i32, loops: i32, delay: i32), (synth, loops, delay));
@@ -580,8 +586,8 @@ buffer!(update_ignorelist, "updateIgnoreList", UpdateIgnoreList, (names: Vec<i64
 write!(update_inv_full, "updateInvFull", UpdateInvFull, (size: i32, component: i32, objs: Vec<i64>), (size, component, objs));
 write!(update_inv_partial, "updateInvPartial", UpdateInvPartial, (component: i32, slots: Vec<i32>, objs: Vec<i64>), (component, slots, objs));
 write!(update_inv_stop_transmit, "updateInvStopTransmit", UpdateInvStopTransmit, (component: i32), (component));
-write!(update_pid, "updatePid", UpdatePid, (pid: i32), (pid));
-buffer!(update_reboot_timer, "updateRebootTimer", UpdateRebootTimer, (ticks: i32), (ticks));
+write!(update_pid, "updatePid", UpdatePid, (pid: i32), (pid)); // todo: what should priority be?
+buffer!(update_reboot_timer, "updateRebootTimer", UpdateRebootTimer, (ticks: i32), (ticks)); // todo: what should priority be?
 buffer!(update_runenergy, "updateRunEnergy", UpdateRunEnergy, (energy: i32), (energy));
 buffer!(update_runweight, "updateRunWeight", UpdateRunWeight, (kg: i32), (kg));
 buffer!(update_stat, "updateStat", UpdateStat, (stat: i32, experience: i32, level: i32), (stat, experience, level));

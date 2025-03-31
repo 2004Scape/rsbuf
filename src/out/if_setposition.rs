@@ -1,6 +1,5 @@
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ServerInternalProt;
 
 pub struct IfSetPosition {
@@ -33,11 +32,6 @@ impl MessageEncoder for IfSetPosition {
     #[inline]
     fn length(&self) -> i32 {
         return 6;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Buffered;
     }
 
     #[inline]

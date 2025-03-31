@@ -1,6 +1,5 @@
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::prot::ServerInternalProt;
 
 pub struct LastLoginInfo {
@@ -36,11 +35,6 @@ impl MessageEncoder for LastLoginInfo {
     #[inline]
     fn length(&self) -> i32 {
         return 9;
-    }
-
-    #[inline]
-    fn priority(&self) -> ServerProtPriority {
-        return ServerProtPriority::Buffered;
     }
 
     #[inline]
