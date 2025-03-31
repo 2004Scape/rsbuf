@@ -1,5 +1,5 @@
 use crate::message::MessageEncoder;
-use crate::pack::WordPack;
+use crate::wordpack::WordPack;
 use crate::packet::Packet;
 use crate::prot::ServerInternalProt;
 

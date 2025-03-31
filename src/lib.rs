@@ -72,7 +72,7 @@ use crate::out::update_zone_partial_enclosed::UpdateZonePartialEnclosed;
 use crate::out::update_zone_partial_follows::UpdateZonePartialFollows;
 use crate::out::varp_large::VarpLarge;
 use crate::out::varp_small::VarpSmall;
-use crate::pack::WordPack;
+use crate::wordpack::WordPack;
 use crate::packet::Packet;
 use crate::player::{Chat, ExactMove, Player};
 use crate::prot::{ClientInternalProt, ClientProt, ServerInternalProt};
@@ -124,7 +124,7 @@ mod visibility;
 mod category;
 mod r#in;
 mod out;
-mod pack;
+mod wordpack;
 mod pool;
 
 macro_rules! read {
