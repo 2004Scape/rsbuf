@@ -12,6 +12,7 @@ pub struct EventTracking {
 #[wasm_bindgen]
 impl EventTracking {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(bytes: Vec<u8>) -> EventTracking {
         return EventTracking {
             bytes,
@@ -20,10 +21,12 @@ impl EventTracking {
 }
 
 impl MessageDecoder<EventTracking> for EventTracking {
+    #[inline]
     fn length() -> i32 {
         return -2;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> EventTracking {
         return EventTracking::new(buf.data.clone());
     }
@@ -46,6 +49,7 @@ pub struct EventCameraPosition {
 #[wasm_bindgen]
 impl EventCameraPosition {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         pitch: i32,
         yaw: i32,
@@ -62,10 +66,12 @@ impl EventCameraPosition {
 }
 
 impl MessageDecoder<EventCameraPosition> for EventCameraPosition {
+    #[inline]
     fn length() -> i32 {
         return 6;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> EventCameraPosition {
         return EventCameraPosition::new(
             buf.g2() as i32,

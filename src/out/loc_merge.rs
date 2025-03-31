@@ -21,6 +21,7 @@ pub struct LocMerge {
 }
 
 impl LocMerge {
+    #[inline]
     pub fn new(
         src_x: i32,
         src_z: i32,
@@ -54,17 +55,21 @@ impl LocMerge {
 }
 
 impl MessageEncoder for LocMerge {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::LOC_MERGE as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 14;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Immediate;
     }
+    #[inline]
 
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.coord);
@@ -79,6 +84,7 @@ impl MessageEncoder for LocMerge {
         buf.p1(self.north - self.src_z);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 14;
     }

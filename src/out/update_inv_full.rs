@@ -10,6 +10,7 @@ pub struct UpdateInvFull {
 }
 
 impl UpdateInvFull {
+    #[inline]
     pub fn new(
         size: i32,
         component: i32,
@@ -24,18 +25,22 @@ impl UpdateInvFull {
 }
 
 impl MessageEncoder for UpdateInvFull {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::UPDATE_INV_FULL as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return -2;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Immediate;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         // todo: size should be the index of the last non-empty slot
         buf.p2(self.component);
@@ -59,6 +64,7 @@ impl MessageEncoder for UpdateInvFull {
         }
     }
 
+    #[inline]
     fn test(&self) -> usize {
         let mut length: usize = 0;
         length += 3;

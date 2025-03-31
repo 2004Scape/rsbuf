@@ -10,6 +10,7 @@ pub struct UpdateStat {
 }
 
 impl UpdateStat {
+    #[inline]
     pub fn new(
         stat: i32,
         experience: i32,
@@ -24,24 +25,29 @@ impl UpdateStat {
 }
 
 impl MessageEncoder for UpdateStat {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::UPDATE_STAT as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 6;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.stat);
         buf.p4(self.experience / 10);
         buf.p1(self.level); // not base level
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 6;
     }

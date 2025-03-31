@@ -9,16 +9,19 @@ pub struct NoTimeout {}
 #[wasm_bindgen]
 impl NoTimeout {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new() -> NoTimeout {
         return NoTimeout {};
     }
 }
 
 impl MessageDecoder<NoTimeout> for NoTimeout {
+    #[inline]
     fn length() -> i32 {
         return 0;
     }
 
+    #[inline]
     fn decode(_: ClientProt, _: &mut Packet) -> NoTimeout {
         return NoTimeout::new();
     }

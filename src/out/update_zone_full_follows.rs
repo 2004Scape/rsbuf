@@ -12,6 +12,7 @@ pub struct UpdateZoneFullFollows {
 }
 
 impl UpdateZoneFullFollows {
+    #[inline]
     pub fn new(
         x: i32,
         z: i32,
@@ -28,23 +29,28 @@ impl UpdateZoneFullFollows {
 }
 
 impl MessageEncoder for UpdateZoneFullFollows {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::UPDATE_ZONE_FULL_FOLLOWS as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 2;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Immediate;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1((self.x << 3) - CoordGrid::origin(self.origin_x as u16) as i32);
         buf.p1((self.z << 3) - CoordGrid::origin(self.origin_z as u16) as i32);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 2;
     }

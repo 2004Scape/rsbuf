@@ -12,6 +12,7 @@ pub struct FriendListAdd {
 #[wasm_bindgen]
 impl FriendListAdd {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(username: i64) -> FriendListAdd {
         return FriendListAdd {
             username,
@@ -20,10 +21,12 @@ impl FriendListAdd {
 }
 
 impl MessageDecoder<FriendListAdd> for FriendListAdd {
+    #[inline]
     fn length() -> i32 {
         return 8;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> FriendListAdd {
         return FriendListAdd::new(buf.g8s());
     }
@@ -40,6 +43,7 @@ pub struct FriendListDel {
 #[wasm_bindgen]
 impl FriendListDel {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(username: i64) -> FriendListDel {
         return FriendListDel {
             username,
@@ -48,10 +52,12 @@ impl FriendListDel {
 }
 
 impl MessageDecoder<FriendListDel> for FriendListDel {
+    #[inline]
     fn length() -> i32 {
         return 8;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> FriendListDel {
         return FriendListDel::new(buf.g8s());
     }

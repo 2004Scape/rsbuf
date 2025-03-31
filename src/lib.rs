@@ -1307,9 +1307,6 @@ pub unsafe fn next_buffered_write(pid: i32) -> Option<OutgoingPacket> {
 // ---- decoders
 
 static PACKET_LOOKUP: Lazy<HashMap<i32, Option<IncomingPacket>>> = Lazy::new(|| {
-    use ClientInternalProt::*;
-    use ClientProt::*;
-
     let mut lookup: HashMap<i32, Option<IncomingPacket>> = HashMap::new();
     lookup.insert(ClientInternalProt::CLIENT_CHEAT as i32, Some(IncomingPacket::new(ClientProt::CLIENT_CHEAT as i32, ClientCheat::length())));
     lookup.insert(ClientInternalProt::CLOSE_MODAL as i32, Some(IncomingPacket::new(ClientProt::CLOSE_MODAL as i32, CloseModal::length())));

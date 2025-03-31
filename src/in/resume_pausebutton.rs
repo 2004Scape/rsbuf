@@ -11,6 +11,8 @@ pub struct ResumePauseButton {
 
 #[wasm_bindgen]
 impl ResumePauseButton {
+    #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(component: u16) -> ResumePauseButton {
         return ResumePauseButton {
             component,
@@ -19,10 +21,12 @@ impl ResumePauseButton {
 }
 
 impl MessageDecoder<ResumePauseButton> for ResumePauseButton {
+    #[inline]
     fn length() -> i32 {
         return 2;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> ResumePauseButton {
         return ResumePauseButton::new(buf.g2());
     }

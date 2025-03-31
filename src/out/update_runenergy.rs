@@ -8,6 +8,7 @@ pub struct UpdateRunEnergy {
 }
 
 impl UpdateRunEnergy {
+    #[inline]
     pub fn new(
         energy: i32,
     ) -> UpdateRunEnergy {
@@ -18,22 +19,27 @@ impl UpdateRunEnergy {
 }
 
 impl MessageEncoder for UpdateRunEnergy {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::UPDATE_RUNENERGY as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 1;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.energy / 100);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 1;
     }

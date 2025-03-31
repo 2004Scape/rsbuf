@@ -8,6 +8,7 @@ pub struct TutFlash {
 }
 
 impl TutFlash {
+    #[inline]
     pub fn new(
         tab: i32,
     ) -> TutFlash {
@@ -18,22 +19,27 @@ impl TutFlash {
 }
 
 impl MessageEncoder for TutFlash {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::TUT_FLASH as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 1;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.tab);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 1;
     }

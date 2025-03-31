@@ -14,6 +14,7 @@ pub struct OpNpc {
 #[wasm_bindgen]
 impl OpNpc {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         op: u8,
         nid: u16,
@@ -26,10 +27,12 @@ impl OpNpc {
 }
 
 impl MessageDecoder<OpNpc> for OpNpc {
+    #[inline]
     fn length() -> i32 {
         return 2;
     }
 
+    #[inline]
     fn decode(prot: ClientProt, buf: &mut Packet) -> OpNpc {
         let op: u8 = match prot {
             ClientProt::OPNPC1 => 1,
@@ -59,6 +62,7 @@ pub struct OpNpcT {
 #[wasm_bindgen]
 impl OpNpcT {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         nid: u16,
         spell: u16,
@@ -71,10 +75,12 @@ impl OpNpcT {
 }
 
 impl MessageDecoder<OpNpcT> for OpNpcT {
+    #[inline]
     fn length() -> i32 {
         return 4;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> OpNpcT {
         return OpNpcT::new(
             buf.g2(),
@@ -100,6 +106,7 @@ pub struct OpNpcU {
 #[wasm_bindgen]
 impl OpNpcU {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         nid: u16,
         use_obj: u16,
@@ -116,10 +123,12 @@ impl OpNpcU {
 }
 
 impl MessageDecoder<OpNpcU> for OpNpcU {
+    #[inline]
     fn length() -> i32 {
         return 8;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> OpNpcU {
         return OpNpcU::new(
             buf.g2(),

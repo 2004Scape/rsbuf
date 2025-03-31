@@ -14,6 +14,7 @@ pub struct MessagePrivate {
 #[wasm_bindgen]
 impl MessagePrivate {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         username: i64,
         input: Vec<u8>,
@@ -26,10 +27,12 @@ impl MessagePrivate {
 }
 
 impl MessageDecoder<MessagePrivate> for MessagePrivate {
+    #[inline]
     fn length() -> i32 {
         return -1;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> MessagePrivate {
         return MessagePrivate::new(
             buf.g8s(),

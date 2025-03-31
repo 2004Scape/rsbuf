@@ -9,6 +9,7 @@ pub struct IfSetModel {
 }
 
 impl IfSetModel {
+    #[inline]
     pub fn new(
         component: i32,
         model: i32,
@@ -21,23 +22,28 @@ impl IfSetModel {
 }
 
 impl MessageEncoder for IfSetModel {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::IF_SETMODEL as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 4;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.component);
         buf.p2(self.model);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 4;
     }

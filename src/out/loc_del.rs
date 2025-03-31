@@ -10,6 +10,7 @@ pub struct LocDel {
 }
 
 impl LocDel {
+    #[inline]
     pub fn new(
         coord: i32,
         shape: i32,
@@ -24,23 +25,28 @@ impl LocDel {
 }
 
 impl MessageEncoder for LocDel {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::LOC_DEL as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 2;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Immediate;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.coord);
         buf.p1((self.shape << 2) | (self.angle & 0x3));
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 2;
     }

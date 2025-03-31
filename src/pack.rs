@@ -12,6 +12,7 @@ impl WordPack {
         '&', '*', '\\', '\'', '@', '#', '+', '=', '£', '$', '%', '"', '[', ']'
     ];
 
+    #[inline]
     pub unsafe fn unpack(packet: &mut Packet, length: usize) -> String {
         let mut char_buffer: Vec<char> = Vec::with_capacity(80);
         let mut pos: usize = 0;
@@ -59,6 +60,7 @@ impl WordPack {
         WordPack::sentence_case(&char_buffer.get_unchecked(..pos).iter().collect::<String>())
     }
 
+    #[inline]
     pub unsafe fn pack(packet: &mut Packet, mut input: String) {
         if input.len() > 80 {
             input.truncate(80);
@@ -99,6 +101,7 @@ impl WordPack {
         }
     }
 
+    #[inline]
     pub fn sentence_case(input: &str) -> String {
         let mut chars: Vec<char> = input.to_lowercase().chars().collect();
         let mut punctuation: bool = true;

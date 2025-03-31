@@ -10,6 +10,7 @@ pub struct SynthSound {
 }
 
 impl SynthSound {
+    #[inline]
     pub fn new(
         synth: i32,
         loops: i32,
@@ -24,24 +25,29 @@ impl SynthSound {
 }
 
 impl MessageEncoder for SynthSound {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::SYNTH_SOUND as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 5;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.synth);
         buf.p1(self.loops);
         buf.p2(self.delay);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 5;
     }

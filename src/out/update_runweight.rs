@@ -8,6 +8,7 @@ pub struct UpdateRunWeight {
 }
 
 impl UpdateRunWeight {
+    #[inline]
     pub fn new(
         kg: i32,
     ) -> UpdateRunWeight {
@@ -18,22 +19,27 @@ impl UpdateRunWeight {
 }
 
 impl MessageEncoder for UpdateRunWeight {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::UPDATE_RUNWEIGHT as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 2;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.kg);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 2;
     }

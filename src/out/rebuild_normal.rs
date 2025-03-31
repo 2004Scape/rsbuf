@@ -12,6 +12,7 @@ pub struct RebuildNormal {
 }
 
 impl RebuildNormal {
+    #[inline]
     pub fn new(
         x: i32,
         z: i32,
@@ -30,18 +31,22 @@ impl RebuildNormal {
 }
 
 impl MessageEncoder for RebuildNormal {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::REBUILD_NORMAL as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return -2;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Immediate;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.x);
         buf.p2(self.z);
@@ -52,15 +57,9 @@ impl MessageEncoder for RebuildNormal {
             buf.p4(unsafe { *self.maps.as_ptr().add(index) });
             buf.p4(unsafe { *self.locs.as_ptr().add(index) });
         }
-        // for &packed in self.squares.iter() {
-        //     // buf.p1(((packed >> 72) & 0xff) as i32);
-        //     // buf.p1(((packed >> 64) & 0xff) as i32);
-        //     // buf.p4(((packed >> 32) & 0xffffffff) as i32);
-        //     // buf.p4((packed & 0xffffffff) as i32);
-        //     // (50n << 72n) + (50n << 64n) + (BigInt.asUintN(32, -2147483648n) << 32n) + 2147483647n
-        // }
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 2 + 2 + self.squares.len() * (1 + 1 + 4 + 4);
     }

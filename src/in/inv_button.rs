@@ -18,6 +18,7 @@ pub struct InvButton {
 #[wasm_bindgen]
 impl InvButton {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         op: u8,
         obj: u16,
@@ -34,10 +35,12 @@ impl InvButton {
 }
 
 impl MessageDecoder<InvButton> for InvButton {
+    #[inline]
     fn length() -> i32 {
         return 6;
     }
 
+    #[inline]
     fn decode(prot: ClientProt, buf: &mut Packet) -> InvButton {
         let op: u8 = match prot {
             ClientProt::INV_BUTTON1 => 1,
@@ -71,6 +74,7 @@ pub struct InvButtonD {
 #[wasm_bindgen]
 impl InvButtonD {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         component: u16,
         slot: u16,
@@ -85,10 +89,12 @@ impl InvButtonD {
 }
 
 impl MessageDecoder<InvButtonD> for InvButtonD {
+    #[inline]
     fn length() -> i32 {
         return 6;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> InvButtonD {
         return InvButtonD::new(
             buf.g2(),

@@ -12,6 +12,7 @@ pub struct RebuildGetMaps {
 #[wasm_bindgen]
 impl RebuildGetMaps {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(maps: Vec<u32>) -> RebuildGetMaps {
         return RebuildGetMaps {
             maps,
@@ -20,10 +21,12 @@ impl RebuildGetMaps {
 }
 
 impl MessageDecoder<RebuildGetMaps> for RebuildGetMaps {
+    #[inline]
     fn length() -> i32 {
         return -1;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> RebuildGetMaps {
         let mut maps: Vec<u32> = vec![0; buf.data.len() / 3];
         for index in 0..maps.len() {

@@ -12,6 +12,7 @@ pub struct IgnoreListAdd {
 #[wasm_bindgen]
 impl IgnoreListAdd {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(username: i64) -> IgnoreListAdd {
         return IgnoreListAdd {
             username,
@@ -20,10 +21,12 @@ impl IgnoreListAdd {
 }
 
 impl MessageDecoder<IgnoreListAdd> for IgnoreListAdd {
+    #[inline]
     fn length() -> i32 {
         return 8;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> IgnoreListAdd {
         return IgnoreListAdd::new(buf.g8s());
     }
@@ -40,6 +43,7 @@ pub struct IgnoreListDel {
 #[wasm_bindgen]
 impl IgnoreListDel {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(username: i64) -> IgnoreListDel {
         return IgnoreListDel {
             username,
@@ -48,10 +52,12 @@ impl IgnoreListDel {
 }
 
 impl MessageDecoder<IgnoreListDel> for IgnoreListDel {
+    #[inline]
     fn length() -> i32 {
         return 8;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> IgnoreListDel {
         return IgnoreListDel::new(buf.g8s());
     }

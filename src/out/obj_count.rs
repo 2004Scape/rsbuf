@@ -11,6 +11,7 @@ pub struct ObjCount {
 }
 
 impl ObjCount {
+    #[inline]
     pub fn new(
         coord: i32,
         obj: i32,
@@ -27,18 +28,22 @@ impl ObjCount {
 }
 
 impl MessageEncoder for ObjCount {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::OBJ_COUNT as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 7;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Immediate;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.coord);
         buf.p2(self.obj);
@@ -46,6 +51,7 @@ impl MessageEncoder for ObjCount {
         buf.p2(self.new_count.min(65535));
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 7;
     }

@@ -11,6 +11,7 @@ pub struct MapAnim {
 }
 
 impl MapAnim {
+    #[inline]
     pub fn new(
         coord: i32,
         spotanim: i32,
@@ -27,18 +28,22 @@ impl MapAnim {
 }
 
 impl MessageEncoder for MapAnim {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::MAP_ANIM as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 6;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Immediate;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.coord);
         buf.p2(self.spotanim);
@@ -46,6 +51,7 @@ impl MessageEncoder for MapAnim {
         buf.p2(self.delay);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 6;
     }

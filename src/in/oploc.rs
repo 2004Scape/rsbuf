@@ -18,6 +18,7 @@ pub struct OpLoc {
 #[wasm_bindgen]
 impl OpLoc {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         op: u8,
         x: u16,
@@ -34,10 +35,12 @@ impl OpLoc {
 }
 
 impl MessageDecoder<OpLoc> for OpLoc {
+    #[inline]
     fn length() -> i32 {
         return 6;
     }
 
+    #[inline]
     fn decode(prot: ClientProt, buf: &mut Packet) -> OpLoc {
         let op: u8 = match prot {
             ClientProt::OPLOC1 => 1,
@@ -73,6 +76,7 @@ pub struct OpLocT {
 #[wasm_bindgen]
 impl OpLocT {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         x: u16,
         z: u16,
@@ -89,10 +93,12 @@ impl OpLocT {
 }
 
 impl MessageDecoder<OpLocT> for OpLocT {
+    #[inline]
     fn length() -> i32 {
         return 8;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> OpLocT {
         return OpLocT::new(
             buf.g2(),
@@ -124,6 +130,7 @@ pub struct OpLocU {
 #[wasm_bindgen]
 impl OpLocU {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         x: u16,
         z: u16,
@@ -144,10 +151,12 @@ impl OpLocU {
 }
 
 impl MessageDecoder<OpLocU> for OpLocU {
+    #[inline]
     fn length() -> i32 {
         return 12;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> OpLocU {
         return OpLocU::new(
             buf.g2(),

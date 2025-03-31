@@ -12,6 +12,7 @@ pub struct DataLoc {
 }
 
 impl DataLoc {
+    #[inline]
     pub fn new(
         x: i32,
         z: i32,
@@ -30,18 +31,22 @@ impl DataLoc {
 }
 
 impl MessageEncoder for DataLoc {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::DATA_LOC as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return -2;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Immediate;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.x);
         buf.p1(self.z);
@@ -50,6 +55,7 @@ impl MessageEncoder for DataLoc {
         buf.pdata(&self.data, 0, self.data.len());
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 6 + self.data.len();
     }
@@ -63,6 +69,7 @@ pub struct DataLocDone {
 }
 
 impl DataLocDone {
+    #[inline]
     pub fn new(
         x: i32,
         z: i32,
@@ -75,23 +82,28 @@ impl DataLocDone {
 }
 
 impl MessageEncoder for DataLocDone {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::DATA_LOC_DONE as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 2;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Immediate;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.x);
         buf.p1(self.z);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 2;
     }

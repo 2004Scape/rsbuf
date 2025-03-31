@@ -10,6 +10,7 @@ pub struct ChatFilterSettings {
 }
 
 impl ChatFilterSettings {
+    #[inline]
     pub fn new(
         public: i32,
         private: i32,
@@ -24,24 +25,29 @@ impl ChatFilterSettings {
 }
 
 impl MessageEncoder for ChatFilterSettings {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::CHAT_FILTER_SETTINGS as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 3;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.public);
         buf.p1(self.private);
         buf.p1(self.trade);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 3;
     }

@@ -9,6 +9,7 @@ pub struct VarpLarge {
 }
 
 impl VarpLarge {
+    #[inline]
     pub fn new(
         varp: i32,
         value: i32,
@@ -21,23 +22,28 @@ impl VarpLarge {
 }
 
 impl MessageEncoder for VarpLarge {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::VARP_LARGE as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 6;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Immediate;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.varp);
         buf.p4(self.value);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 6;
     }

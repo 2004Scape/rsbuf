@@ -12,6 +12,7 @@ pub struct ClientCheat {
 #[wasm_bindgen]
 impl ClientCheat {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(input: String) -> ClientCheat {
         return ClientCheat {
             input,
@@ -20,10 +21,12 @@ impl ClientCheat {
 }
 
 impl MessageDecoder<ClientCheat> for ClientCheat {
+    #[inline]
     fn length() -> i32 {
         return -1;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> ClientCheat {
         return ClientCheat::new(buf.gjstr(10));
     }

@@ -33,6 +33,7 @@ pub struct OutgoingPacket {
 }
 
 impl OutgoingPacket {
+    #[inline]
     pub fn new(
         bytes: Option<Vec<u8>>,
         id: i32,
@@ -56,6 +57,7 @@ pub struct IncomingPacket {
 }
 
 impl IncomingPacket {
+    #[inline]
     pub fn new(
         id: i32,
         length: i32
@@ -564,10 +566,12 @@ impl NpcInfoChangeType {
 }
 
 impl InfoMessage for NpcInfoChangeType {
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.change_type);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 2;
     }

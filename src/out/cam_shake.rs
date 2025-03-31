@@ -11,6 +11,7 @@ pub struct CamShake {
 }
 
 impl CamShake {
+    #[inline]
     pub fn new(
         shake: i32,
         jitter: i32,
@@ -27,18 +28,22 @@ impl CamShake {
 }
 
 impl MessageEncoder for CamShake {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::CAM_SHAKE as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 4;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.shake); // direction?
         buf.p1(self.jitter);
@@ -46,6 +51,7 @@ impl MessageEncoder for CamShake {
         buf.p1(self.frequency);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 4;
     }

@@ -16,6 +16,7 @@ pub struct ChatSetMode {
 #[wasm_bindgen]
 impl ChatSetMode {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         public: u8,
         private: u8,
@@ -30,10 +31,12 @@ impl ChatSetMode {
 }
 
 impl MessageDecoder<ChatSetMode> for ChatSetMode {
+    #[inline]
     fn length() -> i32 {
         return 3;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> ChatSetMode {
         return ChatSetMode::new(
             buf.g1(),

@@ -12,6 +12,7 @@ pub struct IfButton {
 #[wasm_bindgen]
 impl IfButton {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(component: u16) -> IfButton {
         return IfButton {
             component,
@@ -20,10 +21,12 @@ impl IfButton {
 }
 
 impl MessageDecoder<IfButton> for IfButton {
+    #[inline]
     fn length() -> i32 {
         return 2;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> IfButton {
         return IfButton::new(buf.g2());
     }

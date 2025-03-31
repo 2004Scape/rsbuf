@@ -13,6 +13,7 @@ pub struct HintArrow {
 }
 
 impl HintArrow {
+    #[inline]
     pub fn new(
         arrow: i32,
         nid: i32,
@@ -33,18 +34,22 @@ impl HintArrow {
 }
 
 impl MessageEncoder for HintArrow {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::HINT_ARROW as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 6;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered; // todo: what should priority be?
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         match self.arrow {
             1 => {
@@ -79,6 +84,7 @@ impl MessageEncoder for HintArrow {
         }
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 6;
     }

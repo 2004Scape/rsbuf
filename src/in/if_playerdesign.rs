@@ -16,7 +16,12 @@ pub struct IfPlayerDesign {
 #[wasm_bindgen]
 impl IfPlayerDesign {
     #[wasm_bindgen(constructor)]
-    pub fn new(gender: u8, idkit: Vec<i32>, color: Vec<i32>) -> IfPlayerDesign {
+    #[inline]
+    pub fn new(
+        gender: u8,
+        idkit: Vec<i32>,
+        color: Vec<i32>
+    ) -> IfPlayerDesign {
         return IfPlayerDesign {
             gender,
             idkit,
@@ -26,10 +31,12 @@ impl IfPlayerDesign {
 }
 
 impl MessageDecoder<IfPlayerDesign> for IfPlayerDesign {
+    #[inline]
     fn length() -> i32 {
         return 13;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> IfPlayerDesign {
         let gender: u8 = buf.g1();
 

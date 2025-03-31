@@ -21,6 +21,7 @@ pub struct MapProjAnim {
 }
 
 impl MapProjAnim {
+    #[inline]
     pub fn new(
         src_x: i32,
         src_z: i32,
@@ -54,18 +55,22 @@ impl MapProjAnim {
 }
 
 impl MessageEncoder for MapProjAnim {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::MAP_PROJANIM as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 15;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Immediate;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.coord);
         buf.p1(self.dst_x - self.src_x);
@@ -80,6 +85,7 @@ impl MessageEncoder for MapProjAnim {
         buf.p1(self.arc);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 15;
     }

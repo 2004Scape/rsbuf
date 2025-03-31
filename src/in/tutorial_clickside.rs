@@ -12,6 +12,7 @@ pub struct TutorialClickSide {
 #[wasm_bindgen]
 impl TutorialClickSide {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(tab: u8) -> TutorialClickSide {
         return TutorialClickSide {
             tab,
@@ -20,10 +21,12 @@ impl TutorialClickSide {
 }
 
 impl MessageDecoder<TutorialClickSide> for TutorialClickSide {
+    #[inline]
     fn length() -> i32 {
         return 1;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> TutorialClickSide {
         return TutorialClickSide::new(buf.g1());
     }

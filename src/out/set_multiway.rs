@@ -8,6 +8,7 @@ pub struct SetMultiway {
 }
 
 impl SetMultiway {
+    #[inline]
     pub fn new(hidden: bool) -> SetMultiway {
         return SetMultiway {
             hidden,
@@ -16,22 +17,27 @@ impl SetMultiway {
 }
 
 impl MessageEncoder for SetMultiway {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::SET_MULTIWAY as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 1;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(if self.hidden { 1 } else { 0 });
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 1;
     }

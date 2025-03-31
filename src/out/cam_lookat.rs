@@ -12,6 +12,7 @@ pub struct CamLookAt {
 }
 
 impl CamLookAt {
+    #[inline]
     pub fn new(
         x: i32,
         z: i32,
@@ -30,18 +31,22 @@ impl CamLookAt {
 }
 
 impl MessageEncoder for CamLookAt {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::CAM_LOOKAT as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 6;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.x);
         buf.p1(self.z);
@@ -50,6 +55,7 @@ impl MessageEncoder for CamLookAt {
         buf.p1(self.multiplier);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 6;
     }

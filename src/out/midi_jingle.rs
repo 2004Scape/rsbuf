@@ -9,6 +9,7 @@ pub struct MidiJingle {
 }
 
 impl MidiJingle {
+    #[inline]
     pub fn new(
         delay: i32,
         data: Vec<u8>,
@@ -21,23 +22,28 @@ impl MidiJingle {
 }
 
 impl MessageEncoder for MidiJingle {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::MIDI_JINGLE as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return -2;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.delay);
         buf.pdata(&self.data, 0, self.data.len());
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 6 + self.data.len();
     }

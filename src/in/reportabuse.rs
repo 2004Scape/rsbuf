@@ -15,6 +15,8 @@ pub struct ReportAbuse {
 
 #[wasm_bindgen]
 impl ReportAbuse {
+    #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         offender: i64,
         reason: u8,
@@ -29,10 +31,12 @@ impl ReportAbuse {
 }
 
 impl MessageDecoder<ReportAbuse> for ReportAbuse {
+    #[inline]
     fn length() -> i32 {
         return 10;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> ReportAbuse {
         return ReportAbuse::new(
             buf.g8s(),

@@ -16,6 +16,7 @@ pub struct MessagePublic {
 #[wasm_bindgen]
 impl MessagePublic {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         color: u8,
         effect: u8,
@@ -30,10 +31,12 @@ impl MessagePublic {
 }
 
 impl MessageDecoder<MessagePublic> for MessagePublic {
+    #[inline]
     fn length() -> i32 {
         return -1;
     }
 
+    #[inline]
     fn decode(_: ClientProt, buf: &mut Packet) -> MessagePublic {
         return MessagePublic::new(
             buf.g1(),

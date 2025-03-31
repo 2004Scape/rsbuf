@@ -17,6 +17,7 @@ pub struct MoveClick {
 #[wasm_bindgen]
 impl MoveClick {
     #[wasm_bindgen(constructor)]
+    #[inline]
     pub fn new(
         ctrl: bool,
         op: bool,
@@ -31,10 +32,12 @@ impl MoveClick {
 }
 
 impl MessageDecoder<MoveClick> for MoveClick {
+    #[inline]
     fn length() -> i32 {
         return -1;
     }
 
+    #[inline]
     fn decode(prot: ClientProt, buf: &mut Packet) -> MoveClick {
         let ctrl: bool = buf.g1() == 1;
         let x: u16 = buf.g2();

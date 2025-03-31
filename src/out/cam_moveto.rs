@@ -12,6 +12,7 @@ pub struct CamMoveTo {
 }
 
 impl CamMoveTo {
+    #[inline]
     pub fn new(
         x: i32,
         z: i32,
@@ -30,18 +31,22 @@ impl CamMoveTo {
 }
 
 impl MessageEncoder for CamMoveTo {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::CAM_MOVETO as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 6;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.x);
         buf.p1(self.z);
@@ -50,6 +55,7 @@ impl MessageEncoder for CamMoveTo {
         buf.p1(self.multiplier);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 6;
     }

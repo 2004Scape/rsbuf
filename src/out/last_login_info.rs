@@ -11,6 +11,7 @@ pub struct LastLoginInfo {
 }
 
 impl LastLoginInfo {
+    #[inline]
     pub fn new(
         last_ip: i32,
         days_since_login: i32,
@@ -27,18 +28,22 @@ impl LastLoginInfo {
 }
 
 impl MessageEncoder for LastLoginInfo {
+    #[inline]
     fn id(&self) -> i32 {
         return ServerInternalProt::LAST_LOGIN_INFO as i32;
     }
 
+    #[inline]
     fn length(&self) -> i32 {
         return 9;
     }
 
+    #[inline]
     fn priority(&self) -> ServerProtPriority {
         return ServerProtPriority::Buffered;
     }
 
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p4(self.last_ip);
         buf.p2(self.days_since_login);
@@ -46,6 +51,7 @@ impl MessageEncoder for LastLoginInfo {
         buf.p2(self.messages);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 9;
     }
