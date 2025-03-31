@@ -27,7 +27,7 @@ impl MessageDecoder<IfButton> for IfButton {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> IfButton {
+    fn decode(_: ClientProt, mut buf: Packet) -> IfButton {
         return IfButton::new(buf.g2());
     }
 }

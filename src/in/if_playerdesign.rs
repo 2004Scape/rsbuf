@@ -37,7 +37,7 @@ impl MessageDecoder<IfPlayerDesign> for IfPlayerDesign {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> IfPlayerDesign {
+    fn decode(_: ClientProt, mut buf: Packet) -> IfPlayerDesign {
         let gender: u8 = buf.g1();
 
         let mut idkit: [i32; 7] = [0; 7];

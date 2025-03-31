@@ -54,7 +54,8 @@ impl MessageEncoder for MessagePrivateOut {
         buf.p8(self.from);
         buf.p4(self.id);
         buf.p1(staff_mod_level);
-        unsafe { WordPack::pack(buf, self.msg.clone()); }
+        let bytes: Vec<u8> = unsafe { WordPack::new().pack(self.msg.clone()) };
+        buf.pdata(&bytes, 0, bytes.len())
     }
 
     #[inline]

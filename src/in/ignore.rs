@@ -27,7 +27,7 @@ impl MessageDecoder<IgnoreListAdd> for IgnoreListAdd {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> IgnoreListAdd {
+    fn decode(_: ClientProt, mut buf: Packet) -> IgnoreListAdd {
         return IgnoreListAdd::new(buf.g8s());
     }
 }
@@ -58,7 +58,7 @@ impl MessageDecoder<IgnoreListDel> for IgnoreListDel {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> IgnoreListDel {
+    fn decode(_: ClientProt, mut buf: Packet) -> IgnoreListDel {
         return IgnoreListDel::new(buf.g8s());
     }
 }

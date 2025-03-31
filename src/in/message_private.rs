@@ -33,7 +33,7 @@ impl MessageDecoder<MessagePrivate> for MessagePrivate {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> MessagePrivate {
+    fn decode(_: ClientProt, mut buf: Packet) -> MessagePrivate {
         return MessagePrivate::new(
             buf.g8s(),
             unsafe { buf.data.get_unchecked(buf.pos..buf.pos + buf.data.len() - 8).to_vec() }

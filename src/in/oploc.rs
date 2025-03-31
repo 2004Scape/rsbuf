@@ -41,7 +41,7 @@ impl MessageDecoder<OpLoc> for OpLoc {
     }
 
     #[inline]
-    fn decode(prot: ClientProt, buf: &mut Packet) -> OpLoc {
+    fn decode(prot: ClientProt, mut buf: Packet) -> OpLoc {
         let op: u8 = match prot {
             ClientProt::OPLOC1 => 1,
             ClientProt::OPLOC2 => 2,
@@ -99,7 +99,7 @@ impl MessageDecoder<OpLocT> for OpLocT {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> OpLocT {
+    fn decode(_: ClientProt, mut buf: Packet) -> OpLocT {
         return OpLocT::new(
             buf.g2(),
             buf.g2(),
@@ -157,7 +157,7 @@ impl MessageDecoder<OpLocU> for OpLocU {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> OpLocU {
+    fn decode(_: ClientProt, mut buf: Packet) -> OpLocU {
         return OpLocU::new(
             buf.g2(),
             buf.g2(),

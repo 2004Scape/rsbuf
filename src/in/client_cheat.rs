@@ -27,7 +27,7 @@ impl MessageDecoder<ClientCheat> for ClientCheat {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> ClientCheat {
+    fn decode(_: ClientProt, mut buf: Packet) -> ClientCheat {
         return ClientCheat::new(buf.gjstr(10));
     }
 }

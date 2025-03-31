@@ -22,7 +22,7 @@ impl MessageDecoder<IdleTimer> for IdleTimer {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> IdleTimer {
+    fn decode(_: ClientProt, _: Packet) -> IdleTimer {
         return IdleTimer::new();
     }
 }

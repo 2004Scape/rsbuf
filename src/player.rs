@@ -1,8 +1,7 @@
 use crate::build::BuildArea;
 use crate::coord::CoordGrid;
-use crate::message::{MessageEncoder, OutgoingPacket};
+use crate::message::MessageEncoder;
 use crate::packet::Packet;
-use crate::priority::ServerProtPriority;
 use crate::visibility::Visibility;
 use std::collections::VecDeque;
 
@@ -38,7 +37,7 @@ pub struct Player {
     pub graphic_height: i32,
     pub graphic_delay: i32,
     pub exact_move: Option<ExactMove>,
-    pub write_queue: VecDeque<OutgoingPacket>,
+    pub write_queue: VecDeque<Vec<u8>>,
 }
 
 #[derive(Clone)]
@@ -99,31 +98,34 @@ impl Player {
     }
 
     #[inline]
-    pub fn write(&mut self, message: &dyn MessageEncoder) -> Option<OutgoingPacket> {
-        let mut buf: Packet = Packet::new(message.test());
-        message.encode(&mut buf);
-        let out: OutgoingPacket = OutgoingPacket::new(Some(buf.data), message.id(), message.length());
-        return match message.priority() {
-            ServerProtPriority::Buffered => {
-                self.write_queue.push_back(out);
-                return None;
-            },
-            ServerProtPriority::Immediate => Some(out),
-        };
+    pub fn buffer(&mut self, message: &dyn MessageEncoder) -> Option<Vec<u8>> {
+        self.write_queue.push_back(Player::write(message).unwrap());
+        return None;
     }
 
     #[inline]
-    pub fn write_zone_message(message: &dyn MessageEncoder, enclose: bool) -> Option<OutgoingPacket> {
-        return if enclose {
-            let mut buf: Packet = Packet::new(1 + message.test());
-            buf.p1(message.id());
-            message.encode(&mut buf);
-            Some(OutgoingPacket::new(Some(buf.data), message.id(), message.length()))
-        } else {
-            let mut buf: Packet = Packet::new(message.test());
-            message.encode(&mut buf);
-            Some(OutgoingPacket::new(Some(buf.data), message.id(), message.length()))
-        }
+    pub fn write(message: &dyn MessageEncoder) -> Option<Vec<u8>> {
+        let id: i32 = message.id();
+        let offset: usize = match message.length() {
+            -1 => 1 + 1,
+            -2 => 1 + 2,
+            _ => 1 + 0,
+        };
+        let mut buf: Packet = Packet::new(offset + message.test());
+        buf.p1(id);
+        match message.length() {
+            -1 => buf.pos += 1,
+            -2 => buf.pos += 2,
+            _ => {}
+        };
+        let start = buf.pos;
+        message.encode(&mut buf);
+        match message.length() {
+            -1 => buf.psize1((buf.pos - start) as u8),
+            -2 => buf.psize2((buf.pos - start) as u16),
+            _ => {}
+        };
+        return Some(buf.data);
     }
 
     #[inline]

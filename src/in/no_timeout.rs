@@ -22,7 +22,7 @@ impl MessageDecoder<NoTimeout> for NoTimeout {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> NoTimeout {
+    fn decode(_: ClientProt, _: Packet) -> NoTimeout {
         return NoTimeout::new();
     }
 }

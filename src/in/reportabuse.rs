@@ -37,7 +37,7 @@ impl MessageDecoder<ReportAbuse> for ReportAbuse {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> ReportAbuse {
+    fn decode(_: ClientProt, mut buf: Packet) -> ReportAbuse {
         return ReportAbuse::new(
             buf.g8s(),
             buf.g1(),

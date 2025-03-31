@@ -41,7 +41,7 @@ impl MessageDecoder<OpObj> for OpObj {
     }
 
     #[inline]
-    fn decode(prot: ClientProt, buf: &mut Packet) -> OpObj {
+    fn decode(prot: ClientProt, mut buf: Packet) -> OpObj {
         let op: u8 = match prot {
             ClientProt::OPOBJ1 => 1,
             ClientProt::OPOBJ2 => 2,
@@ -99,7 +99,7 @@ impl MessageDecoder<OpObjT> for OpObjT {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> OpObjT {
+    fn decode(_: ClientProt, mut buf: Packet) -> OpObjT {
         return OpObjT::new(
             buf.g2(),
             buf.g2(),
@@ -157,7 +157,7 @@ impl MessageDecoder<OpObjU> for OpObjU {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> OpObjU {
+    fn decode(_: ClientProt, mut buf: Packet) -> OpObjU {
         return OpObjU::new(
             buf.g2(),
             buf.g2(),

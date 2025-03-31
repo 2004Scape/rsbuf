@@ -27,7 +27,7 @@ impl MessageDecoder<RebuildGetMaps> for RebuildGetMaps {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> RebuildGetMaps {
+    fn decode(_: ClientProt, mut buf: Packet) -> RebuildGetMaps {
         let mut maps: Vec<u32> = vec![0; buf.data.len() / 3];
         for index in 0..maps.len() {
             unsafe { *maps.as_mut_ptr().add(index) = buf.g3() as u32 };

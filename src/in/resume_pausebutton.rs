@@ -27,7 +27,7 @@ impl MessageDecoder<ResumePauseButton> for ResumePauseButton {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> ResumePauseButton {
+    fn decode(_: ClientProt, mut buf: Packet) -> ResumePauseButton {
         return ResumePauseButton::new(buf.g2());
     }
 }

@@ -27,7 +27,7 @@ impl MessageDecoder<ResumePCountDialog> for ResumePCountDialog {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> ResumePCountDialog {
+    fn decode(_: ClientProt, mut buf: Packet) -> ResumePCountDialog {
         return ResumePCountDialog::new(buf.g4s());
     }
 }

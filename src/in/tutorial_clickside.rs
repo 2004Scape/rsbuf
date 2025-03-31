@@ -27,7 +27,7 @@ impl MessageDecoder<TutorialClickSide> for TutorialClickSide {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> TutorialClickSide {
+    fn decode(_: ClientProt, mut buf: Packet) -> TutorialClickSide {
         return TutorialClickSide::new(buf.g1());
     }
 }

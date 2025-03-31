@@ -37,7 +37,7 @@ impl MessageDecoder<ChatSetMode> for ChatSetMode {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> ChatSetMode {
+    fn decode(_: ClientProt, mut buf: Packet) -> ChatSetMode {
         return ChatSetMode::new(
             buf.g1(),
             buf.g1(),

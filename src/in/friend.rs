@@ -27,7 +27,7 @@ impl MessageDecoder<FriendListAdd> for FriendListAdd {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> FriendListAdd {
+    fn decode(_: ClientProt, mut buf: Packet) -> FriendListAdd {
         return FriendListAdd::new(buf.g8s());
     }
 }
@@ -58,7 +58,7 @@ impl MessageDecoder<FriendListDel> for FriendListDel {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> FriendListDel {
+    fn decode(_: ClientProt, mut buf: Packet) -> FriendListDel {
         return FriendListDel::new(buf.g8s());
     }
 }

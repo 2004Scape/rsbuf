@@ -1,6 +1,8 @@
 use crate::packet::Packet;
 
-pub struct WordPack;
+pub struct WordPack {
+    buf: Packet,
+}
 
 impl WordPack {
     const CHAR_LOOKUP: [char; 61] = [
@@ -13,7 +15,14 @@ impl WordPack {
     ];
 
     #[inline]
-    pub unsafe fn unpack(packet: &mut Packet, length: usize) -> String {
+    pub fn new() -> WordPack {
+        return WordPack {
+            buf: Packet::new(100),
+        };
+    }
+
+    #[inline]
+    pub unsafe fn unpack(&self, mut packet: Packet, length: usize) -> String {
         let mut char_buffer: Vec<char> = Vec::with_capacity(80);
         let mut pos: usize = 0;
         let mut carry: i32 = -1;
@@ -61,7 +70,9 @@ impl WordPack {
     }
 
     #[inline]
-    pub unsafe fn pack(packet: &mut Packet, mut input: String) {
+    pub unsafe fn pack(&mut self, mut input: String) -> Vec<u8> {
+        self.buf.pos = 0;
+
         if input.len() > 80 {
             input.truncate(80);
         }
@@ -85,20 +96,22 @@ impl WordPack {
                 if index < 13 {
                     carry = index;
                 } else {
-                    packet.p1(index);
+                    self.buf.p1(index);
                 }
             } else if index < 13 {
-                packet.p1((carry << 4) + index);
+                self.buf.p1((carry << 4) + index);
                 carry = -1;
             } else {
-                packet.p1((carry << 4) + (index >> 4));
+                self.buf.p1((carry << 4) + (index >> 4));
                 carry = index & 0xf;
             }
         }
 
         if carry != -1 {
-            packet.p1(carry << 4);
+            self.buf.p1(carry << 4);
         }
+
+        return self.buf.data.get_unchecked(0..self.buf.pos).to_vec();
     }
 
     #[inline]

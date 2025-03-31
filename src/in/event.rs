@@ -27,7 +27,7 @@ impl MessageDecoder<EventTracking> for EventTracking {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> EventTracking {
+    fn decode(_: ClientProt, buf: Packet) -> EventTracking {
         return EventTracking::new(buf.data.clone());
     }
 }
@@ -72,7 +72,7 @@ impl MessageDecoder<EventCameraPosition> for EventCameraPosition {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> EventCameraPosition {
+    fn decode(_: ClientProt, mut buf: Packet) -> EventCameraPosition {
         return EventCameraPosition::new(
             buf.g2() as i32,
             buf.g2() as i32,

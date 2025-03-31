@@ -41,7 +41,7 @@ impl MessageDecoder<InvButton> for InvButton {
     }
 
     #[inline]
-    fn decode(prot: ClientProt, buf: &mut Packet) -> InvButton {
+    fn decode(prot: ClientProt, mut buf: Packet) -> InvButton {
         let op: u8 = match prot {
             ClientProt::INV_BUTTON1 => 1,
             ClientProt::INV_BUTTON2 => 2,
@@ -95,7 +95,7 @@ impl MessageDecoder<InvButtonD> for InvButtonD {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> InvButtonD {
+    fn decode(_: ClientProt, mut buf: Packet) -> InvButtonD {
         return InvButtonD::new(
             buf.g2(),
             buf.g2(),

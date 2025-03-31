@@ -22,7 +22,7 @@ impl MessageDecoder<AnticheatOp1> for AnticheatOp1 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatOp1 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatOp1 {
         return AnticheatOp1::new();
     }
 }
@@ -48,7 +48,7 @@ impl MessageDecoder<AnticheatOp2> for AnticheatOp2 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatOp2 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatOp2 {
         return AnticheatOp2::new();
     }
 }
@@ -74,7 +74,7 @@ impl MessageDecoder<AnticheatOp3> for AnticheatOp3 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatOp3 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatOp3 {
         return AnticheatOp3::new();
     }
 }
@@ -100,7 +100,7 @@ impl MessageDecoder<AnticheatOp4> for AnticheatOp4 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatOp4 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatOp4 {
         return AnticheatOp4::new();
     }
 }
@@ -126,7 +126,7 @@ impl MessageDecoder<AnticheatOp5> for AnticheatOp5 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatOp5 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatOp5 {
         return AnticheatOp5::new();
     }
 }
@@ -152,7 +152,7 @@ impl MessageDecoder<AnticheatOp6> for AnticheatOp6 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatOp6 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatOp6 {
         return AnticheatOp6::new();
     }
 }
@@ -178,7 +178,7 @@ impl MessageDecoder<AnticheatOp7> for AnticheatOp7 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatOp7 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatOp7 {
         return AnticheatOp7::new();
     }
 }
@@ -204,7 +204,7 @@ impl MessageDecoder<AnticheatOp8> for AnticheatOp8 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatOp8 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatOp8 {
         return AnticheatOp8::new();
     }
 }
@@ -230,7 +230,7 @@ impl MessageDecoder<AnticheatOp9> for AnticheatOp9 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatOp9 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatOp9 {
         return AnticheatOp9::new();
     }
 }
@@ -256,7 +256,7 @@ impl MessageDecoder<AnticheatCycle1> for AnticheatCycle1 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatCycle1 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatCycle1 {
         return AnticheatCycle1::new();
     }
 }
@@ -282,7 +282,7 @@ impl MessageDecoder<AnticheatCycle2> for AnticheatCycle2 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatCycle2 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatCycle2 {
         return AnticheatCycle2::new();
     }
 }
@@ -308,7 +308,7 @@ impl MessageDecoder<AnticheatCycle3> for AnticheatCycle3 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatCycle3 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatCycle3 {
         return AnticheatCycle3::new();
     }
 }
@@ -334,7 +334,7 @@ impl MessageDecoder<AnticheatCycle4> for AnticheatCycle4 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatCycle4 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatCycle4 {
         return AnticheatCycle4::new();
     }
 }
@@ -360,7 +360,7 @@ impl MessageDecoder<AnticheatCycle5> for AnticheatCycle5 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatCycle5 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatCycle5 {
         return AnticheatCycle5::new();
     }
 }
@@ -386,7 +386,7 @@ impl MessageDecoder<AnticheatCycle6> for AnticheatCycle6 {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> AnticheatCycle6 {
+    fn decode(_: ClientProt, _: Packet) -> AnticheatCycle6 {
         return AnticheatCycle6::new();
     }
 }

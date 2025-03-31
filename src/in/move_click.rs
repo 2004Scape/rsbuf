@@ -38,7 +38,7 @@ impl MessageDecoder<MoveClick> for MoveClick {
     }
 
     #[inline]
-    fn decode(prot: ClientProt, buf: &mut Packet) -> MoveClick {
+    fn decode(prot: ClientProt, mut buf: Packet) -> MoveClick {
         let ctrl: bool = buf.g1() == 1;
         let x: u16 = buf.g2();
         let z: u16 = buf.g2();

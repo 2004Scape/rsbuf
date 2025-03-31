@@ -22,7 +22,7 @@ impl MessageDecoder<CloseModal> for CloseModal {
     }
 
     #[inline]
-    fn decode(_: ClientProt, _: &mut Packet) -> CloseModal {
+    fn decode(_: ClientProt, _: Packet) -> CloseModal {
         return CloseModal::new();
     }
 }

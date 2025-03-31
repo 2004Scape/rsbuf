@@ -1,7 +1,6 @@
 use crate::packet::Packet;
 use crate::priority::ServerProtPriority;
 use crate::prot::ClientProt;
-use wasm_bindgen::prelude::wasm_bindgen;
 
 pub trait InfoMessage {
     fn encode(&self, buf: &mut Packet);
@@ -18,41 +17,38 @@ pub trait MessageEncoder {
 
 pub trait MessageDecoder<T> {
     fn length() -> i32;
-    fn decode(prot: ClientProt, buf: &mut Packet) -> T;
+    fn decode(prot: ClientProt, buf: Packet) -> T;
 }
 
-#[wasm_bindgen]
-#[derive(Clone)] // for VecDeque
-pub struct OutgoingPacket {
-    #[wasm_bindgen(getter_with_clone, readonly)]
-    pub bytes: Option<Vec<u8>>,
-    #[wasm_bindgen(readonly)]
-    pub id: i32,
-    #[wasm_bindgen(readonly)]
-    pub length: i32,
-}
+// #[wasm_bindgen]
+// #[derive(Clone)]
+// pub struct OutgoingPacket {
+//     #[wasm_bindgen(getter_with_clone, readonly)]
+//     pub bytes: Option<Vec<u8>>,
+//     #[wasm_bindgen(readonly)]
+//     pub id: i32,
+//     #[wasm_bindgen(readonly)]
+//     pub length: i32,
+// }
+//
+// impl OutgoingPacket {
+//     #[inline]
+//     pub fn new(
+//         bytes: Option<Vec<u8>>,
+//         id: i32,
+//         length: i32
+//     ) -> OutgoingPacket {
+//         return OutgoingPacket {
+//             bytes,
+//             id,
+//             length,
+//         }
+//     }
+// }
 
-impl OutgoingPacket {
-    #[inline]
-    pub fn new(
-        bytes: Option<Vec<u8>>,
-        id: i32,
-        length: i32
-    ) -> OutgoingPacket {
-        return OutgoingPacket {
-            bytes,
-            id,
-            length,
-        }
-    }
-}
-
-#[wasm_bindgen]
 #[derive(Clone)]
 pub struct IncomingPacket {
-    #[wasm_bindgen(readonly)]
     pub id: i32,
-    #[wasm_bindgen(readonly)]
     pub length: i32,
 }
 

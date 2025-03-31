@@ -37,7 +37,7 @@ impl MessageDecoder<MessagePublic> for MessagePublic {
     }
 
     #[inline]
-    fn decode(_: ClientProt, buf: &mut Packet) -> MessagePublic {
+    fn decode(_: ClientProt, mut buf: Packet) -> MessagePublic {
         return MessagePublic::new(
             buf.g1(),
             buf.g1(),
