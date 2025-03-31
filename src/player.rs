@@ -99,12 +99,12 @@ impl Player {
 
     #[inline]
     pub fn buffer(&mut self, message: &dyn MessageEncoder) -> Option<Vec<u8>> {
-        self.write_queue.push_back(Player::write(message).unwrap());
+        self.write_queue.push_back(Player::write(message));
         return None;
     }
 
     #[inline]
-    pub fn write(message: &dyn MessageEncoder) -> Option<Vec<u8>> {
+    pub fn write(message: &dyn MessageEncoder) -> Vec<u8> {
         let id: i32 = message.id();
         let offset: usize = match message.length() {
             -1 => 1 + 1,
@@ -118,14 +118,14 @@ impl Player {
             -2 => buf.pos += 2,
             _ => {}
         };
-        let start = buf.pos;
+        let start: usize = buf.pos;
         message.encode(&mut buf);
         match message.length() {
             -1 => buf.psize1((buf.pos - start) as u8),
             -2 => buf.psize2((buf.pos - start) as u16),
             _ => {}
         };
-        return Some(buf.data);
+        return buf.data;
     }
 
     #[inline]

@@ -126,6 +126,39 @@ mod r#in;
 mod out;
 mod pack;
 
+macro_rules! read {
+    ($fn_name:ident, $js_name:literal, $struct:ty, $prot:expr) => {
+        #[wasm_bindgen(js_name = $js_name)]
+        pub unsafe fn $fn_name(bytes: Vec<u8>) -> $struct {
+            <$struct>::decode($prot, Packet::from(bytes))
+        }
+    };
+}
+
+macro_rules! buffer {
+    ($fn_name:ident, $js_name:literal, $struct:ty, ($($arg_name:ident: $arg_ty:ty),*), ($($arg_val:ident),*)) => {
+        #[wasm_bindgen(js_name = $js_name)]
+        pub unsafe fn $fn_name(pid: i32, $($arg_name: $arg_ty),*) -> Option<Vec<u8>> {
+            if pid == -1 {
+                return None;
+            }
+            match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
+                None => None,
+                Some(player) => player.buffer(&<$struct>::new($($arg_val),*)),
+            }
+        }
+    };
+}
+
+macro_rules! write {
+    ($fn_name:ident, $js_name:literal, $struct:ty, ($($arg_name:ident: $arg_ty:ty),*), ($($arg_val:ident),*)) => {
+        #[wasm_bindgen(js_name = $js_name)]
+        pub unsafe fn $fn_name($($arg_name: $arg_ty),*) -> Vec<u8> {
+            Player::write(&<$struct>::new($($arg_val),*))
+        }
+    };
+}
+
 static mut PLAYERS: Lazy<Vec<Option<Player>>> = Lazy::new(|| vec![None; 2048]);
 static mut PLAYER_GRID: Lazy<HashMap<u32, Vec<i32>>> = Lazy::new(|| HashMap::with_capacity(2048));
 static mut PLAYER_RENDERER: Lazy<PlayerRenderer> = Lazy::new(PlayerRenderer::new);
@@ -255,14 +288,13 @@ pub unsafe fn compute_player(
 }
 
 #[wasm_bindgen(js_name = playerInfo)]
-pub unsafe fn player_info(pos: usize, pid: i32, dx: i32, dz: i32, rebuild: bool) -> Option<Vec<u8>> {
+pub unsafe fn player_info(pid: i32, dx: i32, dz: i32, rebuild: bool) -> Option<Vec<u8>> {
     if pid == -1 {
         return None;
     }
 
     if let Some(player) = &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
         let bytes: Vec<u8> = PLAYER_INFO.encode(
-            pos,
             &mut **addr_of_mut!(PLAYER_RENDERER),
             &**addr_of!(PLAYERS),
             &mut **addr_of_mut!(ZONE_MAP),
@@ -275,7 +307,7 @@ pub unsafe fn player_info(pos: usize, pid: i32, dx: i32, dz: i32, rebuild: bool)
         let mut buf: Packet = Packet::new(1 + 2 + bytes.len());
         buf.p1(ServerInternalProt::PLAYER_INFO as i32);
         buf.pos += 2;
-        let start = buf.pos;
+        let start: usize = buf.pos;
         buf.pdata(&bytes, 0, bytes.len());
         buf.psize2((buf.pos - start) as u16);
         return Some(buf.data);
@@ -390,14 +422,13 @@ pub unsafe fn compute_npc(
 }
 
 #[wasm_bindgen(js_name = npcInfo)]
-pub unsafe fn npc_info(pos: usize, pid: i32, dx: i32, dz: i32, rebuild: bool) -> Option<Vec<u8>> {
+pub unsafe fn npc_info(pid: i32, dx: i32, dz: i32, rebuild: bool) -> Option<Vec<u8>> {
     if pid == -1 {
         return None;
     }
 
     if let Some(player) = &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
         let bytes: Vec<u8> = NPC_INFO.encode(
-            pos,
             &mut **addr_of_mut!(NPC_RENDERER),
             &mut **addr_of_mut!(NPCS),
             &mut **addr_of_mut!(ZONE_MAP),
@@ -409,7 +440,7 @@ pub unsafe fn npc_info(pos: usize, pid: i32, dx: i32, dz: i32, rebuild: bool) ->
         let mut buf: Packet = Packet::new(1 + 2 + bytes.len());
         buf.p1(ServerInternalProt::NPC_INFO as i32);
         buf.pos += 2;
-        let start = buf.pos;
+        let start: usize = buf.pos;
         buf.pdata(&bytes, 0, bytes.len());
         buf.psize2((buf.pos - start) as u16);
         return Some(buf.data);
@@ -490,596 +521,158 @@ pub unsafe fn cleanup_player_buildarea(pid: i32) {
 
 // ---- encoders
 
-#[wasm_bindgen(js_name = camLookAt)] // buffered
-pub unsafe fn cam_lookat(pid: i32, x: i32, z: i32, height: i32, speed: i32, multiplier: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&CamLookAt::new(x, z, height, speed, multiplier)),
-    };
-}
-
-#[wasm_bindgen(js_name = camMoveTo)] // buffered
-pub unsafe fn cam_moveto(pid: i32, x: i32, z: i32, height: i32, speed: i32, multiplier: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&CamMoveTo::new(x, z, height, speed, multiplier)),
-    };
-}
-
-#[wasm_bindgen(js_name = camReset)] // buffered
-pub unsafe fn cam_reset(pid: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&CamReset::new()),
-    };
-}
-
-#[wasm_bindgen(js_name = camShake)] // buffered
-pub unsafe fn cam_shake(pid: i32, shake: i32, jitter: i32, amplitude: i32, frequency: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&CamShake::new(shake, jitter, amplitude, frequency)),
-    };
-}
-
-#[wasm_bindgen(js_name = chatFilterSettings)] // buffered
-pub unsafe fn chat_filter_settings(pid: i32, public: i32, private: i32, trade: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&ChatFilterSettings::new(public, private, trade)),
-    };
-}
-
-#[wasm_bindgen(js_name = countDialog)] // buffered
-pub unsafe fn count_dialog(pid: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&PCountDialog::new()),
-    };
-}
-
-#[wasm_bindgen(js_name = dataLand)] // immediate
-pub unsafe fn data_land(x: i32, z: i32, offset: i32, length: i32, data: Vec<u8>) -> Option<Vec<u8>> {
-    return Player::write(&DataLand::new(x, z, offset, length, data));
-}
-
-#[wasm_bindgen(js_name = dataLandDone)] // immediate
-pub unsafe fn data_land_done(x: i32, z: i32) -> Option<Vec<u8>> {
-    return Player::write(&DataLandDone::new(x, z));
-}
-
-#[wasm_bindgen(js_name = dataLoc)] // immediate
-pub unsafe fn data_loc(x: i32, z: i32, offset: i32, length: i32, data: Vec<u8>) -> Option<Vec<u8>> {
-    return Player::write(&DataLoc::new(x, z, offset, length, data));
-}
-
-#[wasm_bindgen(js_name = dataLocDone)] // immediate
-pub unsafe fn data_loc_done(x: i32, z: i32) -> Option<Vec<u8>> {
-    return Player::write(&DataLocDone::new(x, z));
-}
-
-#[wasm_bindgen(js_name = enableTracking)] // buffered
-pub unsafe fn enable_tracking(pid: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&EnableTracking::new()),
-    };
-}
-
-#[wasm_bindgen(js_name = finishTracking)] // buffered
-pub unsafe fn finish_tracking(pid: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&FinishTracking::new()),
-    };
-}
-
-#[wasm_bindgen(js_name = hintArrow)] // buffered
-pub unsafe fn hint_arrow(pid: i32, arrow: i32, nid: i32, pid2: i32, x: i32, z: i32, y: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&HintArrow::new(arrow, nid, pid2, x, z, y)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifClose)] // buffered
-pub unsafe fn if_close(pid: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfClose::new()),
-    };
-}
-
-#[wasm_bindgen(js_name = ifOpenChat)] // buffered
-pub unsafe fn if_open_chat(pid: i32, component: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfOpenChat::new(component)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifOpenMain)] // buffered
-pub unsafe fn if_open_main(pid: i32, component: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfOpenMain::new(component)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifOpenMainSide)] // buffered
-pub unsafe fn if_open_main_side(pid: i32, main: i32, side: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfOpenMainSide::new(main, side)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifOpenSide)] // buffered
-pub unsafe fn if_open_side(pid: i32, component: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfOpenSide::new(component)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetAnim)] // buffered
-pub unsafe fn if_setanim(pid: i32, component: i32, seq: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetAnim::new(component, seq)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetColour)] // buffered
-pub unsafe fn if_setcolour(pid: i32, component: i32, colour: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetColour::new(component, colour)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetHide)] // buffered
-pub unsafe fn if_sethide(pid: i32, component: i32, hidden: bool) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetHide::new(component, hidden)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetModel)] // buffered
-pub unsafe fn if_setmodel(pid: i32, component: i32, model: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetModel::new(component, model)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetNpcHead)] // buffered
-pub unsafe fn if_setnpchead(pid: i32, component: i32, npc: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetNpcHead::new(component, npc)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetObject)] // buffered
-pub unsafe fn if_setobject(pid: i32, component: i32, obj: i32, scale: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetObject::new(component, obj, scale)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetPlayerHead)] // buffered
-pub unsafe fn if_setplayerhead(pid: i32, component: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetPlayerHead::new(component)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetPosition)] // buffered
-pub unsafe fn if_setposition(pid: i32, component: i32, x: i32, y: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetPosition::new(component, x, y)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetRecol)] // buffered
-pub unsafe fn if_setrecol(pid: i32, component: i32, src: i32, dst: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetRecol::new(component, src, dst)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetTab)] // buffered
-pub unsafe fn if_settab(pid: i32, component: i32, tab: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetTab::new(component, tab)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetTabActive)] // buffered
-pub unsafe fn if_settabactive(pid: i32, tab: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetTabActive::new(tab)),
-    };
-}
-
-#[wasm_bindgen(js_name = ifSetText)] // buffered
-pub unsafe fn if_settext(pid: i32, component: i32, text: String) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&IfSetText::new(component, text)),
-    };
-}
-
-#[wasm_bindgen(js_name = lastLoginInfo)] // buffered
-pub unsafe fn last_login_info(pid: i32, lastIp: i32, daysSinceLogin: i32, daysSinceRecovery: i32, messages: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&LastLoginInfo::new(lastIp, daysSinceLogin, daysSinceRecovery, messages)),
-    };
-}
-
-#[wasm_bindgen(js_name = locAddChange)] // immediate
-pub unsafe fn loc_addchange(coord: i32, loc: i32, shape: i32, angle: i32) -> Option<Vec<u8>> {
-    return Player::write(&LocAddChange::new(coord, loc, shape, angle));
-}
-
-#[wasm_bindgen(js_name = locAnim)] // immediate
-pub unsafe fn loc_anim(coord: i32, shape: i32, angle: i32, seq: i32) -> Option<Vec<u8>> {
-    return Player::write(&LocAnim::new(coord, shape, angle, seq));
-}
-
-#[wasm_bindgen(js_name = locDel)] // immediate
-pub unsafe fn loc_del(coord: i32, shape: i32, angle: i32) -> Option<Vec<u8>> {
-    return Player::write(&LocDel::new(coord, shape, angle));
-}
-
-#[wasm_bindgen(js_name = locMerge)] // immediate
-pub unsafe fn loc_merge(srcX: i32, srcZ: i32, shape: i32, angle: i32, loc: i32, start: i32, end: i32, pid: i32, east: i32, south: i32, west: i32, north: i32) -> Option<Vec<u8>> {
-    return Player::write(&LocMerge::new(srcX, srcZ, shape, angle, loc, start, end, pid, east, south, west, north));
-}
-
-#[wasm_bindgen(js_name = logout)] // immediate
-pub unsafe fn logout() -> Option<Vec<u8>> {
-    return Player::write(&Logout::new());
-}
-
-#[wasm_bindgen(js_name = mapAnim)] // immediate
-pub unsafe fn map_anim(coord: i32, spotanim: i32, height: i32, delay: i32) -> Option<Vec<u8>> {
-    return Player::write(&MapAnim::new(coord, spotanim, height, delay));
-}
-
-#[wasm_bindgen(js_name = mapProjAnim)] // immediate
-pub unsafe fn map_projanim(srcX: i32, srcZ: i32, dstX: i32, dstZ: i32, target: i32, spotanim: i32, srcHeight: i32, dstHeight: i32, start: i32, end: i32, peak: i32, arc: i32) -> Option<Vec<u8>> {
-    return Player::write(&MapProjAnim::new(srcX, srcZ, dstX, dstZ, target, spotanim, srcHeight, dstHeight, start, end, peak, arc));
-}
-
-#[wasm_bindgen(js_name = messageGame)] // immediate
-pub unsafe fn message_game(msg: String) -> Option<Vec<u8>> {
-    return Player::write(&MessageGame::new(msg));
-}
-
-#[wasm_bindgen(js_name = messagePrivateOut)] // immediate
-pub unsafe fn message_private_out(from: i64, id: i32, staffModLevel: i32, msg: String) -> Option<Vec<u8>> {
-    return Player::write(&MessagePrivateOut::new(from, id, staffModLevel, msg));
-}
-
-#[wasm_bindgen(js_name = midiJingle)] // buffered
-pub unsafe fn midi_jingle(pid: i32, delay: i32, data: Vec<u8>) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&MidiJingle::new(delay, data)),
-    };
-}
-
-#[wasm_bindgen(js_name = midiSong)] // buffered
-pub unsafe fn midi_song(pid: i32, name: String, crc: i32, length: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&MidiSong::new(name, crc, length)),
-    };
-}
-
-#[wasm_bindgen(js_name = objAdd)] // immediate
-pub unsafe fn obj_add(coord: i32, obj: i32, count: i32) -> Option<Vec<u8>> {
-    return Player::write(&ObjAdd::new(coord, obj, count));
-}
-
-#[wasm_bindgen(js_name = objCount)] // immediate
-pub unsafe fn obj_count(coord: i32, obj: i32, oldCount: i32, newCount: i32) -> Option<Vec<u8>> {
-    return Player::write(&ObjCount::new(coord, obj, oldCount, newCount));
-}
-
-#[wasm_bindgen(js_name = objDel)] // immediate
-pub unsafe fn obj_del(coord: i32, obj: i32) -> Option<Vec<u8>> {
-    return Player::write(&ObjDel::new(coord, obj));
-}
-
-#[wasm_bindgen(js_name = objReveal)] // immediate
-pub unsafe fn obj_reveal(coord: i32, obj: i32, count: i32, receiver: i32) -> Option<Vec<u8>> {
-    return Player::write(&ObjReveal::new(coord, obj, count, receiver));
-}
-
-#[wasm_bindgen(js_name = rebuildNormal)] // immediate
-pub unsafe fn rebuild_normal(x: i32, z: i32, squares: Vec<u16>, maps: Vec<i32>, locs: Vec<i32>) -> Option<Vec<u8>> {
-    return Player::write(&RebuildNormal::new(x, z, squares, maps, locs));
-}
-
-#[wasm_bindgen(js_name = resetAnims)] // immediate
-pub unsafe fn reset_anims() -> Option<Vec<u8>> {
-    return Player::write(&ResetAnims::new());
-}
-
-#[wasm_bindgen(js_name = resetClientVarCache)] // immediate
-pub unsafe fn reset_clientvarcache() -> Option<Vec<u8>> {
-    return Player::write(&ResetClientVarCache::new());
-}
-
-#[wasm_bindgen(js_name = setMultiway)] // buffered
-pub unsafe fn set_multiway(pid: i32, hidden: bool) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&SetMultiway::new(hidden)),
-    };
-}
-
-#[wasm_bindgen(js_name = synthSound)] // buffered
-pub unsafe fn synth_sound(pid: i32, synth: i32, loops: i32, delay: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&SynthSound::new(synth, loops, delay)),
-    };
-}
-
-#[wasm_bindgen(js_name = tutFlash)] // buffered
-pub unsafe fn tut_flash(pid: i32, tab: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => return player.buffer(&TutFlash::new(tab)),
-    };
-}
-
-#[wasm_bindgen(js_name = tutOpen)] // buffered
-pub unsafe fn tut_open(pid: i32, component: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&TutOpen::new(component)),
-    };
-}
-
-#[wasm_bindgen(js_name = unsetMapFlag)] // immediate
-pub unsafe fn unset_map_flag() -> Option<Vec<u8>> {
-    return Player::write(&UnsetMapFlag::new());
-}
-
-#[wasm_bindgen(js_name = updateFriendList)] // buffered
-pub unsafe fn update_friendlist(pid: i32, name: i64, node: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&UpdateFriendList::new(name, node)),
-    };
-}
-
-#[wasm_bindgen(js_name = updateIgnoreList)] // buffered
-pub unsafe fn update_ignorelist(pid: i32, names: Vec<i64>) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&UpdateIgnoreList::new(names)),
-    };
-}
-
-#[wasm_bindgen(js_name = updateInvFull)] // immediate
-pub unsafe fn update_inv_full(size: i32, component: i32, objs: Vec<i64>) -> Option<Vec<u8>> {
-    return Player::write(&UpdateInvFull::new(size, component, objs));
-}
-
-#[wasm_bindgen(js_name = updateInvPartial)] // immediate
-pub unsafe fn update_inv_partial(component: i32, slots: Vec<i32>, objs: Vec<i64>) -> Option<Vec<u8>> {
-    return Player::write(&UpdateInvPartial::new(component, slots, objs));
-}
-
-#[wasm_bindgen(js_name = updateInvStopTransmit)] // immediate
-pub unsafe fn update_inv_stop_transmit(component: i32) -> Option<Vec<u8>> {
-    return Player::write(&UpdateInvStopTransmit::new(component));
-}
-
-#[wasm_bindgen(js_name = updatePid)] // immediate
-pub unsafe fn update_pid(pid: i32) -> Option<Vec<u8>> {
-    return Player::write(&UpdatePid::new(pid));
-}
-
-#[wasm_bindgen(js_name = updateRebootTimer)] // buffered
-pub unsafe fn update_reboot_timer(pid: i32, ticks: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&UpdateRebootTimer::new(ticks)),
-    };
-}
-
-#[wasm_bindgen(js_name = updateRunEnergy)] // buffered
-pub unsafe fn update_runenergy(pid: i32, energy: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&UpdateRunEnergy::new(energy)),
-    };
-}
-
-#[wasm_bindgen(js_name = updateRunWeight)] // buffered
-pub unsafe fn update_runweight(pid: i32, kg: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&UpdateRunWeight::new(kg)),
-    };
-}
-
-#[wasm_bindgen(js_name = updateStat)] // buffered
-pub unsafe fn update_stat(pid: i32, stat: i32, experience: i32, level: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.buffer(&UpdateStat::new(stat, experience, level)),
-    };
-}
-
-#[wasm_bindgen(js_name = updateZoneFullFollows)] // immediate
-pub unsafe fn update_zone_full_follows(x: i32, z: i32, originX: i32, originZ: i32) -> Option<Vec<u8>> {
-    return Player::write(&UpdateZoneFullFollows::new(x, z, originX, originZ));
-}
-
-#[wasm_bindgen(js_name = updateZonePartialEnclosed)] // immediate
-pub unsafe fn update_zone_partial_enclosed(x: i32, z: i32, originX: i32, originZ: i32, data: Vec<u8>) -> Option<Vec<u8>> {
-    return Player::write(&UpdateZonePartialEnclosed::new(x, z, originX, originZ, data));
-}
-
-#[wasm_bindgen(js_name = updateZonePartialFollows)] // immediate
-pub unsafe fn update_zone_partial_follows(x: i32, z: i32, originX: i32, originZ: i32) -> Option<Vec<u8>> {
-    return Player::write(&UpdateZonePartialFollows::new(x, z, originX, originZ));
-}
-
-#[wasm_bindgen(js_name = varp)]// immediate
-pub unsafe fn varp(varp: i32, value: i32) -> Option<Vec<u8>> {
-    return if value >= -128 && value <= 127 {
-        Player::write(&VarpSmall::new(varp, value))
-    } else {
-        Player::write(&VarpLarge::new(varp, value))
-    }
-}
-
-#[wasm_bindgen(js_name = nextBufferedWrite)]
-pub unsafe fn next_buffered_write(pid: i32) -> Option<Vec<u8>> {
-    if pid == -1 {
-        return None;
-    }
-    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
-        None => None,
-        Some(player) => player.write_queue.pop_front(),
-    };
-}
+buffer!(cam_lookat, "camLookAt", CamLookAt, (x: i32, z: i32, height: i32, speed: i32, multiplier: i32), (x, z, height, speed, multiplier));
+buffer!(cam_moveto, "camMoveTo", CamMoveTo, (x: i32, z: i32, height: i32, speed: i32, multiplier: i32), (x, z, height, speed, multiplier));
+buffer!(cam_reset, "camReset", CamReset, (), ());
+buffer!(cam_shake, "camShake", CamShake, (shake: i32, jitter: i32, amplitude: i32, frequency: i32), (shake, jitter, amplitude, frequency));
+buffer!(chat_filter_settings, "chatFilterSettings", ChatFilterSettings, (public: i32, private: i32, trade: i32), (public, private, trade));
+buffer!(count_dialog, "countDialog", PCountDialog, (), ());
+write!(data_land, "dataLand", DataLand, (x: i32, z: i32, offset: i32, length: i32, data: Vec<u8>), (x, z, offset, length, data));
+write!(data_land_done, "dataLandDone", DataLandDone, (x: i32, z: i32), (x, z));
+write!(data_loc, "dataLoc", DataLoc, (x: i32, z: i32, offset: i32, length: i32, data: Vec<u8>), (x, z, offset, length, data));
+write!(data_loc_done, "dataLocDone", DataLocDone, (x: i32, z: i32), (x, z));
+buffer!(enable_tracking, "enableTracking", EnableTracking, (), ());
+buffer!(finish_tracking, "finishTracking", FinishTracking, (), ());
+buffer!(hint_arrow, "hintArrow", HintArrow, (arrow: i32, nid: i32, pid2: i32, x: i32, z: i32, y: i32), (arrow, nid, pid2, x, z, y));
+buffer!(if_close, "ifClose", IfClose, (), ());
+buffer!(if_open_chat, "ifOpenChat", IfOpenChat, (component: i32), (component));
+buffer!(if_open_main, "ifOpenMain", IfOpenMain, (component: i32), (component));
+buffer!(if_open_main_side, "ifOpenMainSide", IfOpenMainSide, (main: i32, side: i32), (main, side));
+buffer!(if_open_side, "ifOpenSide", IfOpenSide, (component: i32), (component));
+buffer!(if_setanim, "ifSetAnim", IfSetAnim, (component: i32, seq: i32), (component, seq));
+buffer!(if_setcolour, "ifSetColour", IfSetColour, (component: i32, colour: i32), (component, colour));
+buffer!(if_sethide, "ifSetHide", IfSetHide, (component: i32, hidden: bool), (component, hidden));
+buffer!(if_setmodel, "ifSetModel", IfSetModel, (component: i32, model: i32), (component, model));
+buffer!(if_setnpchead, "ifSetNpcHead", IfSetNpcHead, (component: i32, npc: i32), (component, npc));
+buffer!(if_setobject, "ifSetObject", IfSetObject, (component: i32, obj: i32, scale: i32), (component, obj, scale));
+buffer!(if_setplayerhead, "ifSetPlayerHead", IfSetPlayerHead, (component: i32), (component));
+buffer!(if_setposition, "ifSetPosition", IfSetPosition, (component: i32, x: i32, y: i32), (component, x, y));
+buffer!(if_setrecol, "ifSetRecol", IfSetRecol, (component: i32, src: i32, dst: i32), (component, src, dst));
+buffer!(if_settab, "ifSetTab", IfSetTab, (component: i32, tab: i32), (component, tab));
+buffer!(if_settabactive, "ifSetTabActive", IfSetTabActive, (tab: i32), (tab));
+buffer!(if_settext, "ifSetText", IfSetText, (component: i32, text: String), (component, text));
+buffer!(last_login_info, "lastLoginInfo", LastLoginInfo, (lastIp: i32, daysSinceLogin: i32, daysSinceRecovery: i32, messages: i32), (lastIp, daysSinceLogin, daysSinceRecovery, messages));
+write!(loc_addchange, "locAddChange", LocAddChange, (coord: i32, loc: i32, shape: i32, angle: i32), (coord, loc, shape, angle));
+write!(loc_anim, "locAnim", LocAnim, (coord: i32, shape: i32, angle: i32, seq: i32), (coord, shape, angle, seq));
+write!(loc_del, "locDel", LocDel, (coord: i32, shape: i32, angle: i32), (coord, shape, angle));
+write!(loc_merge, "locMerge", LocMerge, (srcX: i32, srcZ: i32, shape: i32, angle: i32, loc: i32, start: i32, end: i32, pid: i32, east: i32, south: i32, west: i32, north: i32), (srcX, srcZ, shape, angle, loc, start, end, pid, east, south, west, north));
+write!(logout, "logout", Logout, (), ());
+write!(map_anim, "mapAnim", MapAnim, (coord: i32, spotanim: i32, height: i32, delay: i32), (coord, spotanim, height, delay));
+write!(map_projanim, "mapProjAnim", MapProjAnim, (srcX: i32, srcZ: i32, dstX: i32, dstZ: i32, target: i32, spotanim: i32, srcHeight: i32, dstHeight: i32, start: i32, end: i32, peak: i32, arc: i32), (srcX, srcZ, dstX, dstZ, target, spotanim, srcHeight, dstHeight, start, end, peak, arc));
+write!(message_game, "messageGame", MessageGame, (msg: String), (msg));
+write!(message_private_out, "messagePrivateOut", MessagePrivateOut, (from: i64, id: i32, staffModLevel: i32, msg: String), (from, id, staffModLevel, msg));
+buffer!(midi_jingle, "midiJingle", MidiJingle, (delay: i32, data: Vec<u8>), (delay, data));
+buffer!(midi_song, "midiSong", MidiSong, (name: String, crc: i32, length: i32), (name, crc, length));
+write!(obj_add, "objAdd", ObjAdd, (coord: i32, obj: i32, count: i32), (coord, obj, count));
+write!(obj_count, "objCount", ObjCount, (coord: i32, obj: i32, oldCount: i32, newCount: i32), (coord, obj, oldCount, newCount));
+write!(obj_del, "objDel", ObjDel, (coord: i32, obj: i32), (coord, obj));
+write!(obj_reveal, "objReveal", ObjReveal, (coord: i32, obj: i32, count: i32, receiver: i32), (coord, obj, count, receiver));
+write!(rebuild_normal, "rebuildNormal", RebuildNormal, (x: i32, z: i32, squares: Vec<u16>, maps: Vec<i32>, locs: Vec<i32>), (x, z, squares, maps, locs));
+write!(reset_anims, "resetAnims", ResetAnims, (), ());
+write!(reset_clientvarcache, "resetClientVarCache", ResetClientVarCache, (), ());
+buffer!(set_multiway, "setMultiway", SetMultiway, (hidden: bool), (hidden));
+buffer!(synth_sound, "synthSound", SynthSound, (synth: i32, loops: i32, delay: i32), (synth, loops, delay));
+buffer!(tut_flash, "tutFlash", TutFlash, (tab: i32), (tab));
+buffer!(tut_open, "tutOpen", TutOpen, (component: i32), (component));
+write!(unset_map_flag, "unsetMapFlag", UnsetMapFlag, (), ());
+buffer!(update_friendlist, "updateFriendList", UpdateFriendList, (name: i64, node: i32), (name, node));
+buffer!(update_ignorelist, "updateIgnoreList", UpdateIgnoreList, (names: Vec<i64>), (names));
+write!(update_inv_full, "updateInvFull", UpdateInvFull, (size: i32, component: i32, objs: Vec<i64>), (size, component, objs));
+write!(update_inv_partial, "updateInvPartial", UpdateInvPartial, (component: i32, slots: Vec<i32>, objs: Vec<i64>), (component, slots, objs));
+write!(update_inv_stop_transmit, "updateInvStopTransmit", UpdateInvStopTransmit, (component: i32), (component));
+write!(update_pid, "updatePid", UpdatePid, (pid: i32), (pid));
+buffer!(update_reboot_timer, "updateRebootTimer", UpdateRebootTimer, (ticks: i32), (ticks));
+buffer!(update_runenergy, "updateRunEnergy", UpdateRunEnergy, (energy: i32), (energy));
+buffer!(update_runweight, "updateRunWeight", UpdateRunWeight, (kg: i32), (kg));
+buffer!(update_stat, "updateStat", UpdateStat, (stat: i32, experience: i32, level: i32), (stat, experience, level));
+write!(update_zone_full_follows, "updateZoneFullFollows", UpdateZoneFullFollows, (x: i32, z: i32, originX: i32, originZ: i32), (x, z, originX, originZ));
+write!(update_zone_partial_enclosed, "updateZonePartialEnclosed", UpdateZonePartialEnclosed, (x: i32, z: i32, originX: i32, originZ: i32, data: Vec<u8>), (x, z, originX, originZ, data));
+write!(update_zone_partial_follows, "updateZonePartialFollows", UpdateZonePartialFollows, (x: i32, z: i32, originX: i32, originZ: i32), (x, z, originX, originZ));
+write!(varp_small, "varpSmall", VarpSmall, (id: i32, value: i32), (id, value));
+write!(varp_large, "varpLarge", VarpLarge, (id: i32, value: i32), (id, value));
 
 // ---- decoders
+
+read!(client_cheat, "clientCheat", ClientCheat, ClientProt::CLIENT_CHEAT);
+read!(close_modal, "closeModal", CloseModal, ClientProt::CLOSE_MODAL);
+read!(friend_list_add, "friendListAdd", FriendListAdd, ClientProt::FRIENDLIST_ADD);
+read!(friend_list_del, "friendListDel", FriendListDel, ClientProt::FRIENDLIST_DEL);
+read!(idle_timer, "idleTimer", IdleTimer, ClientProt::IDLE_TIMER);
+read!(if_button, "ifButton", IfButton, ClientProt::IF_BUTTON);
+read!(if_player_design, "ifPlayerDesign", IfPlayerDesign, ClientProt::IF_PLAYERDESIGN);
+read!(ignore_list_add, "ignoreListAdd", IgnoreListAdd, ClientProt::IGNORELIST_ADD);
+read!(ignore_list_del, "ignoreListDel", IgnoreListDel, ClientProt::IGNORELIST_DEL);
+read!(inv_button1, "invButton1", InvButton, ClientProt::INV_BUTTON1);
+read!(inv_button2, "invButton2", InvButton, ClientProt::INV_BUTTON2);
+read!(inv_button3, "invButton3", InvButton, ClientProt::INV_BUTTON3);
+read!(inv_button4, "invButton4", InvButton, ClientProt::INV_BUTTON4);
+read!(inv_button5, "invButton5", InvButton, ClientProt::INV_BUTTON5);
+read!(inv_button_d, "invButtonD", InvButtonD, ClientProt::INV_BUTTOND);
+read!(message_private, "messagePrivate", MessagePrivate, ClientProt::MESSAGE_PRIVATE);
+read!(message_public, "messagePublic", MessagePublic, ClientProt::MESSAGE_PUBLIC);
+read!(move_minimap_click, "moveMinimapClick", MoveClick, ClientProt::MOVE_MINIMAPCLICK);
+read!(move_game_click, "moveGameClick", MoveClick, ClientProt::MOVE_GAMECLICK);
+read!(move_op_click, "moveOpClick", MoveClick, ClientProt::MOVE_OPCLICK);
+read!(no_timeout, "noTimeout", NoTimeout, ClientProt::NO_TIMEOUT);
+read!(opheld1, "opheld1", OpHeld, ClientProt::OPHELD1);
+read!(opheld2, "opheld2", OpHeld, ClientProt::OPHELD2);
+read!(opheld3, "opheld3", OpHeld, ClientProt::OPHELD3);
+read!(opheld4, "opheld4", OpHeld, ClientProt::OPHELD4);
+read!(opheld5, "opheld5", OpHeld, ClientProt::OPHELD5);
+read!(opheld_t, "opheldT", OpHeldT, ClientProt::OPHELDT);
+read!(opheld_u, "opheldU", OpHeldU, ClientProt::OPHELDU);
+read!(oploc1, "oploc1", OpLoc, ClientProt::OPLOC1);
+read!(oploc2, "oploc2", OpLoc, ClientProt::OPLOC2);
+read!(oploc3, "oploc3", OpLoc, ClientProt::OPLOC3);
+read!(oploc4, "oploc4", OpLoc, ClientProt::OPLOC4);
+read!(oploc5, "oploc5", OpLoc, ClientProt::OPLOC5);
+read!(oploc_t, "oplocT", OpLocT, ClientProt::OPLOCT);
+read!(oploc_u, "oplocU", OpLocU, ClientProt::OPLOCU);
+read!(opnpc1, "opnpc1", OpNpc, ClientProt::OPNPC1);
+read!(opnpc2, "opnpc2", OpNpc, ClientProt::OPNPC2);
+read!(opnpc3, "opnpc3", OpNpc, ClientProt::OPNPC3);
+read!(opnpc4, "opnpc4", OpNpc, ClientProt::OPNPC4);
+read!(opnpc5, "opnpc5", OpNpc, ClientProt::OPNPC5);
+read!(opnpc_t, "opnpcT", OpNpcT, ClientProt::OPNPCT);
+read!(opnpc_u, "opnpcU", OpNpcU, ClientProt::OPNPCU);
+read!(opobj1, "opobj1", OpObj, ClientProt::OPOBJ1);
+read!(opobj2, "opobj2", OpObj, ClientProt::OPOBJ2);
+read!(opobj3, "opobj3", OpObj, ClientProt::OPOBJ3);
+read!(opobj4, "opobj4", OpObj, ClientProt::OPOBJ4);
+read!(opobj5, "opobj5", OpObj, ClientProt::OPOBJ5);
+read!(opobj_t, "opobjT", OpObjT, ClientProt::OPOBJT);
+read!(opobj_u, "opobjU", OpObjU, ClientProt::OPOBJU);
+read!(opplayer1, "opplayer1", OpPlayer, ClientProt::OPPLAYER1);
+read!(opplayer2, "opplayer2", OpPlayer, ClientProt::OPPLAYER2);
+read!(opplayer3, "opplayer3", OpPlayer, ClientProt::OPPLAYER3);
+read!(opplayer4, "opplayer4", OpPlayer, ClientProt::OPPLAYER4);
+read!(opplayer_t, "opplayerT", OpPlayerT, ClientProt::OPPLAYERT);
+read!(opplayer_u, "opplayerU", OpPlayerU, ClientProt::OPPLAYERU);
+read!(rebuild_getmaps, "rebuildGetMaps", RebuildGetMaps, ClientProt::REBUILD_GETMAPS);
+read!(resume_pausebutton, "resumePauseButton", ResumePauseButton, ClientProt::RESUME_PAUSEBUTTON);
+read!(resume_countdialog, "resumeCountDialog", ResumePCountDialog, ClientProt::RESUME_P_COUNTDIALOG);
+read!(tutorial_clickside, "tutorialClickSide", TutorialClickSide, ClientProt::TUTORIAL_CLICKSIDE);
+read!(chat_setmode, "chatSetMode", ChatSetMode, ClientProt::CHAT_SETMODE);
+read!(event_tracking, "eventTracking", EventTracking, ClientProt::EVENT_TRACKING);
+read!(report_abuse, "reportAbuse", ReportAbuse, ClientProt::REPORT_ABUSE);
+read!(event_camera_position, "eventCameraPosition", EventCameraPosition, ClientProt::EVENT_CAMERA_POSITION);
+read!(anticheatop1, "anticheatOp1", AnticheatOp1, ClientProt::ANTICHEAT_OPLOGIC1);
+read!(anticheatop2, "anticheatOp2", AnticheatOp2, ClientProt::ANTICHEAT_OPLOGIC2);
+read!(anticheatop3, "anticheatOp3", AnticheatOp3, ClientProt::ANTICHEAT_OPLOGIC3);
+read!(anticheatop4, "anticheatOp4", AnticheatOp4, ClientProt::ANTICHEAT_OPLOGIC4);
+read!(anticheatop5, "anticheatOp5", AnticheatOp5, ClientProt::ANTICHEAT_OPLOGIC5);
+read!(anticheatop6, "anticheatOp6", AnticheatOp6, ClientProt::ANTICHEAT_OPLOGIC6);
+read!(anticheatop7, "anticheatOp7", AnticheatOp7, ClientProt::ANTICHEAT_OPLOGIC7);
+read!(anticheatop8, "anticheatOp8", AnticheatOp8, ClientProt::ANTICHEAT_OPLOGIC8);
+read!(anticheatop9, "anticheatOp9", AnticheatOp9, ClientProt::ANTICHEAT_OPLOGIC9);
+read!(anticheatcycle1, "anticheatCycle1", AnticheatCycle1, ClientProt::ANTICHEAT_CYCLELOGIC1);
+read!(anticheatcycle2, "anticheatCycle2", AnticheatCycle2, ClientProt::ANTICHEAT_CYCLELOGIC2);
+read!(anticheatcycle3, "anticheatCycle3", AnticheatCycle3, ClientProt::ANTICHEAT_CYCLELOGIC3);
+read!(anticheatcycle4, "anticheatCycle4", AnticheatCycle4, ClientProt::ANTICHEAT_CYCLELOGIC4);
+read!(anticheatcycle5, "anticheatCycle5", AnticheatCycle5, ClientProt::ANTICHEAT_CYCLELOGIC5);
+read!(anticheatcycle6, "anticheatCycle6", AnticheatCycle6, ClientProt::ANTICHEAT_CYCLELOGIC6);
+
+// ---- misc
 
 static PACKET_LOOKUP: Lazy<Vec<Option<IncomingPacket>>> = Lazy::new(|| {
     let mut lookup: Vec<Option<IncomingPacket>> = vec![None; 255];
@@ -1164,6 +757,17 @@ static PACKET_LOOKUP: Lazy<Vec<Option<IncomingPacket>>> = Lazy::new(|| {
     return lookup;
 });
 
+#[wasm_bindgen(js_name = nextBufferedWrite)]
+pub unsafe fn next_buffered_write(pid: i32) -> Option<Vec<u8>> {
+    if pid == -1 {
+        return None;
+    }
+    return match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
+        None => None,
+        Some(player) => player.write_queue.pop_front(),
+    };
+}
+
 #[wasm_bindgen(js_name = nextBufferedRead)]
 pub unsafe fn next_buffered_read(id: i32) -> i16 {
     return match &*PACKET_LOOKUP.as_ptr().add(id as usize) {
@@ -1171,398 +775,6 @@ pub unsafe fn next_buffered_read(id: i32) -> i16 {
         Some(packet) => ((packet.id as i16) << 8) | (packet.length as i16 & 0xff),
     }
 }
-
-#[wasm_bindgen(js_name = clientCheat)]
-pub unsafe fn clientCheat(bytes: Vec<u8>) -> Option<ClientCheat> {
-    return Some(ClientCheat::decode(ClientProt::CLIENT_CHEAT, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = closeModal)]
-pub unsafe fn close_modal(bytes: Vec<u8>) -> Option<CloseModal> {
-    return Some(CloseModal::decode(ClientProt::CLOSE_MODAL, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = friendListAdd)]
-pub unsafe fn friend_list_add(bytes: Vec<u8>) -> Option<FriendListAdd> {
-    return Some(FriendListAdd::decode(ClientProt::FRIENDLIST_ADD, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = friendListDel)]
-pub unsafe fn friend_list_del(bytes: Vec<u8>) -> Option<FriendListDel> {
-    return Some(FriendListDel::decode(ClientProt::FRIENDLIST_DEL, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = idleTimer)]
-pub unsafe fn idle_timer(bytes: Vec<u8>) -> Option<IdleTimer> {
-    return Some(IdleTimer::decode(ClientProt::IDLE_TIMER, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = ifButton)]
-pub unsafe fn if_button(bytes: Vec<u8>) -> Option<IfButton> {
-    return Some(IfButton::decode(ClientProt::IF_BUTTON, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = ifPlayerDesign)]
-pub unsafe fn if_player_design(bytes: Vec<u8>) -> Option<IfPlayerDesign> {
-    return Some(IfPlayerDesign::decode(ClientProt::IF_PLAYERDESIGN, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = ignoreListAdd)]
-pub unsafe fn ignore_list_add(bytes: Vec<u8>) -> Option<IgnoreListAdd> {
-    return Some(IgnoreListAdd::decode(ClientProt::IGNORELIST_ADD, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = ignoreListDel)]
-pub unsafe fn ignore_list_del(bytes: Vec<u8>) -> Option<IgnoreListDel> {
-    return Some(IgnoreListDel::decode(ClientProt::IGNORELIST_DEL, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = invButton1)]
-pub unsafe fn inv_button1(bytes: Vec<u8>) -> Option<InvButton> {
-    return Some(InvButton::decode(ClientProt::INV_BUTTON1, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = invButton2)]
-pub unsafe fn inv_button2(bytes: Vec<u8>) -> Option<InvButton> {
-    return Some(InvButton::decode(ClientProt::INV_BUTTON2, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = invButton3)]
-pub unsafe fn inv_button3(bytes: Vec<u8>) -> Option<InvButton> {
-    return Some(InvButton::decode(ClientProt::INV_BUTTON3, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = invButton4)]
-pub unsafe fn inv_button4(bytes: Vec<u8>) -> Option<InvButton> {
-    return Some(InvButton::decode(ClientProt::INV_BUTTON4, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = invButton5)]
-pub unsafe fn inv_button5(bytes: Vec<u8>) -> Option<InvButton> {
-    return Some(InvButton::decode(ClientProt::INV_BUTTON5, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = invButtonD)]
-pub unsafe fn inv_buttonD(bytes: Vec<u8>) -> Option<InvButtonD> {
-    return Some(InvButtonD::decode(ClientProt::INV_BUTTOND, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = messagePrivate)]
-pub unsafe fn message_private(bytes: Vec<u8>) -> Option<MessagePrivate> {
-    return Some(MessagePrivate::decode(ClientProt::MESSAGE_PRIVATE, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = messagePublic)]
-pub unsafe fn message_public(bytes: Vec<u8>) -> Option<MessagePublic> {
-    return Some(MessagePublic::decode(ClientProt::MESSAGE_PUBLIC, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = moveMinimapClick)]
-pub unsafe fn move_minimap_click(bytes: Vec<u8>) -> Option<MoveClick> {
-    return Some(MoveClick::decode(ClientProt::MOVE_MINIMAPCLICK, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = moveGameClick)]
-pub unsafe fn move_game_click(bytes: Vec<u8>) -> Option<MoveClick> {
-    return Some(MoveClick::decode(ClientProt::MOVE_GAMECLICK, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = moveOpClick)]
-pub unsafe fn move_op_click(bytes: Vec<u8>) -> Option<MoveClick> {
-    return Some(MoveClick::decode(ClientProt::MOVE_OPCLICK, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = noTimeout)]
-pub unsafe fn no_timeout(bytes: Vec<u8>) -> Option<NoTimeout> {
-    return Some(NoTimeout::decode(ClientProt::NO_TIMEOUT, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opheld1)]
-pub unsafe fn opheld1(bytes: Vec<u8>) -> Option<OpHeld> {
-    return Some(OpHeld::decode(ClientProt::OPHELD1, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opheld2)]
-pub unsafe fn opheld2(bytes: Vec<u8>) -> Option<OpHeld> {
-    return Some(OpHeld::decode(ClientProt::OPHELD2, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opheld3)]
-pub unsafe fn opheld3(bytes: Vec<u8>) -> Option<OpHeld> {
-    return Some(OpHeld::decode(ClientProt::OPHELD3, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opheld4)]
-pub unsafe fn opheld4(bytes: Vec<u8>) -> Option<OpHeld> {
-    return Some(OpHeld::decode(ClientProt::OPHELD4, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opheld5)]
-pub unsafe fn opheld5(bytes: Vec<u8>) -> Option<OpHeld> {
-    return Some(OpHeld::decode(ClientProt::OPHELD5, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opheldT)]
-pub unsafe fn opheldT(bytes: Vec<u8>) -> Option<OpHeldT> {
-    return Some(OpHeldT::decode(ClientProt::OPHELDT, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opheldU)]
-pub unsafe fn opheldU(bytes: Vec<u8>) -> Option<OpHeldU> {
-    return Some(OpHeldU::decode(ClientProt::OPHELDU, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = oploc1)]
-pub unsafe fn oploc1(bytes: Vec<u8>) -> Option<OpLoc> {
-    return Some(OpLoc::decode(ClientProt::OPLOC1, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = oploc2)]
-pub unsafe fn oploc2(bytes: Vec<u8>) -> Option<OpLoc> {
-    return Some(OpLoc::decode(ClientProt::OPLOC2, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = oploc3)]
-pub unsafe fn oploc3(bytes: Vec<u8>) -> Option<OpLoc> {
-    return Some(OpLoc::decode(ClientProt::OPLOC3, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = oploc4)]
-pub unsafe fn oploc4(bytes: Vec<u8>) -> Option<OpLoc> {
-    return Some(OpLoc::decode(ClientProt::OPLOC4, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = oploc5)]
-pub unsafe fn oploc5(bytes: Vec<u8>) -> Option<OpLoc> {
-    return Some(OpLoc::decode(ClientProt::OPLOC5, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = oplocT)]
-pub unsafe fn oplocT(bytes: Vec<u8>) -> Option<OpLocT> {
-    return Some(OpLocT::decode(ClientProt::OPLOCT, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = oplocU)]
-pub unsafe fn oplocU(bytes: Vec<u8>) -> Option<OpLocU> {
-    return Some(OpLocU::decode(ClientProt::OPLOCU, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opnpc1)]
-pub unsafe fn opnpc1(bytes: Vec<u8>) -> Option<OpNpc> {
-    return Some(OpNpc::decode(ClientProt::OPNPC1, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opnpc2)]
-pub unsafe fn opnpc2(bytes: Vec<u8>) -> Option<OpNpc> {
-    return Some(OpNpc::decode(ClientProt::OPNPC2, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opnpc3)]
-pub unsafe fn opnpc3(bytes: Vec<u8>) -> Option<OpNpc> {
-    return Some(OpNpc::decode(ClientProt::OPNPC3, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opnpc4)]
-pub unsafe fn opnpc4(bytes: Vec<u8>) -> Option<OpNpc> {
-    return Some(OpNpc::decode(ClientProt::OPNPC4, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opnpc5)]
-pub unsafe fn opnpc5(bytes: Vec<u8>) -> Option<OpNpc> {
-    return Some(OpNpc::decode(ClientProt::OPNPC5, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opnpcT)]
-pub unsafe fn opnpcT(bytes: Vec<u8>) -> Option<OpNpcT> {
-    return Some(OpNpcT::decode(ClientProt::OPNPCT, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opnpcU)]
-pub unsafe fn opnpcU(bytes: Vec<u8>) -> Option<OpNpcU> {
-    return Some(OpNpcU::decode(ClientProt::OPNPCU, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opobj1)]
-pub unsafe fn opobj1(bytes: Vec<u8>) -> Option<OpObj> {
-    return Some(OpObj::decode(ClientProt::OPOBJ1, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opobj2)]
-pub unsafe fn opobj2(bytes: Vec<u8>) -> Option<OpObj> {
-    return Some(OpObj::decode(ClientProt::OPOBJ2, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opobj3)]
-pub unsafe fn opobj3(bytes: Vec<u8>) -> Option<OpObj> {
-    return Some(OpObj::decode(ClientProt::OPOBJ3, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opobj4)]
-pub unsafe fn opobj4(bytes: Vec<u8>) -> Option<OpObj> {
-    return Some(OpObj::decode(ClientProt::OPOBJ4, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opobj5)]
-pub unsafe fn opobj5(bytes: Vec<u8>) -> Option<OpObj> {
-    return Some(OpObj::decode(ClientProt::OPOBJ5, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opobjT)]
-pub unsafe fn opobjT(bytes: Vec<u8>) -> Option<OpObjT> {
-    return Some(OpObjT::decode(ClientProt::OPOBJT, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opobjU)]
-pub unsafe fn opobjU(bytes: Vec<u8>) -> Option<OpObjU> {
-    return Some(OpObjU::decode(ClientProt::OPOBJU, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opplayer1)]
-pub unsafe fn opplayer1(bytes: Vec<u8>) -> Option<OpPlayer> {
-    return Some(OpPlayer::decode(ClientProt::OPPLAYER1, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opplayer2)]
-pub unsafe fn opplayer2(bytes: Vec<u8>) -> Option<OpPlayer> {
-    return Some(OpPlayer::decode(ClientProt::OPPLAYER2, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opplayer3)]
-pub unsafe fn opplayer3(bytes: Vec<u8>) -> Option<OpPlayer> {
-    return Some(OpPlayer::decode(ClientProt::OPPLAYER3, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opplayer4)]
-pub unsafe fn opplayer4(bytes: Vec<u8>) -> Option<OpPlayer> {
-    return Some(OpPlayer::decode(ClientProt::OPPLAYER4, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opplayerT)]
-pub unsafe fn opplayerT(bytes: Vec<u8>) -> Option<OpPlayerT> {
-    return Some(OpPlayerT::decode(ClientProt::OPPLAYERT, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = opplayerU)]
-pub unsafe fn opplayerU(bytes: Vec<u8>) -> Option<OpPlayerU> {
-    return Some(OpPlayerU::decode(ClientProt::OPPLAYERU, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = rebuildGetMaps)]
-pub unsafe fn rebuild_getmaps(bytes: Vec<u8>) -> Option<RebuildGetMaps> {
-    return Some(RebuildGetMaps::decode(ClientProt::REBUILD_GETMAPS, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = resumePauseButton)]
-pub unsafe fn resume_pausebutton(bytes: Vec<u8>) -> Option<ResumePauseButton> {
-    return Some(ResumePauseButton::decode(ClientProt::RESUME_PAUSEBUTTON, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = resumeCountDialog)]
-pub unsafe fn resume_countdialog(bytes: Vec<u8>) -> Option<ResumePCountDialog> {
-    return Some(ResumePCountDialog::decode(ClientProt::RESUME_P_COUNTDIALOG, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = tutorialClickSide)]
-pub unsafe fn tutorial_clickside(bytes: Vec<u8>) -> Option<TutorialClickSide> {
-    return Some(TutorialClickSide::decode(ClientProt::TUTORIAL_CLICKSIDE, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = chatSetMode)]
-pub unsafe fn chat_setmode(bytes: Vec<u8>) -> Option<ChatSetMode> {
-    return Some(ChatSetMode::decode(ClientProt::CHAT_SETMODE, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = eventTracking)]
-pub unsafe fn event_tracking(bytes: Vec<u8>) -> Option<EventTracking> {
-    return Some(EventTracking::decode(ClientProt::EVENT_TRACKING, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = reportAbuse)]
-pub unsafe fn report_abuse(bytes: Vec<u8>) -> Option<ReportAbuse> {
-    return Some(ReportAbuse::decode(ClientProt::REPORT_ABUSE, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = eventCameraPosition)]
-pub unsafe fn event_camera_position(bytes: Vec<u8>) -> Option<EventCameraPosition> {
-    return Some(EventCameraPosition::decode(ClientProt::EVENT_CAMERA_POSITION, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatOp1)]
-pub unsafe fn anticheatop1(bytes: Vec<u8>) -> Option<AnticheatOp1> {
-    return Some(AnticheatOp1::decode(ClientProt::ANTICHEAT_OPLOGIC1, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatOp2)]
-pub unsafe fn anticheatop2(bytes: Vec<u8>) -> Option<AnticheatOp2> {
-    return Some(AnticheatOp2::decode(ClientProt::ANTICHEAT_OPLOGIC2, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatOp3)]
-pub unsafe fn anticheatop3(bytes: Vec<u8>) -> Option<AnticheatOp3> {
-    return Some(AnticheatOp3::decode(ClientProt::ANTICHEAT_OPLOGIC3, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatOp4)]
-pub unsafe fn anticheatop4(bytes: Vec<u8>) -> Option<AnticheatOp4> {
-    return Some(AnticheatOp4::decode(ClientProt::ANTICHEAT_OPLOGIC4, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatOp5)]
-pub unsafe fn anticheatop5(bytes: Vec<u8>) -> Option<AnticheatOp5> {
-    return Some(AnticheatOp5::decode(ClientProt::ANTICHEAT_OPLOGIC5, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatOp6)]
-pub unsafe fn anticheatop6(bytes: Vec<u8>) -> Option<AnticheatOp6> {
-    return Some(AnticheatOp6::decode(ClientProt::ANTICHEAT_OPLOGIC6, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatOp7)]
-pub unsafe fn anticheatop7(bytes: Vec<u8>) -> Option<AnticheatOp7> {
-    return Some(AnticheatOp7::decode(ClientProt::ANTICHEAT_OPLOGIC7, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatOp8)]
-pub unsafe fn anticheatop8(bytes: Vec<u8>) -> Option<AnticheatOp8> {
-    return Some(AnticheatOp8::decode(ClientProt::ANTICHEAT_OPLOGIC8, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatOp9)]
-pub unsafe fn anticheatop9(bytes: Vec<u8>) -> Option<AnticheatOp9> {
-    return Some(AnticheatOp9::decode(ClientProt::ANTICHEAT_OPLOGIC9, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatCycle1)]
-pub unsafe fn anticheatcycle1(bytes: Vec<u8>) -> Option<AnticheatCycle1> {
-    return Some(AnticheatCycle1::decode(ClientProt::ANTICHEAT_CYCLELOGIC1, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatCycle2)]
-pub unsafe fn anticheatcycle2(bytes: Vec<u8>) -> Option<AnticheatCycle2> {
-    return Some(AnticheatCycle2::decode(ClientProt::ANTICHEAT_CYCLELOGIC2, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatCycle3)]
-pub unsafe fn anticheatcycle3(bytes: Vec<u8>) -> Option<AnticheatCycle3> {
-    return Some(AnticheatCycle3::decode(ClientProt::ANTICHEAT_CYCLELOGIC3, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatCycle4)]
-pub unsafe fn anticheatcycle4(bytes: Vec<u8>) -> Option<AnticheatCycle4> {
-    return Some(AnticheatCycle4::decode(ClientProt::ANTICHEAT_CYCLELOGIC4, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatCycle5)]
-pub unsafe fn anticheatcycle5(bytes: Vec<u8>) -> Option<AnticheatCycle5> {
-    return Some(AnticheatCycle5::decode(ClientProt::ANTICHEAT_CYCLELOGIC5, Packet::from(bytes)));
-}
-
-#[wasm_bindgen(js_name = anticheatCycle6)]
-pub unsafe fn anticheatcycle6(bytes: Vec<u8>) -> Option<AnticheatCycle6> {
-    return Some(AnticheatCycle6::decode(ClientProt::ANTICHEAT_CYCLELOGIC6, Packet::from(bytes)));
-}
-
-// ---- misc
 
 #[wasm_bindgen(js_name = unpackWords)]
 pub unsafe fn unpack_words(bytes: Vec<u8>, length: usize) -> String {

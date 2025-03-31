@@ -30,7 +30,6 @@ impl NpcInfo {
     #[inline]
     pub fn encode(
         &mut self,
-        pos: usize,
         renderer: &mut NpcRenderer,
         npcs: &mut [Option<Npc>],
         map: &mut ZoneMap,
@@ -51,7 +50,7 @@ impl NpcInfo {
         self.updates.bit_pos = 0;
 
         self.buf.bits();
-        let bytes: usize = self.write_npcs(npcs, renderer, player, pos);
+        let bytes: usize = self.write_npcs(npcs, renderer, player, 0);
         self.write_new_npcs(map, npcs, renderer, player, bytes);
         if self.updates.pos > 0 {
             self.buf.pbit(13, 8191);

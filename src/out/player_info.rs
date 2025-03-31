@@ -31,7 +31,6 @@ impl PlayerInfo {
     #[inline]
     pub fn encode(
         &mut self,
-        pos: usize,
         renderer: &mut PlayerRenderer,
         players: &[Option<Player>],
         map: &mut ZoneMap,
@@ -56,7 +55,7 @@ impl PlayerInfo {
 
         self.buf.bits();
         let bytes1: usize = self.write_local_player(renderer, player);
-        let bytes2: usize = self.write_players(players, renderer, player, bytes1 + pos);
+        let bytes2: usize = self.write_players(players, renderer, player, bytes1);
         self.write_new_players(map, players, renderer, grid, player, bytes2);
         if self.updates.pos > 0 {
             self.buf.pbit(11, 2047);
