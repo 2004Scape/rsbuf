@@ -108,6 +108,7 @@ use out::player_info::PlayerInfo;
 use std::collections::HashMap;
 use std::ptr::{addr_of, addr_of_mut};
 use wasm_bindgen::prelude::wasm_bindgen;
+use crate::pool::PacketPool;
 
 pub mod packet;
 pub mod renderer;
@@ -124,6 +125,7 @@ mod category;
 mod r#in;
 mod out;
 mod pack;
+mod pool;
 
 macro_rules! read {
     ($fn_name:ident, $js_name:literal, $struct:ty, $prot:expr) => {
@@ -148,7 +150,7 @@ macro_rules! buffer {
             }
             match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
                 None => None,
-                Some(player) => player.buffer(&<$struct>::new($($arg_val),*)),
+                Some(player) => player.buffer(&mut *POOL, &<$struct>::new($($arg_val),*)),
             }
         }
     };
@@ -160,7 +162,7 @@ macro_rules! write {
     ($fn_name:ident, $js_name:literal, $struct:ty, ($($arg_name:ident: $arg_ty:ty),*), ($($arg_val:ident),*)) => {
         #[wasm_bindgen(js_name = $js_name)]
         pub unsafe fn $fn_name($($arg_name: $arg_ty),*) -> Vec<u8> {
-            Player::write(&<$struct>::new($($arg_val),*))
+            Player::write(&mut *POOL, &<$struct>::new($($arg_val),*))
         }
     };
 }
@@ -176,6 +178,7 @@ static mut NPC_INFO: Lazy<NpcInfo> = Lazy::new(NpcInfo::new);
 
 static mut ZONE_MAP: Lazy<ZoneMap> = Lazy::new(ZoneMap::new);
 static mut WORD_PACK: Lazy<WordPack> = Lazy::new(WordPack::new);
+static mut POOL: Lazy<PacketPool> = Lazy::new(PacketPool::new);
 
 #[wasm_bindgen(js_name = computePlayer)]
 pub unsafe fn compute_player(
@@ -310,13 +313,13 @@ pub unsafe fn player_info(pid: i32, dx: i32, dz: i32, rebuild: bool) -> Option<V
             dz,
             rebuild,
         );
-        let mut buf: Packet = Packet::new(1 + 2 + bytes.len());
+        let buf: &mut Packet = &mut *POOL.take(1 + 2 + bytes.len());
         buf.p1(ServerInternalProt::PLAYER_INFO as i32);
         buf.pos += 2;
         let start: usize = buf.pos;
         buf.pdata(&bytes, 0, bytes.len());
         buf.psize2((buf.pos - start) as u16);
-        return Some(buf.data);
+        return unsafe { Some(buf.data.get_unchecked(0..buf.pos).to_vec()) };
     }
 
     return None;
@@ -443,13 +446,13 @@ pub unsafe fn npc_info(pid: i32, dx: i32, dz: i32, rebuild: bool) -> Option<Vec<
             dz,
             rebuild
         );
-        let mut buf: Packet = Packet::new(1 + 2 + bytes.len());
+        let buf: &mut Packet = &mut *POOL.take(1 + 2 + bytes.len());
         buf.p1(ServerInternalProt::NPC_INFO as i32);
         buf.pos += 2;
         let start: usize = buf.pos;
         buf.pdata(&bytes, 0, bytes.len());
         buf.psize2((buf.pos - start) as u16);
-        return Some(buf.data);
+        return unsafe { Some(buf.data.get_unchecked(0..buf.pos).to_vec()) };
     }
 
     return None;

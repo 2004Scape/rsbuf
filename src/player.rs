@@ -4,6 +4,7 @@ use crate::message::MessageEncoder;
 use crate::packet::Packet;
 use crate::visibility::Visibility;
 use std::collections::VecDeque;
+use crate::pool::PacketPool;
 
 #[derive(Clone)]
 pub struct Player {
@@ -98,20 +99,20 @@ impl Player {
     }
 
     #[inline]
-    pub fn buffer(&mut self, message: &dyn MessageEncoder) -> Option<Vec<u8>> {
-        self.write_queue.push_back(Player::write(message));
+    pub fn buffer(&mut self, pool: &mut PacketPool, message: &dyn MessageEncoder) -> Option<Vec<u8>> {
+        self.write_queue.push_back(Player::write(pool, message));
         return None;
     }
 
     #[inline]
-    pub fn write(message: &dyn MessageEncoder) -> Vec<u8> {
+    pub fn write(pool: &mut PacketPool, message: &dyn MessageEncoder) -> Vec<u8> {
         let id: i32 = message.id();
         let offset: usize = match message.length() {
             -1 => 1 + 1,
             -2 => 1 + 2,
             _ => 1 + 0,
         };
-        let mut buf: Packet = Packet::new(offset + message.test());
+        let mut buf: &mut Packet = pool.take(offset + message.test());
         buf.p1(id);
         match message.length() {
             -1 => buf.pos += 1,
@@ -125,7 +126,7 @@ impl Player {
             -2 => buf.psize2((buf.pos - start) as u16),
             _ => {}
         };
-        return buf.data;
+        return unsafe { buf.data.get_unchecked(0..buf.pos).to_vec() };
     }
 
     #[inline]
