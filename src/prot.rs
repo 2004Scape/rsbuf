@@ -1,4 +1,5 @@
 #![allow(non_camel_case_types)]
+#![allow(dead_code)]
 
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -250,6 +251,16 @@ pub enum ServerInternalProt {
     UPDATE_ZONE_PARTIAL_FOLLOWS = 7, // NXT naming
     UPDATE_ZONE_FULL_FOLLOWS = 135, // NXT naming
     UPDATE_ZONE_PARTIAL_ENCLOSED = 162, // NXT naming
+    LOC_MERGE = 23, // based on runescript command p_locmerge
+    LOC_ANIM = 42, // NXT naming
+    OBJ_DEL = 49, // NXT naming
+    OBJ_REVEAL = 50, // NXT naming
+    LOC_ADD_CHANGE = 59, // NXT naming
+    MAP_PROJANIM = 69, // NXT naming
+    LOC_DEL = 76, // NXT naming
+    OBJ_COUNT = 151, // NXT naming
+    MAP_ANIM = 191, // NXT naming
+    OBJ_ADD = 223, // NXT naming
 }
 
 #[repr(u8)]

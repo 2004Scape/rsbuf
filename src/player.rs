@@ -94,7 +94,7 @@ impl Player {
             graphic_height: -1,
             graphic_delay: -1,
             exact_move: None,
-            write_queue: VecDeque::new(),
+            write_queue: VecDeque::with_capacity(64),
         }
     }
 
@@ -110,6 +110,20 @@ impl Player {
             },
             ServerProtPriority::Immediate => Some(out),
         };
+    }
+
+    #[inline]
+    pub fn write_zone_message(message: &dyn MessageEncoder, enclose: bool) -> Option<OutgoingPacket> {
+        return if enclose {
+            let mut buf: Packet = Packet::new(1 + message.test());
+            buf.p1(message.id());
+            message.encode(&mut buf);
+            Some(OutgoingPacket::new(Some(buf.data), message.id(), message.length()))
+        } else {
+            let mut buf: Packet = Packet::new(message.test());
+            message.encode(&mut buf);
+            Some(OutgoingPacket::new(Some(buf.data), message.id(), message.length()))
+        }
     }
 
     #[inline]

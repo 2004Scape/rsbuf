@@ -47,4 +47,14 @@ impl CoordGrid {
     pub const fn zone(pos: u16) -> u16 {
         return pos >> 3;
     }
+
+    #[inline]
+    pub const fn origin(pos: u16) -> u16 {
+        return ((pos >> 3) - 6) << 3;
+    }
+
+    #[inline]
+    pub const fn pack_zone_coord(x: u16, z: u16) -> u8 {
+        return (((x & 0x7) as u8) << 4) | (z & 0x7) as u8;
+    }
 }

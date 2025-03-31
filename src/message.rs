@@ -47,6 +47,7 @@ impl OutgoingPacket {
 }
 
 #[wasm_bindgen]
+#[derive(Clone)]
 pub struct IncomingPacket {
     #[wasm_bindgen(readonly)]
     pub id: i32,
