@@ -99,9 +99,8 @@ impl Player {
     }
 
     #[inline]
-    pub fn buffer(&mut self, pool: &mut PacketPool, message: &dyn MessageEncoder) -> Option<Vec<u8>> {
+    pub fn buffer(&mut self, pool: &mut PacketPool, message: &dyn MessageEncoder) {
         self.write_queue.push_back(Player::write(pool, message));
-        return None;
     }
 
     #[inline]

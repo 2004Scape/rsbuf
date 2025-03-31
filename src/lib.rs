@@ -150,7 +150,10 @@ macro_rules! buffer {
             }
             match &mut *PLAYERS.as_mut_ptr().add(pid as usize) {
                 None => None,
-                Some(player) => player.buffer(&mut *POOL, &<$struct>::new($($arg_val),*)),
+                Some(player) => {
+                    player.buffer(&mut *POOL, &<$struct>::new($($arg_val),*));
+                    None
+                },
             }
         }
     };
