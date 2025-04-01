@@ -113,6 +113,7 @@ use crate::pool::PacketPool;
 pub mod packet;
 pub mod renderer;
 pub mod build;
+pub mod wordpack;
 
 mod coord;
 mod player;
@@ -124,7 +125,6 @@ mod visibility;
 mod category;
 mod r#in;
 mod out;
-mod wordpack;
 mod pool;
 
 macro_rules! read {
