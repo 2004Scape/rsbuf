@@ -8,7 +8,7 @@ pub struct UpdateRebootTimer {
 
 impl UpdateRebootTimer {
     #[inline]
-    pub fn new(
+    pub const fn new(
         ticks: i32,
     ) -> UpdateRebootTimer {
         return UpdateRebootTimer {

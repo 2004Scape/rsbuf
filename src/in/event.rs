@@ -9,9 +9,7 @@ pub struct EventTracking {
     pub bytes: Vec<u8>,
 }
 
-#[wasm_bindgen]
 impl EventTracking {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(bytes: Vec<u8>) -> EventTracking {
         return EventTracking {
@@ -46,9 +44,7 @@ pub struct EventCameraPosition {
     pub zoom: i32,
 }
 
-#[wasm_bindgen]
 impl EventCameraPosition {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         pitch: i32,

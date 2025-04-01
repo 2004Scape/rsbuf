@@ -6,9 +6,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 #[wasm_bindgen]
 pub struct CloseModal {}
 
-#[wasm_bindgen]
 impl CloseModal {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> CloseModal {
         return CloseModal {}

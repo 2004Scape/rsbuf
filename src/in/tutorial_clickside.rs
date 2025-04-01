@@ -9,9 +9,7 @@ pub struct TutorialClickSide {
     pub tab: u8,
 }
 
-#[wasm_bindgen]
 impl TutorialClickSide {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(tab: u8) -> TutorialClickSide {
         return TutorialClickSide {

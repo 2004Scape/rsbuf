@@ -8,7 +8,7 @@ pub struct UpdatePid {
 
 impl UpdatePid {
     #[inline]
-    pub fn new(
+    pub const fn new(
         pid: i32,
     ) -> UpdatePid {
         return UpdatePid {

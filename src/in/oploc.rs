@@ -15,9 +15,7 @@ pub struct OpLoc {
     pub loc: u16,
 }
 
-#[wasm_bindgen]
 impl OpLoc {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         op: u8,
@@ -73,9 +71,7 @@ pub struct OpLocT {
     pub spell: u16,
 }
 
-#[wasm_bindgen]
 impl OpLocT {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         x: u16,
@@ -127,9 +123,7 @@ pub struct OpLocU {
     pub use_component: u16,
 }
 
-#[wasm_bindgen]
 impl OpLocU {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         x: u16,

@@ -9,7 +9,7 @@ pub struct IfSetHide {
 
 impl IfSetHide {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
         hidden: bool,
     ) -> IfSetHide {

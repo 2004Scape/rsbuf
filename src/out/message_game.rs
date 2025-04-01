@@ -8,7 +8,7 @@ pub struct MessageGame {
 
 impl MessageGame {
     #[inline]
-    pub fn new(msg: String) -> MessageGame {
+    pub const fn new(msg: String) -> MessageGame {
         return MessageGame {
             msg,
         }

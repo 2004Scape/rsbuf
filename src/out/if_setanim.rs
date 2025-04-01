@@ -9,7 +9,7 @@ pub struct IfSetAnim {
 
 impl IfSetAnim {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
         seq: i32,
     ) -> IfSetAnim {

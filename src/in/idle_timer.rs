@@ -6,9 +6,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 #[wasm_bindgen]
 pub struct IdleTimer {}
 
-#[wasm_bindgen]
 impl IdleTimer {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> IdleTimer {
         return IdleTimer {}

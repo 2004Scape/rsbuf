@@ -9,7 +9,7 @@ pub struct VarpSmall {
 
 impl VarpSmall {
     #[inline]
-    pub fn new(
+    pub const fn new(
         varp: i32,
         value: i32,
     ) -> VarpSmall {

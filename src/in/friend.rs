@@ -9,9 +9,7 @@ pub struct FriendListAdd {
     pub username: i64,
 }
 
-#[wasm_bindgen]
 impl FriendListAdd {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(username: i64) -> FriendListAdd {
         return FriendListAdd {
@@ -40,9 +38,7 @@ pub struct FriendListDel {
     pub username: i64,
 }
 
-#[wasm_bindgen]
 impl FriendListDel {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(username: i64) -> FriendListDel {
         return FriendListDel {

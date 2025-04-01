@@ -2,9 +2,9 @@ use crate::build::BuildArea;
 use crate::coord::CoordGrid;
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
+use crate::pool::PacketPool;
 use crate::visibility::Visibility;
 use std::collections::VecDeque;
-use crate::pool::PacketPool;
 
 #[derive(Clone)]
 pub struct Player {

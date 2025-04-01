@@ -15,9 +15,7 @@ pub struct OpHeld {
     pub component: u16,
 }
 
-#[wasm_bindgen]
 impl OpHeld {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         op: u8,
@@ -73,9 +71,7 @@ pub struct OpHeldT {
     pub spell: u16,
 }
 
-#[wasm_bindgen]
 impl OpHeldT {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         obj: u16,
@@ -127,9 +123,7 @@ pub struct OpHeldU {
     pub use_component: u16,
 }
 
-#[wasm_bindgen]
 impl OpHeldU {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         obj: u16,

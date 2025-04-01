@@ -1,7 +1,7 @@
 use crate::message::MessageEncoder;
-use crate::wordpack::WordPack;
 use crate::packet::Packet;
 use crate::prot::ServerInternalProt;
+use crate::wordpack::WordPack;
 
 pub struct MessagePrivateOut {
     from: i64,
@@ -12,7 +12,7 @@ pub struct MessagePrivateOut {
 
 impl MessagePrivateOut {
     #[inline]
-    pub fn new(
+    pub const fn new(
         from: i64,
         id: i32,
         staff_mod_level: i32,

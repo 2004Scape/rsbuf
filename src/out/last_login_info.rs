@@ -11,7 +11,7 @@ pub struct LastLoginInfo {
 
 impl LastLoginInfo {
     #[inline]
-    pub fn new(
+    pub const fn new(
         last_ip: i32,
         days_since_login: i32,
         days_since_recovery: i32,

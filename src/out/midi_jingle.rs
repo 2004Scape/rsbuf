@@ -9,7 +9,7 @@ pub struct MidiJingle {
 
 impl MidiJingle {
     #[inline]
-    pub fn new(
+    pub const fn new(
         delay: i32,
         data: Vec<u8>,
     ) -> MidiJingle {

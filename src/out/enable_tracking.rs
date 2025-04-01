@@ -6,7 +6,7 @@ pub struct EnableTracking {}
 
 impl EnableTracking {
     #[inline]
-    pub fn new() -> EnableTracking {
+    pub const fn new() -> EnableTracking {
         return EnableTracking {}
     }
 }

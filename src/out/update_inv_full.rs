@@ -10,7 +10,7 @@ pub struct UpdateInvFull {
 
 impl UpdateInvFull {
     #[inline]
-    pub fn new(
+    pub const fn new(
         size: i32,
         component: i32,
         objs: Vec<i64>,

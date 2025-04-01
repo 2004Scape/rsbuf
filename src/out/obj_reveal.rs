@@ -11,7 +11,7 @@ pub struct ObjReveal {
 
 impl ObjReveal {
     #[inline]
-    pub fn new(
+    pub const fn new(
         coord: i32,
         obj: i32,
         count: i32,

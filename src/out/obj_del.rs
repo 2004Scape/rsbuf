@@ -9,7 +9,7 @@ pub struct ObjDel {
 
 impl ObjDel {
     #[inline]
-    pub fn new(
+    pub const fn new(
         coord: i32,
         obj: i32,
     ) -> ObjDel {

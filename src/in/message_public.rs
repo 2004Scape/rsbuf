@@ -13,9 +13,7 @@ pub struct MessagePublic {
     pub input: Vec<u8>,
 }
 
-#[wasm_bindgen]
 impl MessagePublic {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         color: u8,

@@ -10,7 +10,7 @@ pub struct UpdateStat {
 
 impl UpdateStat {
     #[inline]
-    pub fn new(
+    pub const fn new(
         stat: i32,
         experience: i32,
         level: i32,

@@ -6,7 +6,7 @@ pub struct Logout {}
 
 impl Logout {
     #[inline]
-    pub fn new() -> Logout {
+    pub const fn new() -> Logout {
         return Logout {}
     }
 }

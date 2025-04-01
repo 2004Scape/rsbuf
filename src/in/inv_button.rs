@@ -15,9 +15,7 @@ pub struct InvButton {
     pub component: u16,
 }
 
-#[wasm_bindgen]
 impl InvButton {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         op: u8,
@@ -71,9 +69,7 @@ pub struct InvButtonD {
     pub target: u16,
 }
 
-#[wasm_bindgen]
 impl InvButtonD {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         component: u16,

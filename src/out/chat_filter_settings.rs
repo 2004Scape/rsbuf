@@ -10,7 +10,7 @@ pub struct ChatFilterSettings {
 
 impl ChatFilterSettings {
     #[inline]
-    pub fn new(
+    pub const fn new(
         public: i32,
         private: i32,
         trade: i32,

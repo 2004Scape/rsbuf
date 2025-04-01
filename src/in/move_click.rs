@@ -14,9 +14,7 @@ pub struct MoveClick {
     pub path: Vec<u32>,
 }
 
-#[wasm_bindgen]
 impl MoveClick {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         ctrl: bool,

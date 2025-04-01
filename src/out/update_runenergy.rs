@@ -8,7 +8,7 @@ pub struct UpdateRunEnergy {
 
 impl UpdateRunEnergy {
     #[inline]
-    pub fn new(
+    pub const fn new(
         energy: i32,
     ) -> UpdateRunEnergy {
         return UpdateRunEnergy {

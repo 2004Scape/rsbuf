@@ -9,9 +9,7 @@ pub struct ResumePCountDialog {
     pub input: i32,
 }
 
-#[wasm_bindgen]
 impl ResumePCountDialog {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(input: i32) -> ResumePCountDialog {
         return ResumePCountDialog {

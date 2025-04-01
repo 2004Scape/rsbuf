@@ -8,7 +8,7 @@ pub struct IfOpenMain {
 
 impl IfOpenMain {
     #[inline]
-    pub fn new(component:i32) -> IfOpenMain {
+    pub const fn new(component:i32) -> IfOpenMain {
         return IfOpenMain {
             component,
         }

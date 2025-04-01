@@ -10,7 +10,7 @@ pub struct SynthSound {
 
 impl SynthSound {
     #[inline]
-    pub fn new(
+    pub const fn new(
         synth: i32,
         loops: i32,
         delay: i32,

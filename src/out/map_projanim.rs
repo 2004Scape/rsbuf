@@ -21,7 +21,7 @@ pub struct MapProjAnim {
 
 impl MapProjAnim {
     #[inline]
-    pub fn new(
+    pub const fn new(
         src_x: i32,
         src_z: i32,
         dst_x: i32,

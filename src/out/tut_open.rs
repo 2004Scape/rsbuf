@@ -8,7 +8,7 @@ pub struct TutOpen {
 
 impl TutOpen {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
     ) -> TutOpen {
         return TutOpen {

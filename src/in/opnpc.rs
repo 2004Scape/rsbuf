@@ -11,9 +11,7 @@ pub struct OpNpc {
     pub nid: u16,
 }
 
-#[wasm_bindgen]
 impl OpNpc {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         op: u8,
@@ -59,9 +57,7 @@ pub struct OpNpcT {
     pub spell: u16,
 }
 
-#[wasm_bindgen]
 impl OpNpcT {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         nid: u16,
@@ -103,9 +99,7 @@ pub struct OpNpcU {
     pub use_component: u16,
 }
 
-#[wasm_bindgen]
 impl OpNpcU {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         nid: u16,

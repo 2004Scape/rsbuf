@@ -8,7 +8,7 @@ pub struct UpdateInvStopTransmit {
 
 impl UpdateInvStopTransmit {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
     ) -> UpdateInvStopTransmit {
         return UpdateInvStopTransmit {

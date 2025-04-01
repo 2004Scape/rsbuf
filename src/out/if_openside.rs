@@ -8,7 +8,7 @@ pub struct IfOpenSide {
 
 impl IfOpenSide {
     #[inline]
-    pub fn new(component:i32) -> IfOpenSide {
+    pub const fn new(component:i32) -> IfOpenSide {
         return IfOpenSide {
             component,
         }

@@ -9,7 +9,7 @@ pub struct UpdateFriendList {
 
 impl UpdateFriendList {
     #[inline]
-    pub fn new(name: i64, node: i32) -> UpdateFriendList {
+    pub const fn new(name: i64, node: i32) -> UpdateFriendList {
         return UpdateFriendList {
             name,
             node,

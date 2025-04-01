@@ -10,7 +10,7 @@ pub struct IfSetObject {
 
 impl IfSetObject {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
         obj: i32,
         scale: i32,

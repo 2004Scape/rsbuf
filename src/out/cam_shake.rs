@@ -11,7 +11,7 @@ pub struct CamShake {
 
 impl CamShake {
     #[inline]
-    pub fn new(
+    pub const fn new(
         shake: i32,
         jitter: i32,
         amplitude: i32,

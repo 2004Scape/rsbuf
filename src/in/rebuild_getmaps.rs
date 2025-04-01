@@ -9,9 +9,7 @@ pub struct RebuildGetMaps {
     pub maps: Vec<u32>,
 }
 
-#[wasm_bindgen]
 impl RebuildGetMaps {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(maps: Vec<u32>) -> RebuildGetMaps {
         return RebuildGetMaps {

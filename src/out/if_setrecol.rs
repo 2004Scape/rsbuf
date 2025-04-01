@@ -10,7 +10,7 @@ pub struct IfSetRecol {
 
 impl IfSetRecol {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
         src: i32,
         dst: i32,

@@ -6,7 +6,7 @@ pub struct CamReset {}
 
 impl CamReset {
     #[inline]
-    pub fn new() -> CamReset {
+    pub const fn new() -> CamReset {
         return CamReset {}
     }
 }

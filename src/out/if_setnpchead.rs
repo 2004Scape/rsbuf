@@ -9,7 +9,7 @@ pub struct IfSetNpcHead {
 
 impl IfSetNpcHead {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
         npc: i32,
     ) -> IfSetNpcHead {

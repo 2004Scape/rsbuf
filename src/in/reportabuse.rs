@@ -13,9 +13,7 @@ pub struct ReportAbuse {
     pub mute: bool,
 }
 
-#[wasm_bindgen]
 impl ReportAbuse {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         offender: i64,

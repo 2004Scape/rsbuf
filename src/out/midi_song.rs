@@ -10,7 +10,7 @@ pub struct MidiSong {
 
 impl MidiSong {
     #[inline]
-    pub fn new(
+    pub const fn new(
         name: String,
         crc: i32,
         length: i32,

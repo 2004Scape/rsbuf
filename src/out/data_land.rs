@@ -12,7 +12,7 @@ pub struct DataLand {
 
 impl DataLand {
     #[inline]
-    pub fn new(
+    pub const fn new(
         x: i32,
         z: i32,
         offset: i32,
@@ -64,7 +64,7 @@ pub struct DataLandDone {
 
 impl DataLandDone {
     #[inline]
-    pub fn new(
+    pub const fn new(
         x: i32,
         z: i32,
     ) -> DataLandDone {

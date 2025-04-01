@@ -8,7 +8,7 @@ pub struct IfSetTabActive {
 
 impl IfSetTabActive {
     #[inline]
-    pub fn new(
+    pub const fn new(
         tab: i32,
     ) -> IfSetTabActive {
         return IfSetTabActive {

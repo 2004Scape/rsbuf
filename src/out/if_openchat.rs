@@ -8,7 +8,7 @@ pub struct IfOpenChat {
 
 impl IfOpenChat {
     #[inline]
-    pub fn new(component:i32) -> IfOpenChat {
+    pub const fn new(component:i32) -> IfOpenChat {
         return IfOpenChat {
             component,
         }

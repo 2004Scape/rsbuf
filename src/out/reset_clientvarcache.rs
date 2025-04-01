@@ -6,7 +6,7 @@ pub struct ResetClientVarCache {}
 
 impl ResetClientVarCache {
     #[inline]
-    pub fn new() -> ResetClientVarCache {
+    pub const fn new() -> ResetClientVarCache {
         return ResetClientVarCache {}
     }
 }

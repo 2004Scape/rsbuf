@@ -72,9 +72,9 @@ use crate::out::update_zone_partial_enclosed::UpdateZonePartialEnclosed;
 use crate::out::update_zone_partial_follows::UpdateZonePartialFollows;
 use crate::out::varp_large::VarpLarge;
 use crate::out::varp_small::VarpSmall;
-use crate::wordpack::WordPack;
 use crate::packet::Packet;
 use crate::player::{Chat, ExactMove, Player};
+use crate::pool::PacketPool;
 use crate::prot::{ClientInternalProt, ClientProt, ServerInternalProt};
 use crate::r#in::anticheat::{AnticheatCycle1, AnticheatCycle2, AnticheatCycle3, AnticheatCycle4, AnticheatCycle5, AnticheatCycle6, AnticheatOp1, AnticheatOp2, AnticheatOp3, AnticheatOp4, AnticheatOp5, AnticheatOp6, AnticheatOp7, AnticheatOp8, AnticheatOp9};
 use crate::r#in::chat_setmode::ChatSetMode;
@@ -103,12 +103,12 @@ use crate::r#in::resume_pausebutton::ResumePauseButton;
 use crate::r#in::tutorial_clickside::TutorialClickSide;
 use crate::renderer::{NpcRenderer, PlayerRenderer};
 use crate::visibility::Visibility;
+use crate::wordpack::WordPack;
 use once_cell::sync::Lazy;
 use out::player_info::PlayerInfo;
 use std::collections::HashMap;
 use std::ptr::{addr_of, addr_of_mut};
 use wasm_bindgen::prelude::wasm_bindgen;
-use crate::pool::PacketPool;
 
 pub mod packet;
 pub mod renderer;
@@ -786,6 +786,30 @@ pub unsafe fn next_buffered_read(id: i32) -> i16 {
         None => -1,
         Some(packet) => ((packet.id as i16) << 8) | (packet.length as i16 & 0xff),
     }
+}
+
+#[wasm_bindgen(js_name = isBufferFull)]
+pub unsafe fn is_buffer_full(pid: i32) -> bool {
+    if pid == -1 {
+        return false;
+    }
+    return match &*PLAYERS.as_ptr().add(pid as usize) {
+        None => false,
+        Some(player) => player
+            .write_queue
+            .iter()
+            .map(|packet| packet.len())
+            .scan(0, |acc, len| {
+                *acc += len;
+                return if *acc >= 5000 {
+                    None
+                } else {
+                    Some(*acc)
+                }
+            })
+            .last()
+            .unwrap_or(0) >= 5000
+    };
 }
 
 #[wasm_bindgen(js_name = unpackWords)]

@@ -8,7 +8,7 @@ pub struct UpdateRunWeight {
 
 impl UpdateRunWeight {
     #[inline]
-    pub fn new(
+    pub const fn new(
         kg: i32,
     ) -> UpdateRunWeight {
         return UpdateRunWeight {

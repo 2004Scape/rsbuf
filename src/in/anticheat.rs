@@ -6,9 +6,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 #[wasm_bindgen]
 pub struct AnticheatOp1 {}
 
-#[wasm_bindgen]
 impl AnticheatOp1 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatOp1 {
         return AnticheatOp1 {};
@@ -32,9 +30,7 @@ impl MessageDecoder<AnticheatOp1> for AnticheatOp1 {
 #[wasm_bindgen]
 pub struct AnticheatOp2 {}
 
-#[wasm_bindgen]
 impl AnticheatOp2 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatOp2 {
         return AnticheatOp2 {};
@@ -58,9 +54,7 @@ impl MessageDecoder<AnticheatOp2> for AnticheatOp2 {
 #[wasm_bindgen]
 pub struct AnticheatOp3 {}
 
-#[wasm_bindgen]
 impl AnticheatOp3 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatOp3 {
         return AnticheatOp3 {};
@@ -84,9 +78,7 @@ impl MessageDecoder<AnticheatOp3> for AnticheatOp3 {
 #[wasm_bindgen]
 pub struct AnticheatOp4 {}
 
-#[wasm_bindgen]
 impl AnticheatOp4 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatOp4 {
         return AnticheatOp4 {};
@@ -110,9 +102,7 @@ impl MessageDecoder<AnticheatOp4> for AnticheatOp4 {
 #[wasm_bindgen]
 pub struct AnticheatOp5 {}
 
-#[wasm_bindgen]
 impl AnticheatOp5 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatOp5 {
         return AnticheatOp5 {};
@@ -136,9 +126,7 @@ impl MessageDecoder<AnticheatOp5> for AnticheatOp5 {
 #[wasm_bindgen]
 pub struct AnticheatOp6 {}
 
-#[wasm_bindgen]
 impl AnticheatOp6 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatOp6 {
         return AnticheatOp6 {};
@@ -162,9 +150,7 @@ impl MessageDecoder<AnticheatOp6> for AnticheatOp6 {
 #[wasm_bindgen]
 pub struct AnticheatOp7 {}
 
-#[wasm_bindgen]
 impl AnticheatOp7 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatOp7 {
         return AnticheatOp7 {};
@@ -188,9 +174,7 @@ impl MessageDecoder<AnticheatOp7> for AnticheatOp7 {
 #[wasm_bindgen]
 pub struct AnticheatOp8 {}
 
-#[wasm_bindgen]
 impl AnticheatOp8 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatOp8 {
         return AnticheatOp8 {};
@@ -214,9 +198,7 @@ impl MessageDecoder<AnticheatOp8> for AnticheatOp8 {
 #[wasm_bindgen]
 pub struct AnticheatOp9 {}
 
-#[wasm_bindgen]
 impl AnticheatOp9 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatOp9 {
         return AnticheatOp9 {};
@@ -240,9 +222,7 @@ impl MessageDecoder<AnticheatOp9> for AnticheatOp9 {
 #[wasm_bindgen]
 pub struct AnticheatCycle1 {}
 
-#[wasm_bindgen]
 impl AnticheatCycle1 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatCycle1 {
         return AnticheatCycle1 {};
@@ -266,9 +246,7 @@ impl MessageDecoder<AnticheatCycle1> for AnticheatCycle1 {
 #[wasm_bindgen]
 pub struct AnticheatCycle2 {}
 
-#[wasm_bindgen]
 impl AnticheatCycle2 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatCycle2 {
         return AnticheatCycle2 {};
@@ -292,9 +270,7 @@ impl MessageDecoder<AnticheatCycle2> for AnticheatCycle2 {
 #[wasm_bindgen]
 pub struct AnticheatCycle3 {}
 
-#[wasm_bindgen]
 impl AnticheatCycle3 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatCycle3 {
         return AnticheatCycle3 {};
@@ -318,9 +294,7 @@ impl MessageDecoder<AnticheatCycle3> for AnticheatCycle3 {
 #[wasm_bindgen]
 pub struct AnticheatCycle4 {}
 
-#[wasm_bindgen]
 impl AnticheatCycle4 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatCycle4 {
         return AnticheatCycle4 {};
@@ -344,9 +318,7 @@ impl MessageDecoder<AnticheatCycle4> for AnticheatCycle4 {
 #[wasm_bindgen]
 pub struct AnticheatCycle5 {}
 
-#[wasm_bindgen]
 impl AnticheatCycle5 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatCycle5 {
         return AnticheatCycle5 {};
@@ -370,9 +342,7 @@ impl MessageDecoder<AnticheatCycle5> for AnticheatCycle5 {
 #[wasm_bindgen]
 pub struct AnticheatCycle6 {}
 
-#[wasm_bindgen]
 impl AnticheatCycle6 {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> AnticheatCycle6 {
         return AnticheatCycle6 {};

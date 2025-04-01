@@ -9,9 +9,7 @@ pub struct ResumePauseButton {
     pub component: u16,
 }
 
-#[wasm_bindgen]
 impl ResumePauseButton {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(component: u16) -> ResumePauseButton {
         return ResumePauseButton {

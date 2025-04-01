@@ -12,7 +12,7 @@ pub struct CamMoveTo {
 
 impl CamMoveTo {
     #[inline]
-    pub fn new(
+    pub const fn new(
         x: i32,
         z: i32,
         height: i32,

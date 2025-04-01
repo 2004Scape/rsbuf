@@ -6,7 +6,7 @@ pub struct PCountDialog {}
 
 impl PCountDialog {
     #[inline]
-    pub fn new() -> PCountDialog {
+    pub const fn new() -> PCountDialog {
         return PCountDialog {}
     }
 }

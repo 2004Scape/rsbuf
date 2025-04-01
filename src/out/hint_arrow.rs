@@ -13,7 +13,7 @@ pub struct HintArrow {
 
 impl HintArrow {
     #[inline]
-    pub fn new(
+    pub const fn new(
         arrow: i32,
         nid: i32,
         pid: i32,

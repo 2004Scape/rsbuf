@@ -13,9 +13,7 @@ pub struct IfPlayerDesign {
     pub color: Vec<i32>,
 }
 
-#[wasm_bindgen]
 impl IfPlayerDesign {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         gender: u8,

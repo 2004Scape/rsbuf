@@ -9,9 +9,7 @@ pub struct ClientCheat {
     pub input: String,
 }
 
-#[wasm_bindgen]
 impl ClientCheat {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(input: String) -> ClientCheat {
         return ClientCheat {

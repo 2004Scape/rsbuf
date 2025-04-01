@@ -13,9 +13,7 @@ pub struct ChatSetMode {
     pub trade: u8,
 }
 
-#[wasm_bindgen]
 impl ChatSetMode {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         public: u8,

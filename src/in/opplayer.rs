@@ -11,9 +11,7 @@ pub struct OpPlayer {
     pub pid: u16,
 }
 
-#[wasm_bindgen]
 impl OpPlayer {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         op: u8,
@@ -58,9 +56,7 @@ pub struct OpPlayerT {
     pub spell: u16,
 }
 
-#[wasm_bindgen]
 impl OpPlayerT {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         pid: u16,
@@ -102,9 +98,7 @@ pub struct OpPlayerU {
     pub use_component: u16,
 }
 
-#[wasm_bindgen]
 impl OpPlayerU {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         pid: u16,

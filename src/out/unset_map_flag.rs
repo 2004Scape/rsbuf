@@ -6,7 +6,7 @@ pub struct UnsetMapFlag {}
 
 impl UnsetMapFlag {
     #[inline]
-    pub fn new() -> UnsetMapFlag {
+    pub const fn new() -> UnsetMapFlag {
         return UnsetMapFlag {}
     }
 }

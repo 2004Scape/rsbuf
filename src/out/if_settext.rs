@@ -9,7 +9,7 @@ pub struct IfSetText {
 
 impl IfSetText {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
         text: String,
     ) -> IfSetText {

@@ -11,7 +11,7 @@ pub struct LocAnim {
 
 impl LocAnim {
     #[inline]
-    pub fn new(
+    pub const fn new(
         coord: i32,
         shape: i32,
         angle: i32,

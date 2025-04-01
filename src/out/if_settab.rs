@@ -9,7 +9,7 @@ pub struct IfSetTab {
 
 impl IfSetTab {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
         tab: i32,
     ) -> IfSetTab {

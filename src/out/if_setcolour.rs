@@ -9,7 +9,7 @@ pub struct IfSetColour {
 
 impl IfSetColour {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
         colour: i32,
     ) -> IfSetColour {

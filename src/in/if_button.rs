@@ -9,9 +9,7 @@ pub struct IfButton {
     pub component: u16,
 }
 
-#[wasm_bindgen]
 impl IfButton {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(component: u16) -> IfButton {
         return IfButton {

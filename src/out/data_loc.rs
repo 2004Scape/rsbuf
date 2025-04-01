@@ -12,7 +12,7 @@ pub struct DataLoc {
 
 impl DataLoc {
     #[inline]
-    pub fn new(
+    pub const fn new(
         x: i32,
         z: i32,
         offset: i32,
@@ -64,7 +64,7 @@ pub struct DataLocDone {
 
 impl DataLocDone {
     #[inline]
-    pub fn new(
+    pub const fn new(
         x: i32,
         z: i32,
     ) -> DataLocDone {

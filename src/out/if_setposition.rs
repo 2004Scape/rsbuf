@@ -10,7 +10,7 @@ pub struct IfSetPosition {
 
 impl IfSetPosition {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
         x: i32,
         y: i32,

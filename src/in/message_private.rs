@@ -11,9 +11,7 @@ pub struct MessagePrivate {
     pub input: Vec<u8>,
 }
 
-#[wasm_bindgen]
 impl MessagePrivate {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(
         username: i64,

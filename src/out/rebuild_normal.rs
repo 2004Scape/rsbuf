@@ -12,7 +12,7 @@ pub struct RebuildNormal {
 
 impl RebuildNormal {
     #[inline]
-    pub fn new(
+    pub const fn new(
         x: i32,
         z: i32,
         squares: Vec<u16>,

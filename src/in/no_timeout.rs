@@ -6,9 +6,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 #[wasm_bindgen]
 pub struct NoTimeout {}
 
-#[wasm_bindgen]
 impl NoTimeout {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new() -> NoTimeout {
         return NoTimeout {};

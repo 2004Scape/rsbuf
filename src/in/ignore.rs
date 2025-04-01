@@ -9,9 +9,7 @@ pub struct IgnoreListAdd {
     pub username: i64,
 }
 
-#[wasm_bindgen]
 impl IgnoreListAdd {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(username: i64) -> IgnoreListAdd {
         return IgnoreListAdd {
@@ -40,9 +38,7 @@ pub struct IgnoreListDel {
     pub username: i64,
 }
 
-#[wasm_bindgen]
 impl IgnoreListDel {
-    #[wasm_bindgen(constructor)]
     #[inline]
     pub fn new(username: i64) -> IgnoreListDel {
         return IgnoreListDel {

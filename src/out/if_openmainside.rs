@@ -9,7 +9,7 @@ pub struct IfOpenMainSide {
 
 impl IfOpenMainSide {
     #[inline]
-    pub fn new(
+    pub const fn new(
         main: i32,
         side: i32,
     ) -> IfOpenMainSide {

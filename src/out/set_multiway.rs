@@ -8,7 +8,7 @@ pub struct SetMultiway {
 
 impl SetMultiway {
     #[inline]
-    pub fn new(hidden: bool) -> SetMultiway {
+    pub const fn new(hidden: bool) -> SetMultiway {
         return SetMultiway {
             hidden,
         }

@@ -11,7 +11,7 @@ pub struct LocAddChange {
 
 impl LocAddChange {
     #[inline]
-    pub fn new(
+    pub const fn new(
         coord: i32,
         loc: i32,
         shape: i32,

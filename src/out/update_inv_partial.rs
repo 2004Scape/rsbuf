@@ -10,7 +10,7 @@ pub struct UpdateInvPartial {
 
 impl UpdateInvPartial {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
         slots: Vec<i32>,
         objs: Vec<i64>,

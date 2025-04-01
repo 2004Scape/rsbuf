@@ -9,7 +9,7 @@ pub struct IfSetModel {
 
 impl IfSetModel {
     #[inline]
-    pub fn new(
+    pub const fn new(
         component: i32,
         model: i32,
     ) -> IfSetModel {

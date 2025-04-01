@@ -12,7 +12,7 @@ pub struct UpdateZoneFullFollows {
 
 impl UpdateZoneFullFollows {
     #[inline]
-    pub fn new(
+    pub const fn new(
         x: i32,
         z: i32,
         origin_x: i32,

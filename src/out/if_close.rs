@@ -6,7 +6,7 @@ pub struct IfClose {}
 
 impl IfClose {
     #[inline]
-    pub fn new() -> IfClose {
+    pub const fn new() -> IfClose {
         return IfClose {}
     }
 }

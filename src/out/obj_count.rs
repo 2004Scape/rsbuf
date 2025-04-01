@@ -11,7 +11,7 @@ pub struct ObjCount {
 
 impl ObjCount {
     #[inline]
-    pub fn new(
+    pub const fn new(
         coord: i32,
         obj: i32,
         old_count: i32,

@@ -11,7 +11,7 @@ pub struct MapAnim {
 
 impl MapAnim {
     #[inline]
-    pub fn new(
+    pub const fn new(
         coord: i32,
         spotanim: i32,
         height: i32,

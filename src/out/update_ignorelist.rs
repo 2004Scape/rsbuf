@@ -8,7 +8,7 @@ pub struct UpdateIgnoreList {
 
 impl UpdateIgnoreList {
     #[inline]
-    pub fn new(names: Vec<i64>) -> UpdateIgnoreList {
+    pub const fn new(names: Vec<i64>) -> UpdateIgnoreList {
         return UpdateIgnoreList {
             names,
         }

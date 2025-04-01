@@ -6,7 +6,7 @@ pub struct ResetAnims {}
 
 impl ResetAnims {
     #[inline]
-    pub fn new() -> ResetAnims {
+    pub const fn new() -> ResetAnims {
         return ResetAnims {}
     }
 }

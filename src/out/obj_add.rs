@@ -10,7 +10,7 @@ pub struct ObjAdd {
 
 impl ObjAdd {
     #[inline]
-    pub fn new(
+    pub const fn new(
         coord: i32,
         obj: i32,
         count: i32,

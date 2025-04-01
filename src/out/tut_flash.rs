@@ -8,7 +8,7 @@ pub struct TutFlash {
 
 impl TutFlash {
     #[inline]
-    pub fn new(
+    pub const fn new(
         tab: i32,
     ) -> TutFlash {
         return TutFlash {
