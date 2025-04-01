@@ -7,8 +7,10 @@ use wasm_bindgen::prelude::wasm_bindgen;
 pub struct NoTimeout {}
 
 impl NoTimeout {
+    const DEFAULT: NoTimeout = NoTimeout::new();
+
     #[inline]
-    pub fn new() -> NoTimeout {
+    pub const fn new() -> NoTimeout {
         return NoTimeout {};
     }
 }
@@ -21,6 +23,6 @@ impl MessageDecoder<NoTimeout> for NoTimeout {
 
     #[inline]
     fn decode(_: ClientProt, _: Packet) -> NoTimeout {
-        return NoTimeout::new();
+        return NoTimeout::DEFAULT;
     }
 }

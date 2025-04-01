@@ -24,12 +24,12 @@ impl WordPack {
     }
 
     #[inline]
-    pub unsafe fn unpack(&mut self, mut packet: Packet, length: usize) -> String {
+    pub unsafe fn unpack(&mut self, mut packet: Packet) -> String {
         self.unpack.clear();
 
         let mut carry: i32 = -1;
 
-        for _ in 0..length {
+        for _ in 0..packet.len() {
             if self.unpack.len() >= 80 {
                 break;
             }

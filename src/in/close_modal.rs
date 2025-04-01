@@ -7,8 +7,10 @@ use wasm_bindgen::prelude::wasm_bindgen;
 pub struct CloseModal {}
 
 impl CloseModal {
+    const DEFAULT: CloseModal = CloseModal::new();
+
     #[inline]
-    pub fn new() -> CloseModal {
+    pub const fn new() -> CloseModal {
         return CloseModal {}
     }
 }
@@ -21,6 +23,6 @@ impl MessageDecoder<CloseModal> for CloseModal {
 
     #[inline]
     fn decode(_: ClientProt, _: Packet) -> CloseModal {
-        return CloseModal::new();
+        return CloseModal::DEFAULT;
     }
 }

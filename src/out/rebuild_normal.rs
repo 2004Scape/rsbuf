@@ -45,9 +45,7 @@ impl MessageEncoder for RebuildNormal {
         buf.p2(self.x);
         buf.p2(self.z);
         for index in 0..self.squares.len() {
-            let mapsquare: u16 = unsafe { *self.squares.as_ptr().add(index) };
-            buf.p1(((mapsquare >> 8) & 0xff) as i32);
-            buf.p1((mapsquare & 0xff) as i32);
+            buf.p2(unsafe { *self.squares.as_ptr().add(index) as i32 });
             buf.p4(unsafe { *self.maps.as_ptr().add(index) });
             buf.p4(unsafe { *self.locs.as_ptr().add(index) });
         }

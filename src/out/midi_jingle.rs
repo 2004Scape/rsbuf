@@ -39,6 +39,6 @@ impl MessageEncoder for MidiJingle {
 
     #[inline]
     fn test(&self) -> usize {
-        return 6 + self.data.len();
+        return 2 + self.data.len();
     }
 }

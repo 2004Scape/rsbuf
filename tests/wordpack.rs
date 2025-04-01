@@ -4,13 +4,13 @@ use rsbuf::wordpack::WordPack;
 #[test]
 fn test_unpack_test() {
     let packet: Packet = Packet::from(vec![33, 130]);
-    unsafe { assert_eq!("Test", WordPack::new().unpack(packet, 2)) };
+    unsafe { assert_eq!("Test", WordPack::new().unpack(packet)) };
 }
 
 #[test]
 fn test_unpack_zezima() {
     let packet: Packet = Packet::from(vec![221, 29, 213, 208, 48]);
-    unsafe { assert_eq!("Zezima ", WordPack::new().unpack(packet, 5)) };
+    unsafe { assert_eq!("Zezima ", WordPack::new().unpack(packet)) };
 }
 
 #[test]

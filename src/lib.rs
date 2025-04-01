@@ -572,7 +572,7 @@ write!(logout, "logout", Logout, (), ());
 write!(map_anim, "mapAnim", MapAnim, (coord: i32, spotanim: i32, height: i32, delay: i32), (coord, spotanim, height, delay));
 write!(map_projanim, "mapProjAnim", MapProjAnim, (srcX: i32, srcZ: i32, dstX: i32, dstZ: i32, target: i32, spotanim: i32, srcHeight: i32, dstHeight: i32, start: i32, end: i32, peak: i32, arc: i32), (srcX, srcZ, dstX, dstZ, target, spotanim, srcHeight, dstHeight, start, end, peak, arc));
 write!(message_game, "messageGame", MessageGame, (msg: String), (msg));
-write!(message_private_out, "messagePrivateOut", MessagePrivateOut, (from: i64, id: i32, staffModLevel: i32, msg: String), (from, id, staffModLevel, msg));
+write!(message_private_out, "messagePrivateOut", MessagePrivateOut, (from: i64, id: i32, staffModLevel: i32, msg: Vec<u8>), (from, id, staffModLevel, msg));
 buffer!(midi_jingle, "midiJingle", MidiJingle, (delay: i32, data: Vec<u8>), (delay, data));
 buffer!(midi_song, "midiSong", MidiSong, (name: String, crc: i32, length: i32), (name, crc, length));
 write!(obj_add, "objAdd", ObjAdd, (coord: i32, obj: i32, count: i32), (coord, obj, count));
@@ -589,8 +589,8 @@ buffer!(tut_open, "tutOpen", TutOpen, (component: i32), (component));
 write!(unset_map_flag, "unsetMapFlag", UnsetMapFlag, (), ());
 buffer!(update_friendlist, "updateFriendList", UpdateFriendList, (name: i64, node: i32), (name, node));
 buffer!(update_ignorelist, "updateIgnoreList", UpdateIgnoreList, (names: Vec<i64>), (names));
-write!(update_inv_full, "updateInvFull", UpdateInvFull, (size: i32, component: i32, objs: Vec<i64>), (size, component, objs));
-write!(update_inv_partial, "updateInvPartial", UpdateInvPartial, (component: i32, slots: Vec<i32>, objs: Vec<i64>), (component, slots, objs));
+write!(update_inv_full, "updateInvFull", UpdateInvFull, (size: i32, component: i32, inv: Vec<i64>), (size, component, inv));
+write!(update_inv_partial, "updateInvPartial", UpdateInvPartial, (component: i32, slots: Vec<i32>, inv: Vec<i64>), (component, slots, inv));
 write!(update_inv_stop_transmit, "updateInvStopTransmit", UpdateInvStopTransmit, (component: i32), (component));
 write!(update_pid, "updatePid", UpdatePid, (pid: i32), (pid)); // todo: what should priority be?
 buffer!(update_reboot_timer, "updateRebootTimer", UpdateRebootTimer, (ticks: i32), (ticks)); // todo: what should priority be?
@@ -813,8 +813,8 @@ pub unsafe fn is_buffer_full(pid: i32) -> bool {
 }
 
 #[wasm_bindgen(js_name = unpackWords)]
-pub unsafe fn unpack_words(bytes: Vec<u8>, length: usize) -> String {
-    return WORD_PACK.unpack(Packet::from(bytes), length);
+pub unsafe fn unpack_words(bytes: Vec<u8>) -> String {
+    return WORD_PACK.unpack(Packet::from(bytes));
 }
 
 #[wasm_bindgen(js_name = packWords)]

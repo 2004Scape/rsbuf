@@ -1,13 +1,12 @@
 use crate::message::MessageEncoder;
 use crate::packet::Packet;
 use crate::prot::ServerInternalProt;
-use crate::wordpack::WordPack;
 
 pub struct MessagePrivateOut {
     from: i64,
     id: i32,
     staff_mod_level: i32,
-    msg: String,
+    msg: Vec<u8>,
 }
 
 impl MessagePrivateOut {
@@ -16,7 +15,7 @@ impl MessagePrivateOut {
         from: i64,
         id: i32,
         staff_mod_level: i32,
-        msg: String,
+        msg: Vec<u8>,
     ) -> MessagePrivateOut {
         return MessagePrivateOut {
             from,
@@ -48,8 +47,7 @@ impl MessageEncoder for MessagePrivateOut {
         buf.p8(self.from);
         buf.p4(self.id);
         buf.p1(staff_mod_level);
-        let bytes: Vec<u8> = unsafe { WordPack::new().pack(self.msg.clone()) };
-        buf.pdata(&bytes, 0, bytes.len())
+        buf.pdata(&self.msg, 0, self.msg.len())
     }
 
     #[inline]

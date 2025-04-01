@@ -7,8 +7,10 @@ use wasm_bindgen::prelude::wasm_bindgen;
 pub struct IdleTimer {}
 
 impl IdleTimer {
+    const DEFAULT: IdleTimer = IdleTimer::new();
+
     #[inline]
-    pub fn new() -> IdleTimer {
+    pub const fn new() -> IdleTimer {
         return IdleTimer {}
     }
 }
@@ -21,6 +23,6 @@ impl MessageDecoder<IdleTimer> for IdleTimer {
 
     #[inline]
     fn decode(_: ClientProt, _: Packet) -> IdleTimer {
-        return IdleTimer::new();
+        return IdleTimer::DEFAULT;
     }
 }
