@@ -60,6 +60,8 @@ pub unsafe fn compute_player(
     orientationZ: i32,
     damageTaken: i32,
     damageType: i32,
+    damageTaken2: i32,
+    damageType2: i32,
     currentHitpoints: i32,
     baseHitpoints: i32,
     animId: i32,
@@ -136,6 +138,8 @@ pub unsafe fn compute_player(
         player.orientation_z = orientationZ;
         player.damage_taken = damageTaken;
         player.damage_type = damageType;
+        player.damage_taken2 = damageTaken2;
+        player.damage_type2 = damageType2;
         player.current_hitpoints = currentHitpoints;
         player.base_hitpoints = baseHitpoints;
         player.anim_id = animId;
@@ -232,6 +236,8 @@ pub unsafe fn compute_npc(
     orientationZ: i32,
     damageTaken: i32,
     damageType: i32,
+    damageTaken2: i32,
+    damageType2: i32,
     currentHitpoints: i32,
     baseHitpoints: i32,
     animId: i32,
@@ -267,6 +273,8 @@ pub unsafe fn compute_npc(
         npc.orientation_z = orientationZ;
         npc.damage_taken = damageTaken;
         npc.damage_type = damageType;
+        npc.damage_taken2 = damageTaken2;
+        npc.damage_type2 = damageType2;
         npc.current_hitpoints = currentHitpoints;
         npc.base_hitpoints = baseHitpoints;
         npc.anim_id = animId;
