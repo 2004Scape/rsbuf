@@ -15,7 +15,7 @@ impl PlayerRenderer {
     pub fn new() -> PlayerRenderer {
         // exact move does not get cached, that is built on demand.
         return PlayerRenderer {
-            caches: vec![vec![None; 2048]; 8],
+            caches: vec![vec![None; 2048]; 9],
             highs: [0; 2048],
             lows: [0; 2048],
         }
@@ -257,7 +257,7 @@ impl NpcRenderer {
     #[inline]
     pub fn new() -> NpcRenderer {
         return NpcRenderer {
-            caches: vec![vec![None; 8192]; 7],
+            caches: vec![vec![None; 8192]; 8],
             highs: [0; 8192],
             lows: [0; 8192],
         }
