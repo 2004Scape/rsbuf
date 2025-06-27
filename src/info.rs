@@ -399,6 +399,9 @@ impl PlayerInfo {
                 )
             }
         }
+        if masks & PlayerInfoProt::DAMAGE2 as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::DAMAGE2);
+        }
     }
 
     #[inline]
@@ -677,6 +680,9 @@ impl NpcInfo {
         // ----
         // an optimization *could* be made where all of these are just 1 block of bytes...
         // the same could NOT be done for players bcuz of how exact_move works...
+        if masks & NpcInfoProt::DAMAGE2 as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::DAMAGE2);
+        }
         if masks & NpcInfoProt::ANIM as u32 != 0 {
             renderer.write(&mut self.updates, nid, NpcInfoProt::ANIM);
         }

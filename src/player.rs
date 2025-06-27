@@ -24,6 +24,8 @@ pub struct Player {
     pub orientation_z: i32,
     pub damage_taken: i32,
     pub damage_type: i32,
+    pub damage_taken2: i32,
+    pub damage_type2: i32,
     pub current_hitpoints: i32,
     pub base_hitpoints: i32,
     pub anim_id: i32,
@@ -79,6 +81,8 @@ impl Player {
             orientation_z: -1,
             damage_taken: -1,
             damage_type: -1,
+            damage_taken2: -1,
+            damage_type2: -1,
             current_hitpoints: -1,
             base_hitpoints: -1,
             anim_id: -1,
@@ -108,6 +112,8 @@ impl Player {
         // self.orientation_z = -1;
         self.damage_taken = -1;
         self.damage_type = -1;
+        self.damage_taken2 = -1;
+        self.damage_type2 = -1;
         self.current_hitpoints = -1;
         self.base_hitpoints = -1;
         self.anim_id = -1;

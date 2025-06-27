@@ -15,7 +15,7 @@ impl PlayerRenderer {
     pub fn new() -> PlayerRenderer {
         // exact move does not get cached, that is built on demand.
         return PlayerRenderer {
-            caches: vec![vec![None; 2048]; 8],
+            caches: vec![vec![None; 2048]; 9],
             highs: [0; 2048],
             lows: [0; 2048],
         }
@@ -79,6 +79,18 @@ impl PlayerRenderer {
                     player.base_hitpoints,
                 ),
                 PlayerInfoProt::DAMAGE,
+            );
+        }
+        if masks & PlayerInfoProt::DAMAGE2 as u32 != 0 {
+            highs += self.cache(
+                pid,
+                &PlayerInfoDamage::new(
+                    player.damage_taken2,
+                    player.damage_type2,
+                    player.current_hitpoints,
+                    player.base_hitpoints,
+                ),
+                PlayerInfoProt::DAMAGE2,
             );
         }
         if masks & PlayerInfoProt::FACE_COORD as u32 != 0 {
@@ -196,6 +208,7 @@ impl PlayerRenderer {
             PlayerInfoProt::FACE_ENTITY.to_index(),
             PlayerInfoProt::SAY.to_index(),
             PlayerInfoProt::DAMAGE.to_index(),
+            PlayerInfoProt::DAMAGE2.to_index(),
             PlayerInfoProt::FACE_COORD.to_index(),
             PlayerInfoProt::CHAT.to_index(),
             PlayerInfoProt::SPOT_ANIM.to_index(),
@@ -244,7 +257,7 @@ impl NpcRenderer {
     #[inline]
     pub fn new() -> NpcRenderer {
         return NpcRenderer {
-            caches: vec![vec![None; 8192]; 7],
+            caches: vec![vec![None; 8192]; 8],
             highs: [0; 8192],
             lows: [0; 8192],
         }
@@ -299,6 +312,18 @@ impl NpcRenderer {
                     npc.base_hitpoints,
                 ),
                 NpcInfoProt::DAMAGE,
+            );
+        }
+        if masks & NpcInfoProt::DAMAGE2 as u32 != 0 {
+            highs += self.cache(
+                nid,
+                &NpcInfoDamage::new(
+                    npc.damage_taken2,
+                    npc.damage_type2,
+                    npc.current_hitpoints,
+                    npc.base_hitpoints,
+                ),
+                NpcInfoProt::DAMAGE2,
             );
         }
         if masks & NpcInfoProt::CHANGE_TYPE as u32 != 0 {
@@ -385,6 +410,7 @@ impl NpcRenderer {
             NpcInfoProt::FACE_ENTITY.to_index(),
             NpcInfoProt::SAY.to_index(),
             NpcInfoProt::DAMAGE.to_index(),
+            NpcInfoProt::DAMAGE2.to_index(),
             NpcInfoProt::CHANGE_TYPE.to_index(),
             NpcInfoProt::SPOT_ANIM.to_index(),
             NpcInfoProt::FACE_COORD.to_index(),

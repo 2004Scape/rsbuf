@@ -16,6 +16,7 @@ pub enum PlayerInfoProt {
     BIG = 0x80,
     SPOT_ANIM = 0x100,
     EXACT_MOVE = 0x200,
+    DAMAGE2 = 0x400,
 }
 
 impl PlayerInfoProt {
@@ -28,9 +29,10 @@ impl PlayerInfoProt {
             PlayerInfoProt::FACE_ENTITY => 2,
             PlayerInfoProt::SAY => 3,
             PlayerInfoProt::DAMAGE => 4,
-            PlayerInfoProt::FACE_COORD => 5,
-            PlayerInfoProt::CHAT => 6,
-            PlayerInfoProt::SPOT_ANIM => 7,
+            PlayerInfoProt::DAMAGE2 => 5,
+            PlayerInfoProt::FACE_COORD => 6,
+            PlayerInfoProt::CHAT => 7,
+            PlayerInfoProt::SPOT_ANIM => 8,
             PlayerInfoProt::BIG => 255, // unused
             PlayerInfoProt::EXACT_MOVE => 255, // unused
         }
@@ -41,6 +43,7 @@ impl PlayerInfoProt {
 #[derive(Eq, Hash, PartialEq)]
 #[wasm_bindgen]
 pub enum NpcInfoProt {
+    DAMAGE2 = 0x1,
     ANIM = 0x2,
     FACE_ENTITY = 0x4,
     SAY = 0x8,
@@ -59,9 +62,10 @@ impl NpcInfoProt {
             NpcInfoProt::FACE_ENTITY => 1,
             NpcInfoProt::SAY => 2,
             NpcInfoProt::DAMAGE => 3,
-            NpcInfoProt::CHANGE_TYPE => 4,
-            NpcInfoProt::SPOT_ANIM => 5,
-            NpcInfoProt::FACE_COORD => 6,
+            NpcInfoProt::DAMAGE2 => 4,
+            NpcInfoProt::CHANGE_TYPE => 5,
+            NpcInfoProt::SPOT_ANIM => 6,
+            NpcInfoProt::FACE_COORD => 7,
         }
     }
 }
