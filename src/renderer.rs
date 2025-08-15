@@ -1,4 +1,4 @@
-use crate::message::{InfoMessage, NpcInfoAnim, NpcInfoChangeType, NpcInfoDamage, NpcInfoFaceCoord, NpcInfoFaceEntity, NpcInfoSay, NpcInfoSpotanim, PlayerInfoAnim, PlayerInfoAppearance, PlayerInfoChat, PlayerInfoDamage, PlayerInfoExactMove, PlayerInfoFaceCoord, PlayerInfoFaceEntity, PlayerInfoSay, PlayerInfoSpotanim};
+use crate::message::{InfoMessage, NpcInfoAnim, NpcInfoChangeType, NpcInfoDamage, NpcInfoDamage2, NpcInfoFaceCoord, NpcInfoFaceEntity, NpcInfoSay, NpcInfoSpotanim, PlayerInfoAnim, PlayerInfoAppearance, PlayerInfoChat, PlayerInfoDamage, PlayerInfoDamage2, PlayerInfoExactMove, PlayerInfoFaceCoord, PlayerInfoFaceEntity, PlayerInfoSay, PlayerInfoSpotanim};
 use crate::npc::Npc;
 use crate::packet::Packet;
 use crate::player::Player;
@@ -84,7 +84,7 @@ impl PlayerRenderer {
         if masks & PlayerInfoProt::DAMAGE2 as u32 != 0 {
             highs += self.cache(
                 pid,
-                &PlayerInfoDamage::new(
+                &PlayerInfoDamage2::new(
                     player.damage_taken2,
                     player.damage_type2,
                     player.current_hitpoints,
@@ -317,7 +317,7 @@ impl NpcRenderer {
         if masks & NpcInfoProt::DAMAGE2 as u32 != 0 {
             highs += self.cache(
                 nid,
-                &NpcInfoDamage::new(
+                &NpcInfoDamage2::new(
                     npc.damage_taken2,
                     npc.damage_type2,
                     npc.current_hitpoints,

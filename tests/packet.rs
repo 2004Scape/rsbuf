@@ -338,3 +338,132 @@ fn test_rsadec() {
     assert_eq!("hello", result.gjstr(0));
     assert_eq!("world", result.gjstr(0));
 }
+
+#[test]
+fn test_p1_alt1() {
+    let mut packet: Packet = Packet::new(1);
+    packet.p1_alt1(23);
+
+    assert_eq!(151, packet.data[0]);
+}
+
+#[test]
+fn test_p1_alt2() {
+    let mut packet: Packet = Packet::new(1);
+    packet.p1_alt2(23);
+
+    assert_eq!(233, packet.data[0]);
+}
+
+#[test]
+fn test_p1_alt3() {
+    let mut packet: Packet = Packet::new(1);
+    packet.p1_alt3(23);
+
+    assert_eq!(105, packet.data[0]);
+}
+
+#[test]
+fn test_p2_alt1() {
+    let mut packet: Packet = Packet::new(2);
+    packet.p2_alt1(2323);
+
+    assert_eq!(19, packet.data[0]);
+    assert_eq!(9, packet.data[1]);
+}
+
+#[test]
+fn test_p2_alt2() {
+    let mut packet: Packet = Packet::new(2);
+    packet.p2_alt2(2323);
+
+    assert_eq!(9, packet.data[0]);
+    assert_eq!(147, packet.data[1]);
+}
+
+#[test]
+fn test_p2_alt3() {
+    let mut packet: Packet = Packet::new(2);
+    packet.p2_alt3(2323);
+
+    assert_eq!(147, packet.data[0]);
+    assert_eq!(9, packet.data[1]);
+}
+
+#[test]
+fn test_p4_alt1() {
+    let mut packet: Packet = Packet::new(4);
+    packet.p4_alt1(232323);
+
+    assert_eq!(131, packet.data[0]);
+    assert_eq!(139, packet.data[1]);
+    assert_eq!(3, packet.data[2]);
+    assert_eq!(0, packet.data[3]);
+}
+
+#[test]
+fn test_p4_alt2() {
+    let mut packet: Packet = Packet::new(4);
+    packet.p4_alt2(232323);
+
+    assert_eq!(139, packet.data[0]);
+    assert_eq!(131, packet.data[1]);
+    assert_eq!(0, packet.data[2]);
+    assert_eq!(3, packet.data[3]);
+}
+
+#[test]
+fn test_p4_alt3() {
+    let mut packet: Packet = Packet::new(4);
+    packet.p4_alt3(232323);
+
+    assert_eq!(3, packet.data[0]);
+    assert_eq!(0, packet.data[1]);
+    assert_eq!(131, packet.data[2]);
+    assert_eq!(139, packet.data[3]);
+}
+
+#[test]
+fn test_pdata_alt1() {
+    let mut temp = vec![0; 4];
+    temp[1] = 23;
+    temp[3] = 23;
+
+    let mut packet: Packet = Packet::new(4);
+    packet.pdata_alt1(&temp, 0, 4);
+
+    assert_eq!(23, packet.data[0]);
+    assert_eq!(0, packet.data[1]);
+    assert_eq!(23, packet.data[2]);
+    assert_eq!(0, packet.data[3]);
+}
+
+#[test]
+fn test_pdata_alt2() {
+    let mut temp = vec![0; 4];
+    temp[1] = 23;
+    temp[3] = 23;
+
+    let mut packet: Packet = Packet::new(4);
+    packet.pdata_alt2(&temp, 0, 4);
+
+    assert_eq!(128, packet.data[0]);
+    assert_eq!(151, packet.data[1]);
+    assert_eq!(128, packet.data[2]);
+    assert_eq!(151, packet.data[3]);
+}
+
+#[test]
+fn test_pdata_alt3() {
+    let mut temp = vec![0; 4];
+    temp[1] = 23;
+    temp[3] = 23;
+
+    let mut packet: Packet = Packet::new(4);
+    packet.pdata_alt3(&temp, 0, 4);
+
+    assert_eq!(151, packet.data[0]);
+    assert_eq!(128, packet.data[1]);
+    assert_eq!(151, packet.data[2]);
+    assert_eq!(128, packet.data[3]);
+}

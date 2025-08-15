@@ -1253,4 +1253,106 @@ impl Packet {
         self.pdata(&dec, 0, dec.len());
         self.pos = 0;
     }
+
+    #[inline]
+    pub fn p1_alt1(&mut self, value: i32) {
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value + 128) as u8 }
+        self.pos += 1;
+    }
+
+    #[inline]
+    pub fn p1_alt2(&mut self, value: i32) {
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (0 - value) as u8 }
+        self.pos += 1;
+    }
+
+    #[inline]
+    pub fn p1_alt3(&mut self, value: i32) {
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (128 - value) as u8 }
+        self.pos += 1;
+    }
+
+    #[inline]
+    pub fn p2_alt1(&mut self, value: i32) {
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 8) as u8 }
+        self.pos += 1;
+    }
+
+    #[inline]
+    pub fn p2_alt2(&mut self, value: i32) {
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 8) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value + 128) as u8 }
+        self.pos += 1;
+    }
+
+    #[inline]
+    pub fn p2_alt3(&mut self, value: i32) {
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value + 128) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 8) as u8 }
+        self.pos += 1;
+    }
+
+    #[inline]
+    pub fn p4_alt1(&mut self, value: i32) {
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 8) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 16) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 24) as u8 }
+        self.pos += 1;
+    }
+
+    #[inline]
+    pub fn p4_alt2(&mut self, value: i32) {
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 8) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 24) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 16) as u8 }
+        self.pos += 1;
+    }
+
+    #[inline]
+    pub fn p4_alt3(&mut self, value: i32) {
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 16) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 24) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value) as u8 }
+        self.pos += 1;
+        unsafe { *self.data.as_mut_ptr().add(self.pos) = (value >> 8) as u8 }
+        self.pos += 1;
+    }
+
+    #[inline]
+    pub fn pdata_alt1(&mut self, src: &Vec<u8>, offset: usize, length: usize) {
+        for i in (offset..offset + length).rev() {
+            unsafe { *self.data.as_mut_ptr().add(self.pos) = (src[i]) as u8 };
+            self.pos += 1;
+        }
+    }
+
+    #[inline]
+    pub fn pdata_alt2(&mut self, src: &Vec<u8>, offset: usize, length: usize) {
+        for i in offset..offset + length {
+            unsafe { *self.data.as_mut_ptr().add(self.pos) = (src[i] + 128) as u8 }
+            self.pos += 1;
+        }
+    }
+
+    #[inline]
+    pub fn pdata_alt3(&mut self, src: &Vec<u8>, offset: usize, length: usize) {
+        for i in (offset..offset + length).rev() {
+            unsafe { *self.data.as_mut_ptr().add(self.pos) = (src[i] + 128) as u8 }
+            self.pos += 1;
+        }
+    }
 }

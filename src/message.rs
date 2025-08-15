@@ -25,7 +25,7 @@ impl InfoMessage for PlayerInfoAppearance {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.bytes.len() as i32);
-        buf.pdata(&self.bytes, 0, self.bytes.len());
+        buf.pdata_alt1(&self.bytes, 0, self.bytes.len());
     }
 
     #[inline]
@@ -57,7 +57,7 @@ impl PlayerInfoFaceEntity {
 impl InfoMessage for PlayerInfoFaceEntity {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
-        buf.p2(self.entity);
+        buf.p2_alt2(self.entity);
     }
 
     #[inline]
@@ -133,7 +133,7 @@ impl InfoMessage for PlayerInfoAnim {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.anim);
-        buf.p1(self.delay);
+        buf.p1_alt3(self.delay);
     }
 
     #[inline]
@@ -208,9 +208,55 @@ impl PlayerInfoDamage {
 impl InfoMessage for PlayerInfoDamage {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
-        buf.p1(self.damage);
-        buf.p1(self.damage_type);
-        buf.p1(self.current_hitpoints);
+        buf.p1_alt1(self.damage);
+        buf.p1_alt3(self.damage_type);
+        buf.p1_alt2(self.current_hitpoints);
+        buf.p1(self.base_hitpoints);
+    }
+
+    #[inline]
+    fn test(&self) -> usize {
+        return 4;
+    }
+
+    #[inline]
+    fn persists(&self) -> bool {
+        return false;
+    }
+}
+
+// ----
+
+pub struct PlayerInfoDamage2 {
+    damage: i32,
+    damage_type: i32,
+    current_hitpoints: i32,
+    base_hitpoints: i32,
+}
+
+impl PlayerInfoDamage2 {
+    #[inline]
+    pub const fn new(
+        damage: i32,
+        damage_type: i32,
+        current_hitpoints: i32,
+        base_hitpoints: i32,
+    ) -> PlayerInfoDamage2 {
+        return PlayerInfoDamage2 {
+            damage,
+            damage_type,
+            current_hitpoints,
+            base_hitpoints,
+        }
+    }
+}
+
+impl InfoMessage for PlayerInfoDamage2 {
+    #[inline]
+    fn encode(&self, buf: &mut Packet) {
+        buf.p1_alt3(self.damage);
+        buf.p1_alt2(self.damage_type);
+        buf.p1_alt3(self.current_hitpoints);
         buf.p1(self.base_hitpoints);
     }
 
@@ -256,9 +302,9 @@ impl InfoMessage for PlayerInfoChat {
     fn encode(&self, buf: &mut Packet) {
         buf.p1(self.color);
         buf.p1(self.effect);
-        buf.p1(self.ignored);
-        buf.p1(self.bytes.len() as i32);
-        buf.pdata(&self.bytes, 0, self.bytes.len());
+        buf.p1_alt2(self.ignored);
+        buf.p1_alt1(self.bytes.len() as i32);
+        buf.pdata_alt2(&self.bytes, 0, self.bytes.len());
     }
 
     #[inline]
@@ -298,8 +344,8 @@ impl PlayerInfoSpotanim {
 impl InfoMessage for PlayerInfoSpotanim {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
-        buf.p2(self.graphic_id);
-        buf.p4((self.graphic_height << 16) | self.graphic_delay);
+        buf.p2_alt2(self.graphic_id);
+        buf.p4_alt2((self.graphic_height << 16) | self.graphic_delay);
     }
 
     #[inline]
@@ -351,12 +397,12 @@ impl PlayerInfoExactMove {
 impl InfoMessage for PlayerInfoExactMove {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
-        buf.p1(self.start_x);
-        buf.p1(self.start_z);
-        buf.p1(self.end_x);
+        buf.p1_alt1(self.start_x);
+        buf.p1_alt2(self.start_z);
+        buf.p1_alt3(self.end_x);
         buf.p1(self.end_z);
         buf.p2(self.begin);
-        buf.p2(self.finish);
+        buf.p2_alt2(self.finish);
         buf.p1(self.dir);
     }
 
@@ -389,7 +435,7 @@ impl NpcInfoFaceEntity {
 impl InfoMessage for NpcInfoFaceEntity {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
-        buf.p2(self.entity);
+        buf.p2_alt1(self.entity);
     }
 
     #[inline]
@@ -426,8 +472,8 @@ impl NpcInfoFaceCoord {
 impl InfoMessage for NpcInfoFaceCoord {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
-        buf.p2(self.x);
-        buf.p2(self.z);
+        buf.p2_alt3(self.x);
+        buf.p2_alt1(self.z);
     }
 
     #[inline]
@@ -465,7 +511,7 @@ impl InfoMessage for NpcInfoAnim {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.anim);
-        buf.p1(self.delay);
+        buf.p1_alt3(self.delay);
     }
 
     #[inline]
@@ -540,10 +586,56 @@ impl NpcInfoDamage {
 impl InfoMessage for NpcInfoDamage {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
-        buf.p1(self.damage);
-        buf.p1(self.damage_type);
+        buf.p1_alt1(self.damage);
+        buf.p1_alt1(self.damage_type);
         buf.p1(self.current_hitpoints);
-        buf.p1(self.base_hitpoints);
+        buf.p1_alt3(self.base_hitpoints);
+    }
+
+    #[inline]
+    fn test(&self) -> usize {
+        return 4;
+    }
+
+    #[inline]
+    fn persists(&self) -> bool {
+        return false;
+    }
+}
+
+// ----
+
+pub struct NpcInfoDamage2 {
+    damage: i32,
+    damage_type: i32,
+    current_hitpoints: i32,
+    base_hitpoints: i32,
+}
+
+impl NpcInfoDamage2 {
+    #[inline]
+    pub const fn new(
+        damage: i32,
+        damage_type: i32,
+        current_hitpoints: i32,
+        base_hitpoints: i32,
+    ) -> NpcInfoDamage2 {
+        return NpcInfoDamage2 {
+            damage,
+            damage_type,
+            current_hitpoints,
+            base_hitpoints,
+        }
+    }
+}
+
+impl InfoMessage for NpcInfoDamage2 {
+    #[inline]
+    fn encode(&self, buf: &mut Packet) {
+        buf.p1_alt3(self.damage);
+        buf.p1_alt3(self.damage_type);
+        buf.p1(self.current_hitpoints);
+        buf.p1_alt2(self.base_hitpoints);
     }
 
     #[inline]
@@ -574,7 +666,7 @@ impl NpcInfoChangeType {
 
 impl InfoMessage for NpcInfoChangeType {
     fn encode(&self, buf: &mut Packet) {
-        buf.p2(self.change_type);
+        buf.p2_alt2(self.change_type);
     }
 
     fn test(&self) -> usize {
@@ -613,7 +705,7 @@ impl InfoMessage for NpcInfoSpotanim {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.graphic_id);
-        buf.p4((self.graphic_height << 16) | self.graphic_delay);
+        buf.p4_alt2((self.graphic_height << 16) | self.graphic_delay);
     }
 
     #[inline]

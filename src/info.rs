@@ -210,10 +210,10 @@ impl PlayerInfo {
     ) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 3);
-        self.buf.pbit(2, y);
-        self.buf.pbit(7, x);
-        self.buf.pbit(7, z);
         self.buf.pbit(1, if jump { 1 } else { 0 });
+        self.buf.pbit(2, y);
+        self.buf.pbit(7, z);
+        self.buf.pbit(7, x);
         if extend {
             self.buf.pbit(1, 1);
             self.highdefinition(renderer, player, other);
@@ -359,29 +359,11 @@ impl PlayerInfo {
             self.updates.p1(masks as i32);
         }
         // ----
-        if masks & PlayerInfoProt::APPEARANCE as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::APPEARANCE);
-        }
         if masks & PlayerInfoProt::ANIM as u32 != 0 {
             renderer.write(&mut self.updates, other.pid, PlayerInfoProt::ANIM);
         }
-        if masks & PlayerInfoProt::FACE_ENTITY as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::FACE_ENTITY);
-        }
         if masks & PlayerInfoProt::SAY as u32 != 0 {
             renderer.write(&mut self.updates, other.pid, PlayerInfoProt::SAY);
-        }
-        if masks & PlayerInfoProt::DAMAGE as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::DAMAGE);
-        }
-        if masks & PlayerInfoProt::FACE_COORD as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::FACE_COORD);
-        }
-        if masks & PlayerInfoProt::CHAT as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::CHAT);
-        }
-        if masks & PlayerInfoProt::SPOT_ANIM as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::SPOT_ANIM);
         }
         if masks & PlayerInfoProt::EXACT_MOVE as u32 != 0 {
             if let Some(exactmove) = &other.exact_move {
@@ -398,6 +380,24 @@ impl PlayerInfo {
                     exactmove.dir,
                 )
             }
+        }
+        if masks & PlayerInfoProt::FACE_ENTITY as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::FACE_ENTITY);
+        }
+        if masks & PlayerInfoProt::FACE_COORD as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::FACE_COORD);
+        }
+        if masks & PlayerInfoProt::SPOT_ANIM as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::SPOT_ANIM);
+        }
+        if masks & PlayerInfoProt::APPEARANCE as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::APPEARANCE);
+        }
+        if masks & PlayerInfoProt::DAMAGE as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::DAMAGE);
+        }
+        if masks & PlayerInfoProt::CHAT as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::CHAT);
         }
         if masks & PlayerInfoProt::DAMAGE2 as u32 != 0 {
             renderer.write(&mut self.updates, other.pid, PlayerInfoProt::DAMAGE2);
@@ -457,7 +457,7 @@ impl NpcInfo {
         let bytes: usize = self.write_npcs(npcs, renderer, player, pos);
         self.write_new_npcs(map, npcs, renderer, player, bytes);
         if self.updates.pos > 0 {
-            self.buf.pbit(13, 8191);
+            self.buf.pbit(14, 16383);
             self.buf.bytes();
             self.buf.pdata(&self.updates.data, 0, self.updates.pos);
         } else {
@@ -542,11 +542,12 @@ impl NpcInfo {
         x: i32,
         z: i32,
     ) {
-        self.buf.pbit(13, nid);
-        self.buf.pbit(11, ntype);
-        self.buf.pbit(5, x);
-        self.buf.pbit(5, z);
+        self.buf.pbit(14, nid);
         self.buf.pbit(1, 1); // extend
+        self.buf.pbit(5, z);
+        self.buf.pbit(5, x);
+        self.buf.pbit(1, 0); // telejump
+        self.buf.pbit(13, ntype);
         self.lowdefinition(renderer, other);
         player.build.npcs.insert(other.nid);
     }
@@ -680,29 +681,29 @@ impl NpcInfo {
         // ----
         // an optimization *could* be made where all of these are just 1 block of bytes...
         // the same could NOT be done for players bcuz of how exact_move works...
-        if masks & NpcInfoProt::DAMAGE2 as u32 != 0 {
-            renderer.write(&mut self.updates, nid, NpcInfoProt::DAMAGE2);
-        }
-        if masks & NpcInfoProt::ANIM as u32 != 0 {
-            renderer.write(&mut self.updates, nid, NpcInfoProt::ANIM);
+        if masks & NpcInfoProt::CHANGE_TYPE as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::CHANGE_TYPE);
         }
         if masks & NpcInfoProt::FACE_ENTITY as u32 != 0 {
             renderer.write(&mut self.updates, nid, NpcInfoProt::FACE_ENTITY);
         }
-        if masks & NpcInfoProt::SAY as u32 != 0 {
-            renderer.write(&mut self.updates, nid, NpcInfoProt::SAY);
-        }
         if masks & NpcInfoProt::DAMAGE as u32 != 0 {
             renderer.write(&mut self.updates, nid, NpcInfoProt::DAMAGE);
-        }
-        if masks & NpcInfoProt::CHANGE_TYPE as u32 != 0 {
-            renderer.write(&mut self.updates, nid, NpcInfoProt::CHANGE_TYPE);
         }
         if masks & NpcInfoProt::SPOT_ANIM as u32 != 0 {
             renderer.write(&mut self.updates, nid, NpcInfoProt::SPOT_ANIM);
         }
+        if masks & NpcInfoProt::SAY as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::SAY);
+        }
         if masks & NpcInfoProt::FACE_COORD as u32 != 0 {
             renderer.write(&mut self.updates, nid, NpcInfoProt::FACE_COORD);
+        }
+        if masks & NpcInfoProt::ANIM as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::ANIM);
+        }
+        if masks & NpcInfoProt::DAMAGE2 as u32 != 0 {
+            renderer.write(&mut self.updates, nid, NpcInfoProt::DAMAGE2);
         }
     }
 
