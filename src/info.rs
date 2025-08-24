@@ -178,9 +178,9 @@ impl PlayerInfo {
     ) {
         self.buf.pbit(11, pid);
         self.buf.pbit(5, x);
-        self.buf.pbit(5, z);
-        self.buf.pbit(1, if jump { 1 } else { 0 });
         self.buf.pbit(1, 1); // extend
+        self.buf.pbit(1, if jump { 1 } else { 0 });
+        self.buf.pbit(5, z);
         self.lowdefinition(renderer, player, other);
         player.build.players.insert(other.pid);
     }
