@@ -225,6 +225,7 @@ pub unsafe fn compute_npc(
     nid: i32,
     ntype: i32,
     tele: bool,
+    jump: bool,
     runDir: i8,
     walkDir: i8,
     active: bool,
@@ -262,6 +263,7 @@ pub unsafe fn compute_npc(
         npc.ntype = ntype;
         npc.coord = coord;
         npc.tele = tele;
+        npc.jump = jump;
         npc.run_dir = runDir;
         npc.walk_dir = walkDir;
         npc.active = active;

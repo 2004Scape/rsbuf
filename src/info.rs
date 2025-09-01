@@ -524,7 +524,7 @@ impl NpcInfo {
                     // more npcs get added next tick
                     return;
                 }
-                self.add(renderer, player, other, other.nid, other.ntype, other.coord.x() as i32 - player.coord.x() as i32, other.coord.z() as i32 - player.coord.z() as i32);
+                self.add(renderer, player, other, other.nid, other.ntype, other.coord.x() as i32 - player.coord.x() as i32, other.coord.z() as i32 - player.coord.z() as i32, other.jump);
                 other.observers = other.observers + 1;
                 bytes += len + 1;
             }
@@ -541,12 +541,13 @@ impl NpcInfo {
         ntype: i32,
         x: i32,
         z: i32,
+        jump: bool
     ) {
         self.buf.pbit(14, nid);
         self.buf.pbit(1, 1); // extend
         self.buf.pbit(5, z);
         self.buf.pbit(5, x);
-        self.buf.pbit(1, 0); // telejump
+        self.buf.pbit(1, if jump { 1 } else { 0 });
         self.buf.pbit(13, ntype);
         self.lowdefinition(renderer, other);
         player.build.npcs.insert(other.nid);
