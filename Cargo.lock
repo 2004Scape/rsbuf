@@ -605,7 +605,7 @@ dependencies = [
 
 [[package]]
 name = "rsbuf"
-version = "225.1.7"
+version = "377.1.1"
 dependencies = [
  "criterion",
  "getrandom",

@@ -6,6 +6,7 @@ pub struct Npc {
     pub nid: i32,
     pub ntype: i32,
     pub tele: bool,
+    pub jump: bool,
     pub run_dir: i8,
     pub walk_dir: i8,
     pub active: bool,
@@ -38,6 +39,7 @@ impl Npc {
             nid,
             ntype,
             tele: false,
+            jump: false,
             run_dir: -1,
             walk_dir: -1,
             active: false,
@@ -68,6 +70,7 @@ impl Npc {
         self.walk_dir = -1;
         self.run_dir = -1;
         self.tele = false;
+        self.jump = false;
         self.masks = 0;
         // self.face_entity = -1;
         self.face_x = -1;
