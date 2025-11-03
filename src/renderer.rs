@@ -138,7 +138,7 @@ impl PlayerRenderer {
         if lows > 0 {
             let header: usize = PlayerRenderer::header(PlayerInfoProt::APPEARANCE as u32 + PlayerInfoProt::FACE_ENTITY as u32 + PlayerInfoProt::FACE_COORD as u32);
             unsafe {
-                let appearance = (*self.caches.as_ptr().add(PlayerInfoProt::APPEARANCE.to_index()))
+                let appearance = (&(*self.caches.as_ptr().add(PlayerInfoProt::APPEARANCE.to_index())))
                     .get(pid as usize)
                     .and_then(|x| x.as_ref())
                     .map_or(0, |y| y.len());
