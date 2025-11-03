@@ -1,0 +1,57 @@
+use crate::message::MessageEncoder;
+use crate::packet::Packet;
+use crate::prot::ServerInternalProt;
+
+pub struct MessagePrivateOut {
+    from: i64,
+    id: i32,
+    staff_mod_level: i32,
+    msg: Vec<u8>,
+}
+
+impl MessagePrivateOut {
+    #[inline]
+    pub const fn new(
+        from: i64,
+        id: i32,
+        staff_mod_level: i32,
+        msg: Vec<u8>,
+    ) -> MessagePrivateOut {
+        return MessagePrivateOut {
+            from,
+            id,
+            staff_mod_level,
+            msg,
+        }
+    }
+}
+
+impl MessageEncoder for MessagePrivateOut {
+    #[inline]
+    fn id(&self) -> i32 {
+        return ServerInternalProt::MESSAGE_PRIVATE as i32
+    }
+
+    #[inline]
+    fn length(&self) -> i32 {
+        return -1;
+    }
+
+    #[inline]
+    fn encode(&self, buf: &mut Packet) {
+        let mut staff_mod_level = self.staff_mod_level;
+        if staff_mod_level > 0 {
+            staff_mod_level += 1;
+        }
+
+        buf.p8(self.from);
+        buf.p4(self.id);
+        buf.p1(staff_mod_level);
+        buf.pdata(&self.msg, 0, self.msg.len())
+    }
+
+    #[inline]
+    fn test(&self) -> usize {
+        return 14 + self.msg.len();
+    }
+}

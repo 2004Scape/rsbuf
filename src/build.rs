@@ -305,10 +305,10 @@ impl BuildArea {
         y: u8,
         z: u16
     ) -> bool {
-        if let Some(other) = unsafe { &*players.as_ptr().add(player as usize) } {
-            return !(self.players.contains(player) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), self.view_distance) || other.pid == -1 || other.pid == pid || other.coord.y() != y);
-        }
-        return false;
+        return match unsafe { &*players.as_ptr().add(player as usize) } {
+            None => false,
+            Some(other) => !(self.players.contains(player) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), self.view_distance) || other.pid == -1 || other.pid == pid || other.coord.y() != y),
+        };
     }
 
     #[inline]
@@ -320,9 +320,9 @@ impl BuildArea {
         y: u8,
         z: u16
     ) -> bool {
-        if let Some(other) = unsafe { &*npcs.as_ptr().add(npc as usize) } {
-            return !(self.npcs.contains(npc) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), BuildArea::PREFERRED_VIEW_DISTANCE) || other.nid == -1 || other.coord.y() != y || !other.active);
-        }
-        return false;
+        return match unsafe { &*npcs.as_ptr().add(npc as usize) } {
+            None => false,
+            Some(other) => !(self.npcs.contains(npc) || !CoordGrid::within_distance_sw(&other.coord, &CoordGrid::from(x, y, z), BuildArea::PREFERRED_VIEW_DISTANCE) || other.nid == -1 || other.coord.y() != y || !other.active),
+        };
     }
 }

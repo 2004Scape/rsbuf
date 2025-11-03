@@ -1,6 +1,10 @@
 use crate::build::BuildArea;
 use crate::coord::CoordGrid;
+use crate::message::MessageEncoder;
+use crate::packet::Packet;
+use crate::pool::PacketPool;
 use crate::visibility::Visibility;
+use std::collections::VecDeque;
 
 #[derive(Clone)]
 pub struct Player {
@@ -34,6 +38,7 @@ pub struct Player {
     pub graphic_height: i32,
     pub graphic_delay: i32,
     pub exact_move: Option<ExactMove>,
+    pub write_queue: VecDeque<Vec<u8>>,
 }
 
 #[derive(Clone)]
@@ -89,7 +94,38 @@ impl Player {
             graphic_height: -1,
             graphic_delay: -1,
             exact_move: None,
+            write_queue: VecDeque::with_capacity(64),
         }
+    }
+
+    #[inline]
+    pub fn buffer(&mut self, pool: &mut PacketPool, message: &dyn MessageEncoder) {
+        self.write_queue.push_back(Player::write(pool, message));
+    }
+
+    #[inline]
+    pub fn write(pool: &mut PacketPool, message: &dyn MessageEncoder) -> Vec<u8> {
+        let id: i32 = message.id();
+        let offset: usize = match message.length() {
+            -1 => 1 + 1,
+            -2 => 1 + 2,
+            _ => 1 + 0,
+        };
+        let mut buf: &mut Packet = pool.take(offset + message.test());
+        buf.p1(id);
+        match message.length() {
+            -1 => buf.pos += 1,
+            -2 => buf.pos += 2,
+            _ => {}
+        };
+        let start: usize = buf.pos;
+        message.encode(&mut buf);
+        match message.length() {
+            -1 => buf.psize1((buf.pos - start) as u8),
+            -2 => buf.psize2((buf.pos - start) as u16),
+            _ => {}
+        };
+        return unsafe { buf.data.get_unchecked(0..buf.pos).to_vec() };
     }
 
     #[inline]
@@ -118,6 +154,7 @@ impl Player {
         self.graphic_height = -1;
         self.graphic_delay = -1;
         self.exact_move = None;
+        self.write_queue.clear();
     }
 }
 

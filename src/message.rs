@@ -1,9 +1,40 @@
 use crate::packet::Packet;
+use crate::prot::ClientProt;
 
 pub trait InfoMessage {
     fn encode(&self, buf: &mut Packet);
     fn test(&self) -> usize;
-    fn persists(&self) -> bool;
+}
+
+pub trait MessageEncoder {
+    fn id(&self) -> i32;
+    fn length(&self) -> i32;
+    fn encode(&self, buf: &mut Packet);
+    fn test(&self) -> usize;
+}
+
+pub trait MessageDecoder<T> {
+    fn length() -> i32;
+    fn decode(prot: ClientProt, buf: Packet) -> T;
+}
+
+#[derive(Clone)]
+pub struct IncomingPacket {
+    pub id: i32,
+    pub length: i32,
+}
+
+impl IncomingPacket {
+    #[inline]
+    pub fn new(
+        id: i32,
+        length: i32
+    ) -> IncomingPacket {
+        return IncomingPacket {
+            id,
+            length,
+        }
+    }
 }
 
 // ---- players
@@ -32,11 +63,6 @@ impl InfoMessage for PlayerInfoAppearance {
     fn test(&self) -> usize {
         return 1 + self.bytes.len();
     }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return true;
-    }
 }
 
 // ----
@@ -63,11 +89,6 @@ impl InfoMessage for PlayerInfoFaceEntity {
     #[inline]
     fn test(&self) -> usize {
         return 2;
-    }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
     }
 }
 
@@ -102,11 +123,6 @@ impl InfoMessage for PlayerInfoFaceCoord {
     fn test(&self) -> usize {
         return 4;
     }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
-    }
 }
 
 // ----
@@ -140,11 +156,6 @@ impl InfoMessage for PlayerInfoAnim {
     fn test(&self) -> usize {
         return 3;
     }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
-    }
 }
 
 // ----
@@ -171,11 +182,6 @@ impl InfoMessage for PlayerInfoSay {
     #[inline]
     fn test(&self) -> usize {
         return 1 + self.say.len();
-    }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
     }
 }
 
@@ -217,11 +223,6 @@ impl InfoMessage for PlayerInfoDamage {
     #[inline]
     fn test(&self) -> usize {
         return 4;
-    }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
     }
 }
 
@@ -265,11 +266,6 @@ impl InfoMessage for PlayerInfoChat {
     fn test(&self) -> usize {
         return 1 + 1 + 1 + 1 + self.bytes.len();
     }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
-    }
 }
 
 // ----
@@ -305,11 +301,6 @@ impl InfoMessage for PlayerInfoSpotanim {
     #[inline]
     fn test(&self) -> usize {
         return 6;
-    }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
     }
 }
 
@@ -364,11 +355,6 @@ impl InfoMessage for PlayerInfoExactMove {
     fn test(&self) -> usize {
         return 9;
     }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
-    }
 }
 
 // ---- npcs
@@ -395,11 +381,6 @@ impl InfoMessage for NpcInfoFaceEntity {
     #[inline]
     fn test(&self) -> usize {
         return 2;
-    }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
     }
 }
 
@@ -434,11 +415,6 @@ impl InfoMessage for NpcInfoFaceCoord {
     fn test(&self) -> usize {
         return 4;
     }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
-    }
 }
 
 // ----
@@ -472,11 +448,6 @@ impl InfoMessage for NpcInfoAnim {
     fn test(&self) -> usize {
         return 3;
     }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
-    }
 }
 
 // ----
@@ -503,11 +474,6 @@ impl InfoMessage for NpcInfoSay {
     #[inline]
     fn test(&self) -> usize {
         return 1 + self.say.len();
-    }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
     }
 }
 
@@ -550,11 +516,6 @@ impl InfoMessage for NpcInfoDamage {
     fn test(&self) -> usize {
         return 4;
     }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
-    }
 }
 
 // ----
@@ -573,16 +534,14 @@ impl NpcInfoChangeType {
 }
 
 impl InfoMessage for NpcInfoChangeType {
+    #[inline]
     fn encode(&self, buf: &mut Packet) {
         buf.p2(self.change_type);
     }
 
+    #[inline]
     fn test(&self) -> usize {
         return 2;
-    }
-
-    fn persists(&self) -> bool {
-        return false;
     }
 }
 
@@ -620,11 +579,4 @@ impl InfoMessage for NpcInfoSpotanim {
     fn test(&self) -> usize {
         return 6;
     }
-
-    #[inline]
-    fn persists(&self) -> bool {
-        return false;
-    }
 }
-
-// ----

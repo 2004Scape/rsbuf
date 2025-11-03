@@ -1,0 +1,52 @@
+use crate::message::MessageEncoder;
+use crate::packet::Packet;
+use crate::prot::ServerInternalProt;
+
+pub struct ObjCount {
+    coord: i32,
+    obj: i32,
+    old_count: i32,
+    new_count: i32,
+}
+
+impl ObjCount {
+    #[inline]
+    pub const fn new(
+        coord: i32,
+        obj: i32,
+        old_count: i32,
+        new_count: i32,
+    ) -> ObjCount {
+        return ObjCount {
+            coord,
+            obj,
+            old_count,
+            new_count,
+        }
+    }
+}
+
+impl MessageEncoder for ObjCount {
+    #[inline]
+    fn id(&self) -> i32 {
+        return ServerInternalProt::OBJ_COUNT as i32;
+    }
+
+    #[inline]
+    fn length(&self) -> i32 {
+        return 7;
+    }
+
+    #[inline]
+    fn encode(&self, buf: &mut Packet) {
+        buf.p1(self.coord);
+        buf.p2(self.obj);
+        buf.p2(self.old_count.min(65535));
+        buf.p2(self.new_count.min(65535));
+    }
+
+    #[inline]
+    fn test(&self) -> usize {
+        return 7;
+    }
+}

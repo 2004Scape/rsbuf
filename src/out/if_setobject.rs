@@ -1,0 +1,48 @@
+use crate::message::MessageEncoder;
+use crate::packet::Packet;
+use crate::prot::ServerInternalProt;
+
+pub struct IfSetObject {
+    component: i32,
+    obj: i32,
+    scale: i32,
+}
+
+impl IfSetObject {
+    #[inline]
+    pub const fn new(
+        component: i32,
+        obj: i32,
+        scale: i32,
+    ) -> IfSetObject {
+        return IfSetObject {
+            component,
+            obj,
+            scale,
+        }
+    }
+}
+
+impl MessageEncoder for IfSetObject {
+    #[inline]
+    fn id(&self) -> i32 {
+        return ServerInternalProt::IF_SETOBJECT as i32;
+    }
+
+    #[inline]
+    fn length(&self) -> i32 {
+        return 6;
+    }
+
+    #[inline]
+    fn encode(&self, buf: &mut Packet) {
+        buf.p2(self.component);
+        buf.p2(self.obj);
+        buf.p2(self.scale);
+    }
+
+    #[inline]
+    fn test(&self) -> usize {
+        return 6;
+    }
+}
