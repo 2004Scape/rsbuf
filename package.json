@@ -1,6 +1,6 @@
 {
   "name": "@2004scape/rsbuf",
-  "version": "377.1.1",
+  "version": "530.1.0",
   "description": "A RuneScape update info computer",
   "main": "dist/rsbuf.js",
   "types": "dist/rsbuf.d.ts",

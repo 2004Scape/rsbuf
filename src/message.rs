@@ -24,8 +24,8 @@ impl PlayerInfoAppearance {
 impl InfoMessage for PlayerInfoAppearance {
     #[inline]
     fn encode(&self, buf: &mut Packet) {
-        buf.p1(self.bytes.len() as i32);
-        buf.pdata_alt1(&self.bytes, 0, self.bytes.len());
+        buf.p1_alt1(self.bytes.len() as i32);
+        buf.pdata(&self.bytes, 0, self.bytes.len());
     }
 
     #[inline]

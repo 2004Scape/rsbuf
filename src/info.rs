@@ -16,8 +16,8 @@ pub struct PlayerInfo {
 }
 
 impl PlayerInfo {
-    const BITS_ADD: usize = 11 + 5 + 5 + 1 + 1;
-    const BITS_RUN: usize = 1 + 2 + 3 + 3 + 1;
+    const BITS_ADD: usize = 11 + 5 + 5 + 1 + 1 + 3;
+    const BITS_RUN: usize = 1 + 2 + 1 + 3 + 3 + 1;
     const BITS_WALK: usize = 1 + 2 + 3 + 1;
     const BITS_EXTEND: usize = 1 + 2;
 
@@ -177,8 +177,9 @@ impl PlayerInfo {
         jump: bool
     ) {
         self.buf.pbit(11, pid);
-        self.buf.pbit(5, x);
         self.buf.pbit(1, 1); // extend
+        self.buf.pbit(5, x);
+        self.buf.pbit(3, 0); // angle
         self.buf.pbit(1, if jump { 1 } else { 0 });
         self.buf.pbit(5, z);
         self.lowdefinition(renderer, player, other);
@@ -210,16 +211,16 @@ impl PlayerInfo {
     ) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 3);
+        self.buf.pbit(7, z);
         self.buf.pbit(1, if jump { 1 } else { 0 });
         self.buf.pbit(2, y);
-        self.buf.pbit(7, z);
-        self.buf.pbit(7, x);
         if extend {
             self.buf.pbit(1, 1);
             self.highdefinition(renderer, player, other);
         } else {
             self.buf.pbit(1, 0);
         }
+        self.buf.pbit(7, x);
     }
 
     #[inline]
@@ -232,6 +233,7 @@ impl PlayerInfo {
     ) {
         self.buf.pbit(1, 1);
         self.buf.pbit(2, 2);
+        self.buf.pbit(1, 1);
         self.buf.pbit(3, other.walk_dir as i32);
         self.buf.pbit(3, other.run_dir as i32);
         if extend {
@@ -359,11 +361,20 @@ impl PlayerInfo {
             self.updates.p1(masks as i32);
         }
         // ----
+        if masks & PlayerInfoProt::CHAT as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::CHAT);
+        }
+        if masks & PlayerInfoProt::DAMAGE as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::DAMAGE);
+        }
         if masks & PlayerInfoProt::ANIM as u32 != 0 {
             renderer.write(&mut self.updates, other.pid, PlayerInfoProt::ANIM);
         }
-        if masks & PlayerInfoProt::SAY as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::SAY);
+        if masks & PlayerInfoProt::APPEARANCE as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::APPEARANCE);
+        }
+        if masks & PlayerInfoProt::FACE_ENTITY as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::FACE_ENTITY);
         }
         if masks & PlayerInfoProt::EXACT_MOVE as u32 != 0 {
             if let Some(exactmove) = &other.exact_move {
@@ -381,26 +392,17 @@ impl PlayerInfo {
                 )
             }
         }
-        if masks & PlayerInfoProt::FACE_ENTITY as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::FACE_ENTITY);
+        if masks & PlayerInfoProt::SAY as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::SAY);
         }
-        if masks & PlayerInfoProt::FACE_COORD as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::FACE_COORD);
+        if masks & PlayerInfoProt::DAMAGE2 as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::DAMAGE2);
         }
         if masks & PlayerInfoProt::SPOT_ANIM as u32 != 0 {
             renderer.write(&mut self.updates, other.pid, PlayerInfoProt::SPOT_ANIM);
         }
-        if masks & PlayerInfoProt::APPEARANCE as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::APPEARANCE);
-        }
-        if masks & PlayerInfoProt::DAMAGE as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::DAMAGE);
-        }
-        if masks & PlayerInfoProt::CHAT as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::CHAT);
-        }
-        if masks & PlayerInfoProt::DAMAGE2 as u32 != 0 {
-            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::DAMAGE2);
+        if masks & PlayerInfoProt::FACE_COORD as u32 != 0 {
+            renderer.write(&mut self.updates, other.pid, PlayerInfoProt::FACE_COORD);
         }
     }
 

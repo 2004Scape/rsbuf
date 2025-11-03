@@ -6,17 +6,17 @@ use wasm_bindgen::prelude::wasm_bindgen;
 #[derive(Eq, Hash, PartialEq)]
 #[wasm_bindgen]
 pub enum PlayerInfoProt {
-    BIG = 32,
-    ANIM = 8,
-    SAY = 16,
-    EXACT_MOVE = 256,
-    FACE_ENTITY = 1,
-    FACE_COORD = 2,
-    SPOT_ANIM = 512,
-    APPEARANCE = 4,
-    DAMAGE = 1024,
-    CHAT = 64,
-    DAMAGE2 = 128,
+    BIG = 0x10,
+    ANIM = 0x8,
+    SAY = 0x20,
+    EXACT_MOVE = 0x400,
+    FACE_ENTITY = 0x2,
+    FACE_COORD = 0x40,
+    SPOT_ANIM = 0x100,
+    APPEARANCE = 0x4,
+    DAMAGE = 0x1,
+    CHAT = 0x80,
+    DAMAGE2 = 0x200,
 }
 
 impl PlayerInfoProt {
