@@ -30,7 +30,7 @@ static mut PLAYER_GRID: Lazy<HashMap<u32, Vec<i32>>> = Lazy::new(|| HashMap::wit
 static mut PLAYER_RENDERER: Lazy<PlayerRenderer> = Lazy::new(PlayerRenderer::new);
 static mut PLAYER_INFO: Lazy<PlayerInfo> = Lazy::new(PlayerInfo::new);
 
-static mut NPCS: Lazy<Vec<Option<Npc>>> = Lazy::new(|| vec![None; 8192]);
+static mut NPCS: Lazy<Vec<Option<Npc>>> = Lazy::new(|| vec![None; 16384]);
 static mut NPC_RENDERER: Lazy<NpcRenderer> = Lazy::new(NpcRenderer::new);
 static mut NPC_INFO: Lazy<NpcInfo> = Lazy::new(NpcInfo::new);
 
