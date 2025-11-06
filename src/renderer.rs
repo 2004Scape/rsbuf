@@ -249,17 +249,17 @@ impl PlayerRenderer {
 
 pub struct NpcRenderer {
     caches: Vec<Vec<Option<Vec<u8>>>>,
-    highs: [usize; 8192],
-    lows: [usize; 8192],
+    highs: [usize; 16384],
+    lows: [usize; 16384],
 }
 
 impl NpcRenderer {
     #[inline]
     pub fn new() -> NpcRenderer {
         return NpcRenderer {
-            caches: vec![vec![None; 8192]; 8],
-            highs: [0; 8192],
-            lows: [0; 8192],
+            caches: vec![vec![None; 16384]; 8],
+            highs: [0; 16384],
+            lows: [0; 16384],
         }
     }
 
