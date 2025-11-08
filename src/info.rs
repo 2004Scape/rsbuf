@@ -153,7 +153,7 @@ impl PlayerInfo {
             if let Some(other) = unsafe { &*players.as_ptr().add(pid as usize) } {
                 if other.visibility != Visibility::HARD {
                     let len: usize = renderer.lowdefinitions(pid) + renderer.highdefinitions(pid);
-                    // bits to add player + extended info size + bits to break loop (11)
+                    // bits to add player + extended info size + bits to break loop
                     if !self.fits(bytes + 2, PlayerInfo::BITS_ADD, len) {
                         // more players get added next tick
                         return;
@@ -417,7 +417,7 @@ pub struct NpcInfo {
 }
 
 impl NpcInfo {
-    const BITS_ADD: usize = 13 + 11 + 5 + 5 + 1;
+    const BITS_ADD: usize = 14 + 11 + 5 + 5 + 1;
     const BITS_RUN: usize = 1 + 2 + 3 + 3 + 1;
     const BITS_WALK: usize = 1 + 2 + 3 + 1;
     const BITS_EXTEND: usize = 1 + 2;
@@ -457,7 +457,7 @@ impl NpcInfo {
         let bytes: usize = self.write_npcs(npcs, renderer, player, pos);
         self.write_new_npcs(map, npcs, renderer, player, bytes);
         if self.updates.pos > 0 {
-            self.buf.pbit(13, 8191);
+            self.buf.pbit(14, 16383);
             self.buf.bytes();
             self.buf.pdata(&self.updates.data, 0, self.updates.pos);
         } else {
@@ -519,7 +519,7 @@ impl NpcInfo {
             }
             if let Some(other) = unsafe { &mut *npcs.as_mut_ptr().add(nid as usize) } {
                 let len: usize = renderer.lowdefinitions(nid) + renderer.highdefinitions(nid);
-                // bits to add npc + extended info size + bits to break loop (13)
+                // bits to add npc + extended info size + bits to break loop
                 if !self.fits(bytes + 1, NpcInfo::BITS_ADD, len) {
                     // more npcs get added next tick
                     return;
@@ -542,7 +542,7 @@ impl NpcInfo {
         x: i32,
         z: i32,
     ) {
-        self.buf.pbit(13, nid);
+        self.buf.pbit(14, nid);
         self.buf.pbit(11, ntype);
         self.buf.pbit(5, x);
         self.buf.pbit(5, z);

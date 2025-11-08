@@ -81,7 +81,7 @@ impl BuildArea {
     pub fn new() -> BuildArea {
         return BuildArea {
             players: IdBitSet::new(2048, BuildArea::PREFERRED_PLAYERS as usize), // 64 bitset
-            npcs: IdBitSet::new(8192, BuildArea::PREFERRED_NPCS as usize), // 256 bitset
+            npcs: IdBitSet::new(16384, BuildArea::PREFERRED_NPCS as usize), // 256 bitset
             appearances: [0; 2048],
             force_view_distance: false,
             view_distance: BuildArea::PREFERRED_VIEW_DISTANCE,
